@@ -49,7 +49,7 @@ dependencies {
     //gson解析
     compile 'com.google.code.gson:gson:2.7'
     //安卓工控
-    compile(name: 'appLibs', ext: 'aar')
+//    compile(name: 'appLibs', ext: 'aar')
     //七牛
     compile 'com.qiniu:qiniu-android-sdk:7.3.+'
     //以下6个都是虹软相关
@@ -58,7 +58,10 @@ dependencies {
     compile files('libs/facerecognition.jar')
     compile files('libs/facetracking.jar')
     compile files('libs/genderestimation.jar')
-    compile 'com.guo.android_extend:android-extend:1.0.1'
+    compile files('libs/android-extend.jar')
+    compile files('libs/hurraylibs.jar')
+//    compile 'com.guo.android_extend:android-extend:1.0.1'
+
     // banner
     compile 'com.youth.banner:banner:1.4.10'
     //图片加载框架

@@ -2827,18 +2827,20 @@ public class MainService extends Service {
 
     protected void openLock() {
 
+        // TODO: 2018/5/23 门禁机服务类要重写
+        // TODO: 2018/5/23 昊睿要重写
         openAexLock();
 
-        int status = 2;
-        Intent ds_intent = new Intent();
-        ds_intent.setAction(DoorLock.newdoorlockOpenDoor);
-        ds_intent.putExtra("index", 0);
-        ds_intent.putExtra("status", status);
-        sendBroadcast(ds_intent);
-
-        Intent intent = new Intent();
-        intent.setAction(DoorLock.newdoorlockOpenDoor_BLE);
-        sendBroadcast(intent);
+//        int status = 2;
+//        Intent ds_intent = new Intent();
+//        ds_intent.setAction(DoorLock.newdoorlockOpenDoor);
+//        ds_intent.putExtra("index", 0);
+//        ds_intent.putExtra("status", status);
+//        sendBroadcast(ds_intent);
+//
+//        Intent intent = new Intent();
+//        intent.setAction(DoorLock.newdoorlockOpenDoor_BLE);
+//        sendBroadcast(intent);
     }
 
     private void openAexLock() {

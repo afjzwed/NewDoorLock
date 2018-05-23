@@ -90,11 +90,12 @@
             </intent-filter>
         </service>
 
-        <service android:name="com.cxwl.hurry.newdoorlock.service.DoorLock">
-            <intent-filter>
-                <action android:name="com.android.action.doorsensor" />
-            </intent-filter>
-        </service>
+        <!--// TODO: 2018/5/23 昊睿要重写-->
+        <!--<service android:name="com.cxwl.hurry.doorlock.service.DoorLock">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="com.android.action.doorsensor" />-->
+            <!--</intent-filter>-->
+        <!--</service>-->
     </application>
 
 </manifest>

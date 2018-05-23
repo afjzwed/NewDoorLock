@@ -7,7 +7,6 @@ package com.cxwl.hurry.newdoorlock.utils;
 
 import android.os.Handler;
 
-import com.androidex.plugins.kkfile;
 
 public class AexUtil {
     private String port= "/dev/rkey";
@@ -44,15 +43,17 @@ public class AexUtil {
      * @param time
      */
     public int openLock(int time, int index){
-        kkfile rkey = new kkfile();
-        int ident=0;
-        int delay=0;
-        if(index < 0 || index > 0xFE) index = 0;
-        if(ident < 0 || ident > 0xFE) ident = 0;
-        if(time < 0 || time > 0xFE) time = 0;
-        String cmd = String.format("FB%02X2503%02X01%02X00FE",ident,index,time);
-        int r = rkey.native_file_writeHex(port,cmd);
+        // TODO: 2018/5/23 昊睿要重写
+//        kkfile rkey = new kkfile();
+//        int ident=0;
+//        int delay=0;
+//        if(index < 0 || index > 0xFE) index = 0;
+//        if(ident < 0 || ident > 0xFE) ident = 0;
+//        if(time < 0 || time > 0xFE) time = 0;
+//        String cmd = String.format("FB%02X2503%02X01%02X00FE",ident,index,time);
+//        int r = rkey.native_file_writeHex(port,cmd);
 
-        return r > 0?1:0;
+//        return r > 0?1:0;
+        return 0;
     }
 }
