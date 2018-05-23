@@ -614,6 +614,7 @@ public class MainService extends Service {
                             //测试上传日志
                             //test();
                             //保存离线密码 默认123456
+
                             Log.i(TAG, "心跳--服务器返回的离线密码" + connectReportBean.getLixian_mima());
                             SPUtil.put(MainService.this, Constant.SP_LIXIAN_MIMA, connectReportBean.getLixian_mima());
                             //保存心跳时间 默认一分钟
