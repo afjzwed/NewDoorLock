@@ -12,13 +12,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
-import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -27,6 +25,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -59,8 +58,10 @@ import com.cxwl.hurry.newdoorlock.MainApplication;
 import com.cxwl.hurry.newdoorlock.R;
 import com.cxwl.hurry.newdoorlock.callback.AccountCallback;
 import com.cxwl.hurry.newdoorlock.callback.AdverErrorCallBack;
+import com.cxwl.hurry.newdoorlock.callback.AdverTongJiCallBack;
 import com.cxwl.hurry.newdoorlock.callback.GlideImagerBannerLoader;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
+import com.cxwl.hurry.newdoorlock.entity.AdTongJiBean;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.NoticeBean;
 import com.cxwl.hurry.newdoorlock.entity.XdoorBean;
@@ -191,7 +192,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Camera camera = null;
     private SurfaceHolder autoCameraHolder = null;
     private SurfaceView autoCameraSurfaceView = null;
-    private boolean mCamerarelease = true; //判断照相机是否释放
     private AdvertiseHandler advertiseHandler = null;//广告播放类
 //    public appLibsService hwservice;//hwservice为安卓工控appLibs的服务
 
@@ -233,7 +233,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean identification = false;//人脸识别可以开始对比的标识
     private FRAbsLoop mFRAbsLoop = null;//人脸对比线程
 
-    private Timer timer = new Timer();
+    Timer timer = new Timer();
+
+    private boolean mCamerarelease = true; //判断照相机是否释放
+    private Handler cameraHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == 0x01) {
+                if (mCamerarelease) {
+                    cameraHandler.removeMessages(0x01);
+                    buildVideo();
+                } else {
+                    cameraHandler.sendEmptyMessageDelayed(0x01, 200);
+                }
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -287,7 +302,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //初始化人脸相关与身份证识别
         initFaceDetectAndIDCard();
+//测试自动关广告
+        //  textColseAd();
+    }
 
+    //测试自动关广告
+    private void textColseAd() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(30000);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            advertiseHandler.onDestroy();
+                        }
+                    });
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     /*************************************************初始化一些基本东西start
@@ -340,6 +377,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView textViewGongGao;
     private SurfaceView videoView;
     private AdverErrorCallBack adverErrorCallBack;
+    private AdverTongJiCallBack adverTongJiCallBack;
 
     protected void initAdvertiseHandler() {
         if (advertiseHandler == null) {
@@ -354,6 +392,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void ErrorAdver() {
                 imageView.setVisibility(View.VISIBLE);
+            }
+        };
+        adverTongJiCallBack = new AdverTongJiCallBack() {
+            @Override
+            public void sendTj(List<AdTongJiBean> list) {
+                Log.e("adv", list.toString());
             }
         };
 //        advertiseHandler.initData(rows, dialMessenger, (currentStatus == ONVIDEO_MODE),
@@ -575,7 +619,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 });
                             }
                         };
-                        timer.schedule(task, 500, 5000);
+                        timer.schedule(task, 2000, 5000);
                         break;
                     case MSG_INVALID_CARD:
                         //无效房卡
@@ -634,7 +678,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         List<GuangGaoBean> obj1 = (List<GuangGaoBean>) obj;
         Log.d(TAG, "UpdateAdvertise: 8");
         advertiseHandler.initData(obj1, mainMessage, (currentStatus == ONVIDEO_MODE),
-                adverErrorCallBack);
+                adverErrorCallBack, adverTongJiCallBack);
     }
 
     /**
@@ -650,6 +694,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         banner.setBannerStyle(BannerConfig.NOT_INDICATOR);
         //设置图片集合
         banner.setImages(obj1);
+        banner.setDelayTime(10000);
+        banner.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int i, float v, int i1) {
+                Log.i("banner", "onPageScrolled" + i);
+            }
+
+            @Override
+            public void onPageSelected(int i) {
+                Log.i("banner", "onPageSelected" + i);
+                //// TODO: 2018/5/22 这里记录广告播放次数
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int i) {
+                Log.i("banner", "onPageScrollStateChanged" + i);
+            }
+        });
         //banner设置方法全部调用完毕时最后调用
         banner.start();
     }
@@ -745,7 +807,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             sendMainMessager(MSG_RTC_REGISTER, null);
             //初始化社区信息
             setCommunityName(result.getXiangmu_name() == null ? "欣社区" : result.getXiangmu_name());
-            setLockName(result.getDanyuan_name() == null ? "1单元" : result.getDanyuan_name());
+            setLockName(result.getDanyuan_name() == null ? "大门" : result.getDanyuan_name());
 
             Log.e(TAG, "可以读卡");
             enableReaderMode();//登录成功后开启读卡
@@ -1336,8 +1398,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setDialValue("正在和" + blockNo + "视频通话");
         initVideoViews();
         Log.e(TAG, "开始创建remoteView");
-        MainService.callConnection.buildVideo(remoteView);
+        if (mCamerarelease) {
+            buildVideo();
+        } else {
+            cameraHandler.sendEmptyMessageDelayed(0x01, 200);
+        }
+        videoLayout.setVisibility(View.VISIBLE);
         setVideoSurfaceVisibility(View.VISIBLE);
+    }
+
+    private void buildVideo() {
+        if (MainService.callConnection != null) {
+            if (remoteView == null) return;
+            MainService.callConnection.buildVideo(remoteView);//此处接听过快的会导致崩溃
+        }
     }
 
     /**
@@ -1504,7 +1578,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                 Log.v(TAG, "正常清除" + uuid);
                                                 try {
                                                     if (file != null) {
-                                                        file.deleteOnExit();
+                                                        file.delete();
                                                     }
                                                 } catch (Exception e) {
                                                 }
@@ -2037,7 +2111,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 180);
-//        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, mCameraMirror, 180);mCameraMirror=true:Y轴镜像  180:旋转180度
+//        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, mCameraMirror, 180);
+// mCameraMirror=true:Y轴镜像  180:旋转180度
         mSurfaceView.debug_print_fps(true, false);
 
         //人脸跟踪初始化引擎，设置检测角度、范围，数量。创建对象后，必须先于其他成员函数调用，否则其他成员函数会返回 MERR_BAD_STATE
@@ -2164,31 +2239,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {//这里其实不用捕捉错误
             mCamera = Camera.open();
 
-            // See android.hardware.Camera.setCameraDisplayOrientation for
-            // documentation.
-
-            int mCameraID = getIntent().getIntExtra("Camera", 0);
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-
-            int rotation = this.getWindowManager().getDefaultDisplay().getRotation();
-
-            Log.e("相机", "mCameraID " + mCameraID + " facing " + cameraInfo.facing + " " +
-                    "orientation " + cameraInfo.orientation + " rotation " + rotation);
-//            mCameraID 0 facing 0 orientation 0 rotation 0
-
-//            Camera.getCameraInfo(mCameraID, cameraInfo);
-//            int degrees = 0;
-//            int result;
-//            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-//                result = (info.orientation + degrees) % 360;
-//                result = (360 - result) % 360; // compensate the mirror
-//            } else { // back-facing
-//                result = (info.orientation - degrees + 360) % 360;
-//            }
-//            camera.setDisplayOrientation(result);
-
             Camera.Parameters parameters = mCamera.getParameters();
-            parameters.setPreviewSize(640, 480);//设置尺寸
+//            parameters.setPreviewSize(640, 480);//设置尺寸
             parameters.setPreviewFormat(ImageFormat.NV21);//指定图像的格式
             // (NV21：是一种YUV420SP格式，紧跟Y平面的是VU交替的平面)
 

@@ -33,10 +33,8 @@ import com.arcsoft.facerecognition.AFR_FSDKEngine;
 import com.arcsoft.facerecognition.AFR_FSDKError;
 import com.arcsoft.facerecognition.AFR_FSDKFace;
 import com.arcsoft.facerecognition.AFR_FSDKVersion;
-
 import com.cxwl.hurry.newdoorlock.R;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
-import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
 import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
 import com.guo.android_extend.image.ImageConverter;
 import com.guo.android_extend.widget.ExtImageView;
@@ -48,7 +46,6 @@ import java.util.List;
 import static com.cxwl.hurry.newdoorlock.config.Constant.arc_appid;
 import static com.cxwl.hurry.newdoorlock.config.Constant.fd_key;
 import static com.cxwl.hurry.newdoorlock.config.Constant.fr_key;
-import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.LOCAL_FACE_PATH;
 
 
 /**
@@ -142,7 +139,8 @@ public class FaceRegisterActivity extends AppCompatActivity implements SurfaceHo
                 AFD_FSDKEngine engine = new AFD_FSDKEngine();
                 AFD_FSDKVersion version = new AFD_FSDKVersion();
                 List<AFD_FSDKFace> result = new ArrayList<AFD_FSDKFace>();
-                AFD_FSDKError err = engine.AFD_FSDK_InitialFaceEngine(arc_appid, fd_key, AFD_FSDKEngine.AFD_OPF_0_HIGHER_EXT, 16, 5);
+                AFD_FSDKError err = engine.AFD_FSDK_InitialFaceEngine(arc_appid, fd_key,
+                        AFD_FSDKEngine.AFD_OPF_0_HIGHER_EXT, 16, 5);
                 Log.d(TAG, "AFD_FSDK_InitialFaceEngine = " + err.getCode());
                 if (err.getCode() != AFD_FSDKError.MOK) {//FD初始化失败
                     Message reg = Message.obtain();
@@ -198,7 +196,7 @@ public class FaceRegisterActivity extends AppCompatActivity implements SurfaceHo
                     AFR_FSDKVersion version1 = new AFR_FSDKVersion();
                     AFR_FSDKEngine engine1 = new AFR_FSDKEngine();
                     AFR_FSDKFace result1 = new AFR_FSDKFace();
-                    AFR_FSDKError error1 = engine1.AFR_FSDK_InitialEngine(arc_appid,fr_key);
+                    AFR_FSDKError error1 = engine1.AFR_FSDK_InitialEngine(arc_appid, fr_key);
                     Log.d("com.arcsoft", "AFR_FSDK_InitialEngine = " + error1.getCode());
                     if (error1.getCode() != AFD_FSDKError.MOK) {
                         Message reg = Message.obtain();
@@ -373,8 +371,8 @@ public class FaceRegisterActivity extends AppCompatActivity implements SurfaceHo
                                         houseNumber = mEditText1.getText().toString().trim();
                                         phoneNumber = mEditText2.getText().toString().trim();
                                         int key = convertKeyCode(keyCode);
-                                        Log.v("人脸识别", "onKey1-->" + keyCode + "/" + houseNumber
-                                                + "/" + phoneNumber + "/" + key + "/" + focus);
+                                        Log.v("人脸识别", "onKey1-->" + keyCode + "/" + houseNumber +
+                                                "/" + phoneNumber + "/" + key + "/" + focus);
                                         if (key >= 0) {
                                             if (focus) {//输入账号
                                                 callInput(key, mEditText1);
@@ -409,7 +407,8 @@ public class FaceRegisterActivity extends AppCompatActivity implements SurfaceHo
                                                 mEditText1.requestFocus();
                                                 mEditText1.requestFocusFromTouch();
                                             }
-                                        } else if (keyCode == DeviceConfig.DEVICE_KEYCODE_POUND) {//确认键
+                                        } else if (keyCode == DeviceConfig.DEVICE_KEYCODE_POUND)
+                                        {//确认键
                                             if (focus) {
                                                 if (TextUtils.isEmpty(houseNumber)) {
                                                     Toast.makeText(FaceRegisterActivity.this,
