@@ -64,6 +64,7 @@
 
 
         <service android:name=".service.MainService"/>
+
         <!--开机(更新)启动广播-->
         <receiver android:name="com.cxwl.hurry.newdoorlock.receiver.NativeAccessReceiver">
             <intent-filter>
@@ -82,20 +83,14 @@
                 <action android:name="android.intent.action.PACKAGE_REMOVED"/>
             </intent-filter>
         </receiver>
-        <!--rtc服务类-->
 
+        <!--rtc服务类-->
         <service android:name="rtc.sdk.impl.SdkService">
             <intent-filter>
                 <action android:name="rtc.sdk.service"/>
             </intent-filter>
         </service>
 
-        <!--// TODO: 2018/5/23 昊睿要重写-->
-        <!--<service android:name="com.cxwl.hurry.doorlock.service.DoorLock">-->
-            <!--<intent-filter>-->
-                <!--<action android:name="com.android.action.doorsensor" />-->
-            <!--</intent-filter>-->
-        <!--</service>-->
-    </application>
 
+    </application>
 </manifest>

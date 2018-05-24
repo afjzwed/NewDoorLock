@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -47,6 +48,7 @@ import java.util.List;
 import static com.cxwl.hurry.newdoorlock.config.Constant.arc_appid;
 import static com.cxwl.hurry.newdoorlock.config.Constant.fd_key;
 import static com.cxwl.hurry.newdoorlock.config.Constant.fr_key;
+import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.LOCAL_FACE_PATH;
 
 
 /**
@@ -502,6 +504,25 @@ public class FaceRegisterActivity extends AppCompatActivity implements SurfaceHo
         }
         if (handlerThread != null) {
             handlerThread.quit();
+        }
+
+        File picDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+//        String path = picDir.getPath() + File.separator + LOCAL_FACE_PATH;
+//        File file = new File(path);
+        deleteFile(picDir);
+    }
+
+    private void deleteFile(File file) {
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                File f = files[i];
+                deleteFile(f);
+            }
+            Log.e("wh", "走了删除吗");
+//            file.delete();//如要保留文件夹，只删除文件，请注释这行
+        } else if (file.exists()) {
+            file.delete();
         }
     }
 

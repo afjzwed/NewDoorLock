@@ -19,6 +19,7 @@ import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.arcsoft.facedetection.AFD_FSDKEngine;
 import com.arcsoft.facedetection.AFD_FSDKError;
@@ -55,6 +56,7 @@ import com.cxwl.hurry.newdoorlock.utils.SPUtil;
 import com.cxwl.hurry.newdoorlock.utils.ShellUtils;
 import com.cxwl.hurry.newdoorlock.utils.SoundPoolUtil;
 import com.cxwl.hurry.newdoorlock.utils.StringUtils;
+import com.cxwl.hurry.newdoorlock.utils.ToastUtil;
 import com.google.gson.reflect.TypeToken;
 import com.guo.android_extend.image.ImageConverter;
 import com.zhy.http.okhttp.OkHttpUtils;
@@ -164,7 +166,6 @@ public class MainService extends Service {
 
     public int callConnectState = CALL_WAITING;//视频通话链接状态  默认等待
 
-    protected AexUtil aexUtil = null;
     protected CardRecord cardRecord = new CardRecord();
     private String mac;
     private String key;
@@ -353,8 +354,7 @@ public class MainService extends Service {
                         break;
                     }
                     case MSG_FACE_OPENLOCK:
-                        sendMessageToMainAcitivity(MSG_LOCK_OPENED, "");
-//                        openLock();
+                        openLock();
                         LogDoor data = new LogDoor();
                         data.setMac(mac);
                         data.setKaimenfangshi("3");
@@ -530,8 +530,7 @@ public class MainService extends Service {
         if (result != null) {
             if ("0".equals(result)) {
                 Log.e(TAG, "-----------------密码开门成功  开门开门------------------");
-                //// TODO: 2018/5/16 调用开门接口
-                sendMessageToMainAcitivity(MSG_LOCK_OPENED, "");
+                openLock();
                 List<LogDoor> list = new ArrayList<>();
                 LogDoor logDoor = new LogDoor();
                 logDoor.setMac(mac);
@@ -555,8 +554,7 @@ public class MainService extends Service {
         if (result != null) {
             if (result) {
                 Log.e(TAG, "-----------------离线密码开门成功  开门开门------------------");
-                //// TODO: 2018/5/16 调用开门接口
-                sendMessageToMainAcitivity(MSG_LOCK_OPENED, "");
+                openLock();
                 List<LogDoor> list = new ArrayList<>();
                 LogDoor logDoor = new LogDoor();
                 logDoor.setMac(mac);
@@ -991,7 +989,6 @@ public class MainService extends Service {
     /**
      * 获取人脸URL接口
      */
-
     private void getFaceUrlInfo() {
         faceStatus = 1;//正在下载
         try {
@@ -1446,7 +1443,7 @@ public class MainService extends Service {
 
     protected void init() {
 
-        initAexUtil(); //安卓工控设备控制器初始化
+//        initAexUtil(); //安卓工控设备控制器初始化
         Log.i("MainService", "init AEX");
         // TODO: 2018/5/8  initSqlUtil();  初始化卡相关数据库工具类
         Log.i("MainService", "init SQL");
@@ -1491,21 +1488,6 @@ public class MainService extends Service {
                 }
             }
         }, 500, 3000);
-    }
-
-    /**
-     * 初始化安卓工控设备控制器
-     */
-    protected void initAexUtil() {
-
-        aexUtil = new AexUtil(mHandler);
-        try {
-            aexUtil.open();
-        } catch (Exception e) {
-        }
-        Log.e("wh", "初始化控制设备");
-//            sendInitMessenger(InitActivity.MSG_INIT_AEX);
-
     }
 
     /**
@@ -1992,8 +1974,7 @@ public class MainService extends Service {
             stopTimeoutCheckThread();
             //开门操作
             Log.e(TAG, "进行开门操作 开门开门");
-            //// TODO: 2018/5/16  暂时直接开锁
-            sendMessageToMainAcitivity(MSG_LOCK_OPENED, "");//开锁
+            openLock();
             //上传日志
             List<LogDoor> list = new ArrayList<>();
             list.add(logDoor);
@@ -2010,45 +1991,6 @@ public class MainService extends Service {
             stopTimeoutCheckThread();
         }
     }
-
-//    private void test() {
-//        String url = API.LOG;
-//        JSONObject data = new JSONObject();
-//        try {
-//            data.put("mac", "44:2c:05:e6:9c:c5");
-//            data.put("phone", "454");
-//            data.put("ka_id", "");
-//            data.put("kaimenfangshi", "1");
-//            data.put("kaimenjietu", "");
-//            data.put("kaimenshijian", System.currentTimeMillis());
-//            data.put("uuid", "");
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//        LogDoor logDoor = JsonUtil.parseJsonToBean(data.toString(), LogDoor.class);
-//        List<LogDoor> door = new ArrayList<>();
-//        door.add(logDoor);
-//        LogListBean logListBean = new LogListBean();
-//        logListBean.setMac("44:2c:05:e6:9c:c5");
-//        logListBean.setXdoorOneOpenDtos(door);
-//        String s = JsonUtil.parseBeanToJson(logListBean);
-//        Log.e(TAG, "test" + JsonUtil.parseBeanToJson(logListBean));
-//        OkHttpUtils.postString().url(url).content(s).mediaType(MediaType.parse("application/json;" + " " +
-//                "charset=utf-8")).addHeader("Authorization", httpServerToken).tag(this).build().execute(new
-// StringCallback() {
-//
-//
-//            @Override
-//            public void onError(Call call, Exception e, int id) {
-//                Log.e(TAG, e.toString());
-//            }
-//
-//            @Override
-//            public void onResponse(String response, int id) {
-//                Log.e(TAG, response);
-//            }
-//        });
-//    }
 
     /**
      * 上传开门日志
@@ -2191,7 +2133,6 @@ public class MainService extends Service {
     };
 
     /****************************初始化天翼操作********************************/
-
 
     /****************************呼叫相关start********************************/
     /**
@@ -2790,9 +2731,7 @@ public class MainService extends Service {
             rtcClient.release();
             rtcClient = null;
         }
-        if (aexUtil != null) {
-            aexUtil.close();
-        }
+
     }
 
     @Nullable
@@ -2818,11 +2757,9 @@ public class MainService extends Service {
             Ka kaInfo = DbUtils.getInstans().getKaInfo(card);
             if (kaInfo != null) {//判断数据库中是否有卡
                 Log.i(TAG, "刷卡开门成功" + card);
-                sendMessageToMainAcitivity(MSG_LOCK_OPENED, "");
-//                 openLock();
+                 openLock();
                 Log.e(TAG, "onCard====:" + card);
                 // TODO: 2018/5/16 调用日志接口,传卡号 startCardAccessLog(card);
-
                 LogDoor data = new LogDoor();
                 data.setMac(mac);
                 data.setPhone(kaInfo.getYezhu_dianhua());
@@ -2845,28 +2782,13 @@ public class MainService extends Service {
     /****************************卡相关end************************/
 
     protected void openLock() {
-
-        // TODO: 2018/5/23 门禁机服务类要重写
-        // TODO: 2018/5/23 昊睿要重写
-        openAexLock();
-
-//        int status = 2;
-//        Intent ds_intent = new Intent();
-//        ds_intent.setAction(DoorLock.newdoorlockOpenDoor);
-//        ds_intent.putExtra("index", 0);
-//        ds_intent.putExtra("status", status);
-//        sendBroadcast(ds_intent);
-//
-//        Intent intent = new Intent();
-//        intent.setAction(DoorLock.newdoorlockOpenDoor_BLE);
-//        sendBroadcast(intent);
-    }
-
-    private void openAexLock() {
-        int result = aexUtil.openLock();
-        if (result > 0) {
+        int result =  DoorLock.getInstance().openLock();
+        Log.e(TAG, "继电器节点 result " + result);
+        if (result != -1) {
             sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
             SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
+        } else {
+            ToastUtil.showShort("继电器节点操作失败");
         }
     }
 

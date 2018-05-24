@@ -4,25 +4,21 @@ import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Dialog;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.nfc.NfcAdapter;
 import android.nfc.Tag;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -40,6 +36,7 @@ import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -60,6 +57,7 @@ import com.arcsoft.facetracking.AFT_FSDKFace;
 import com.arcsoft.facetracking.AFT_FSDKVersion;
 import com.cxwl.hurry.newdoorlock.MainApplication;
 import com.cxwl.hurry.newdoorlock.R;
+import com.cxwl.hurry.newdoorlock.callback.AccountCallback;
 import com.cxwl.hurry.newdoorlock.callback.AdverErrorCallBack;
 import com.cxwl.hurry.newdoorlock.callback.GlideImagerBannerLoader;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
@@ -70,6 +68,7 @@ import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
 import com.cxwl.hurry.newdoorlock.face.FaceDB;
 import com.cxwl.hurry.newdoorlock.face.PhotographActivity2;
 import com.cxwl.hurry.newdoorlock.interfac.TakePictureCallback;
+import com.cxwl.hurry.newdoorlock.service.DoorLock;
 import com.cxwl.hurry.newdoorlock.service.MainService;
 import com.cxwl.hurry.newdoorlock.utils.AdvertiseHandler;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
@@ -79,13 +78,11 @@ import com.cxwl.hurry.newdoorlock.utils.HttpUtils;
 import com.cxwl.hurry.newdoorlock.utils.Intenet;
 import com.cxwl.hurry.newdoorlock.utils.JsonUtil;
 import com.cxwl.hurry.newdoorlock.utils.NetWorkUtils;
-import com.cxwl.hurry.newdoorlock.utils.SoundPoolUtil;
 import com.google.gson.reflect.TypeToken;
 import com.guo.android_extend.java.AbsLoop;
 import com.guo.android_extend.widget.CameraFrameData;
 import com.guo.android_extend.widget.CameraGLSurfaceView;
 import com.guo.android_extend.widget.CameraSurfaceView;
-import com.hurray.plugins.serialport;
 import com.qiniu.android.common.FixedZone;
 import com.qiniu.android.http.ResponseInfo;
 import com.qiniu.android.storage.Configuration;
@@ -160,7 +157,7 @@ import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_WIFI;
  * Created by William on 2018/4/26
  */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        TakePictureCallback, NfcAdapter.ReaderCallback, CameraSurfaceView.OnCameraListener {
+        TakePictureCallback, CameraSurfaceView.OnCameraListener, AccountCallback {
 
     private static String TAG = "MainActivity";
     public static final int MSG_RTC_ONVIDEO_IN = 10011;//接收到视频呼叫
@@ -198,6 +195,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AdvertiseHandler advertiseHandler = null;//广告播放类
 //    public appLibsService hwservice;//hwservice为安卓工控appLibs的服务
 
+
+    private boolean isNfcFlag = false;//串口库是否打开的标识（默认失败）
+    private DoorLock doorLock;//用于nfc卡扫描
+
     private String cardId;//卡ID
     private boolean nfcFlag = false;//录卡页面是否显示(即是否录卡)的标识,默认false
     //    private Receive receive; //本地广播
@@ -232,19 +233,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean identification = false;//人脸识别可以开始对比的标识
     private FRAbsLoop mFRAbsLoop = null;//人脸对比线程
 
-    Timer timer = new Timer();
+    private Timer timer = new Timer();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // TODO: 2018/5/8  此处hwservice实例化没以MainActivity继承AndroidExActivityBase实现
-// TODO: 2018/5/23 昊睿要重写
-//        this.hwservice = new appLibsService(this);
         super.onCreate(savedInstanceState);
 
+        Window window = getWindow();
         //全屏设置，隐藏窗口所有装饰
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);//清除FLAG
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager
-                .LayoutParams.FLAG_FULLSCREEN);
+        window.clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);//清除FLAG
+        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams
+                .FLAG_FULLSCREEN);
+
+        WindowManager.LayoutParams params = window.getAttributes();
+        params.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View
+                .SYSTEM_UI_FLAG_IMMERSIVE;
+        window.setAttributes(params);//隐藏虚拟按键
+
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         //禁止软键盘弹出
 
@@ -257,17 +262,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        setContentView(R.layout.activity_main);
         setContentView(R.layout.activity_new_main);
 
-        // TODO: 2018/5/23 昊睿要重写
-        // TODO: 2018/5/23  this.mContext.sendBroadcast(new Intent("com.android.action
-        // .hide_navigationbar"));全屏
-//        hwservice.EnterFullScreen();//hwservice为appLibs的服务
+        // TODO: 2018/5/23
+        //this.sendBroadcast(new Intent("com.android.action.hide_navigationbar"));//全屏
+
 
         initView();//初始化View
 //        initDB();//初始化数据库
         initQiniu();//初始化七牛
         initScreen();
         initHandle();
-        initAexNfcReader();//初始化nfc本地广播
+        initAexNfcReader();//初始化nfc
         initMainService();
         initVoiceVolume();//初始化音量设置
         initAutoCamera();
@@ -284,24 +288,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //初始化人脸相关与身份证识别
         initFaceDetectAndIDCard();
 
-        // TODO: 2018/5/23 下面注释
-//        initSerial();
     }
 
     /*************************************************初始化一些基本东西start
      * ********************************************/
-
-    public serialport m_serial = new serialport();
-    public String arg = "/dev/ttyS1,9600,N,1,8";
-
-    private void initSerial() {
-        int iret = m_serial.open(arg);
-        if (iret > 0) {
-            Log.i("recv", "打开串口成功");
-        } else {
-            Log.i("recv", "打开串口失败");
-        }
-    }
 
     /**
      * 开启界面时间(本地)更新线程 之后放到MainService中
@@ -418,11 +408,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * 初始化nfc阅读器
+     * 初始化卡阅读器（打开串口）
      */
     private void initAexNfcReader() {
-        // TODO: 2018/5/23 nfc阅读器要重写
-// TODO: 2018/5/23 昊睿要重写
+        //初始化后即可读卡
+        doorLock = new DoorLock(this);
+
+
         //nfc系统默认有效
    /*     nfcReader = new NfcReader(this);
         //enableReaderMode(); //xiaozd add
@@ -571,8 +563,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         // TODO: 2018/5/16   //做UI显示，并开启其他的任务
                         Log.i(TAG, "开锁");
                         onLockOpened();
-                        // TODO: 2018/5/21 暂时加上
-                        SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
                         final Dialog weituoDialog = DialogUtil.showBottomDialog(MainActivity.this);
                         final TimerTask task = new TimerTask() {
                             @Override
@@ -690,10 +680,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(this, MainService.class);
         bindService(intent, serviceConnection, Service.BIND_AUTO_CREATE);
 
-        // TODO: 2018/5/23 开门服务类 要重写
-        // TODO: 2018/5/23 昊睿要重写
-//        Intent dlIntent = new Intent(MainActivity.this, DoorLock.class);
-//        startService(dlIntent);//start方式启动锁Service
     }
 
     /**
@@ -788,7 +774,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (s != netWorkFlag) {//如果当前网络状态与之前不一致
                     if (s == 1) {//当前有网，之前没网
                         //关闭读卡
-                        disableReaderMode();//没网时打开过一次
+//                        disableReaderMode();//没网时打开过一次
                         //时间更新
                         HttpApi.e("网络监测线程");
                         initSystemtime();
@@ -1325,7 +1311,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 /*********************************密码房号等输入状态相关end*******************************************/
-
 
     /****************************天翼rtc********************/
     public void onRtcDisconnect() {
@@ -1883,49 +1868,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setCurrentStatus(CALL_MODE);
     }
 
-//    @Override
-//    public void onAccountReceived(String account) {
-//        // TODO: 2018/5/23 昊睿要重写
-//
-//        //这里接收到刷卡后获得的卡ID
-//        cardId = account;
-//        Log.e(TAG, "onAccountReceived 卡信息 account " + account + " cardId " + cardId);
-//        if (!nfcFlag) {//非录卡状态（卡信息用于开门）
-//            Message message = Message.obtain();
-//            message.what = MainService.MSG_CARD_INCOME;
-//            message.obj = account;
-//            try {
-//                serviceMessage.send(message);
-//            } catch (RemoteException e) {
-//                e.printStackTrace();
-//            }
-//        } else {//正在录卡状态（卡信息用于录入）
-//            Message message = Message.obtain();
-//            message.what = MSG_INPUT_CARDINFO;
-//            message.obj = account;
-//            handler.sendMessage(message);
-//        }
-//    }
-
     /****************************设置一些状态end************************/
 
     /**
      * 开启nfc读卡模式
      */
     private void enableReaderMode() {
-        // TODO: 2018/5/23 昊睿要重写
-
         Log.i(TAG, "开启读卡模式");
-//        NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
-//        if (nfc != null) {
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//                if (this instanceof NfcAdapter.ReaderCallback) {
-//                    if (!this.isDestroyed()) {
-//                        nfc.enableReaderMode(this, this, NfcReader.READER_FLAGS, null);
-//                    }
-//                }
-//            }
-//        }
     }
 
     /**
@@ -1933,25 +1882,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void disableReaderMode() {
         Log.i(TAG, "禁用读卡模式");
-        NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
-        if (nfc != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                if (!this.isDestroyed()) {
-                    nfc.disableReaderMode(this);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void onTagDiscovered(Tag tag) {
-        // TODO: 2018/5/23 昊睿要重写
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            if ((nfcReader != null) && (nfcReader instanceof NfcAdapter.ReaderCallback)) {
-//                NfcAdapter.ReaderCallback nfcReader = (NfcAdapter.ReaderCallback) this.nfcReader;
-//                nfcReader.onTagDiscovered(tag);
-//            }
-//        }
+        doorLock.setIsNfcFlag(false);
     }
 
     /**
@@ -2003,20 +1934,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     };
-
-    // TODO: 2018/5/23 昊睿要重写
-//    public class Receive extends BroadcastReceiver {
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            String actionName = intent.getAction();
-//            switch (actionName) {
-//                case ACTION_NFC_CARDINFO:
-//                    String cardInfo = intent.getStringExtra("cardinfo");
-//                    Log.i(TAG, "onReceive: cardinfo=" + cardInfo);
-//                    break;
-//            }
-//        }
-//    }
     /****************************点击事件相关start**************************************/
     /****************************点击事件相关start**************************************/
 
@@ -2117,7 +2034,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mGLSurfaceView = (CameraGLSurfaceView) findViewById(R.id.glsurfaceView);
         mSurfaceView = (CameraSurfaceView) findViewById(R.id.surfaceView);
         mSurfaceView.setOnCameraListener(this);
-        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 0);
+
+
+        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 180);
+//        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, mCameraMirror, 180);mCameraMirror=true:Y轴镜像  180:旋转180度
         mSurfaceView.debug_print_fps(true, false);
 
         //人脸跟踪初始化引擎，设置检测角度、范围，数量。创建对象后，必须先于其他成员函数调用，否则其他成员函数会返回 MERR_BAD_STATE
@@ -2246,10 +2166,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             // See android.hardware.Camera.setCameraDisplayOrientation for
             // documentation.
-            Camera.CameraInfo info = new Camera.CameraInfo();
 
-//            Camera.getCameraInfo(cameraId, info);
-//            int degrees = getDisplayRotation(activity);
+            int mCameraID = getIntent().getIntExtra("Camera", 0);
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+
+            int rotation = this.getWindowManager().getDefaultDisplay().getRotation();
+
+            Log.e("相机", "mCameraID " + mCameraID + " facing " + cameraInfo.facing + " " +
+                    "orientation " + cameraInfo.orientation + " rotation " + rotation);
+//            mCameraID 0 facing 0 orientation 0 rotation 0
+
+//            Camera.getCameraInfo(mCameraID, cameraInfo);
+//            int degrees = 0;
 //            int result;
 //            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
 //                result = (info.orientation + degrees) % 360;
@@ -2260,7 +2188,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            camera.setDisplayOrientation(result);
 
             Camera.Parameters parameters = mCamera.getParameters();
-//            parameters.setPreviewSize(800, 600);//设置尺寸
+            parameters.setPreviewSize(640, 480);//设置尺寸
             parameters.setPreviewFormat(ImageFormat.NV21);//指定图像的格式
             // (NV21：是一种YUV420SP格式，紧跟Y平面的是VU交替的平面)
 
@@ -2397,6 +2325,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void faceDetectInput() {
         startActivity(new Intent(this, PhotographActivity2.class));
 //        sendMainMessager(MSG_FACE_DOWNLOAD, null);
+    }
+
+    @Override
+    public void onAccountReceived(String account) {
+        //这里接收到刷卡后获得的卡ID
+        cardId = account;
+        Log.e(TAG, "onAccountReceived 卡信息 account " + account + " cardId " + cardId);
+        if (!nfcFlag) {//非录卡状态（卡信息用于开门）
+            Message message = Message.obtain();
+            message.what = MainService.MSG_CARD_INCOME;
+            message.obj = account;
+            try {
+                serviceMessage.send(message);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        } else {//正在录卡状态（卡信息用于录入）
+            Message message = Message.obtain();
+            message.what = MSG_INPUT_CARDINFO;
+            message.obj = account;
+            handler.sendMessage(message);
+        }
     }
 
     class FRAbsLoop extends AbsLoop {
@@ -2577,11 +2527,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         unbindService(serviceConnection);
-        // TODO: 2018/5/23 昊睿要重写  unregisterReceiver(receive);
+
         disableReaderMode();
         if (netTimer != null) {
             netTimer.cancel();
             netTimer = null;
+        }
+
+        if (doorLock != null) {
+            doorLock.setIsNfcFlag(false);
+            doorLock = null;
         }
 
         if (faceHandler != null) {

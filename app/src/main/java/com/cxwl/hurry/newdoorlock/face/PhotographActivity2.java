@@ -71,7 +71,7 @@ public class PhotographActivity2 extends AppCompatActivity implements Camera.Pic
         mGLSurfaceView = (CameraGLSurfaceView) findViewById(R.id.glsurfaceView);
         mSurfaceView = (CameraSurfaceView) findViewById(R.id.surfaceView);
         mSurfaceView.setOnCameraListener(this);
-        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 0);
+        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 180);
         mSurfaceView.debug_print_fps(true, false);
 
         AFT_FSDKError err = engine.AFT_FSDK_InitialFaceEngine(arc_appid, ft_key, AFT_FSDKEngine
@@ -158,8 +158,7 @@ public class PhotographActivity2 extends AppCompatActivity implements Camera.Pic
         File picDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         //get the current time
         String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        String path = picDir.getPath() + File.separator + LOCAL_FACE_PATH + File.separator +
-                LOCAL_FACE_PATH + timeStamp + ".jpg";//File.separator,与系统有关的默认名称分隔符
+        String path = picDir.getPath() + File.separator + LOCAL_FACE_PATH  + timeStamp + ".jpg";//File.separator,与系统有关的默认名称分隔符
         ///storage/sdcard/Pictures/arcsoft_20180315154351.jpg
 
 //        String SDCard = Environment.getExternalStorageDirectory() + "";
@@ -265,7 +264,7 @@ public class PhotographActivity2 extends AppCompatActivity implements Camera.Pic
         mCamera = Camera.open();//打开硬件摄像头，这里导包得时候一定要注意是android.hardware.Camera
         try {
             Camera.Parameters parameters = mCamera.getParameters();
-            parameters.setPreviewSize(800, 600);
+            parameters.setPreviewSize(640, 480);
             parameters.setPreviewFormat(ImageFormat.NV21);
 
             for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
