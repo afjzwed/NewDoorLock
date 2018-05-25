@@ -1741,7 +1741,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 setDialValue("呼叫" + thisValue + "，取消请按删除键");
                 message.what = MainService.MSG_START_DIAL;
                 if (DeviceConfig.DEVICE_TYPE.equals("C")) {
-                    parameters[0] = thisValue.substring(2);
+                    parameters[0] = thisValue;
                 } else {
                     parameters[0] = thisValue;
                 }
@@ -2225,10 +2225,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Camera setupCamera() {
 //        LogDoor.e(TAG, "相机" + "setupCamera");
 
-
+        mCamera = Camera.open();
         try {//这里其实不用捕捉错误
-            mCamera = Camera.open();
-
             Camera.Parameters parameters = mCamera.getParameters();
 //            parameters.setPreviewSize(640, 480);//设置尺寸
             parameters.setPreviewFormat(ImageFormat.NV21);//指定图像的格式
