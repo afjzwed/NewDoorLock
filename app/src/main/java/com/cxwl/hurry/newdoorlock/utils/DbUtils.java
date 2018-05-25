@@ -124,7 +124,16 @@ public class DbUtils {
             mLianDao.insert(lian.get(i));
         }
     }
+    /**
+     * 查询所有卡信息
+     */
+    public void quaryAllLian() {
+        List<Lian> list = mLianDao.queryBuilder().list();
+        if (list != null) {
+            android.util.Log.i(TAG, "查询所有脸信息成功" + list.toString());
+        }
 
+    }
     /**
      * 删除所有脸信息
      */

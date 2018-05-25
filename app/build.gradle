@@ -23,7 +23,21 @@ android {
             dirs 'libs'
         }
     }
+    signingConfigs {
+        release {
+            storeFile file("../signapk/door.jks")
+            storePassword '123456'
+            keyAlias 'door'
+            keyPassword '123456'
+        }
 
+        debug {
+            storeFile file("../signapk/door.jks")
+            storePassword '123456'
+            keyAlias 'door'
+            keyPassword '123456'
+        }
+    }
     greendao {
         schemaVersion 3
         daoPackage 'com.cxwl.hurry.newdoorlock.db'
