@@ -5,8 +5,8 @@ package com.cxwl.hurry.newdoorlock.http;
  */
 
 public interface API {
-//    String HTTP_HOST = "http://192.168.8.142:80";
-    String HTTP_HOST = "http://120.79.212.90:80";
+    String HTTP_HOST = "http://192.168.8.142:80";
+//    String HTTP_HOST = "http://120.79.212.90:80";
 
     String DEVICE_LOGIN = HTTP_HOST + "/xdoor/device/deviceLogin";//登录
 
@@ -32,4 +32,7 @@ public interface API {
 
     String ADV_TONGJI = HTTP_HOST + "/xdoor/device/addTongji";//获取版本更新路径
 
+    String QINIU_IMG = HTTP_HOST + "/qiniu/getQiniuToken";//获取七牛图片路径
+
+    String PIC = "http://img0.hnchxwl.com/";//七牛图片访问地址
 }

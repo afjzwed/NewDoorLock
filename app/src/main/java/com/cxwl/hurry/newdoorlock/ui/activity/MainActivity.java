@@ -68,6 +68,7 @@ import com.cxwl.hurry.newdoorlock.entity.XdoorBean;
 import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
 import com.cxwl.hurry.newdoorlock.face.FaceDB;
 import com.cxwl.hurry.newdoorlock.face.PhotographActivity2;
+import com.cxwl.hurry.newdoorlock.http.API;
 import com.cxwl.hurry.newdoorlock.interfac.TakePictureCallback;
 import com.cxwl.hurry.newdoorlock.service.DoorLock;
 import com.cxwl.hurry.newdoorlock.service.MainService;
@@ -91,6 +92,8 @@ import com.qiniu.android.storage.UpCompletionHandler;
 import com.qiniu.android.storage.UploadManager;
 import com.youth.banner.Banner;
 import com.youth.banner.BannerConfig;
+import com.zhy.http.okhttp.OkHttpUtils;
+import com.zhy.http.okhttp.callback.StringCallback;
 
 import org.json.JSONObject;
 
@@ -107,6 +110,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 import jni.util.Utils;
+import okhttp3.Call;
 
 import static com.cxwl.hurry.newdoorlock.config.Constant.CALLING_MODE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.CALL_MODE;
@@ -157,8 +161,8 @@ import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_WIFI;
  * MainActivity
  * Created by William on 2018/4/26
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        TakePictureCallback, CameraSurfaceView.OnCameraListener, AccountCallback {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, TakePictureCallback,
+        CameraSurfaceView.OnCameraListener, AccountCallback {
 
     private static String TAG = "MainActivity";
     public static final int MSG_RTC_ONVIDEO_IN = 10011;//接收到视频呼叫
@@ -257,12 +261,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Window window = getWindow();
         //全屏设置，隐藏窗口所有装饰
         window.clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);//清除FLAG
-        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams
-                .FLAG_FULLSCREEN);
+        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         WindowManager.LayoutParams params = window.getAttributes();
-        params.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View
-                .SYSTEM_UI_FLAG_IMMERSIVE;
+        params.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE;
         window.setAttributes(params);//隐藏虚拟按键
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -432,10 +434,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         initVoiceVolume(audioManager, AudioManager.STREAM_MUSIC, DeviceConfig.VOLUME_STREAM_MUSIC);
         initVoiceVolume(audioManager, AudioManager.STREAM_RING, DeviceConfig.VOLUME_STREAM_RING);
-        initVoiceVolume(audioManager, AudioManager.STREAM_SYSTEM, DeviceConfig
-                .VOLUME_STREAM_SYSTEM);
-        initVoiceVolume(audioManager, AudioManager.STREAM_VOICE_CALL, DeviceConfig
-                .VOLUME_STREAM_VOICE_CALL);
+        initVoiceVolume(audioManager, AudioManager.STREAM_SYSTEM, DeviceConfig.VOLUME_STREAM_SYSTEM);
+        initVoiceVolume(audioManager, AudioManager.STREAM_VOICE_CALL, DeviceConfig.VOLUME_STREAM_VOICE_CALL);
     }
 
     /**
@@ -632,8 +632,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         break;
                     case MSG_GET_NOTICE: //获取通告成功
                         String value = (String) msg.obj;
-                        ArrayList<NoticeBean> noticeBeanList = (ArrayList<NoticeBean>) JsonUtil
-                                .parseJsonToList(value, new TypeToken<List<NoticeBean>>() {
+                        ArrayList<NoticeBean> noticeBeanList = (ArrayList<NoticeBean>) JsonUtil.parseJsonToList
+                                (value, new TypeToken<List<NoticeBean>>() {
                         }.getType());
 
                         NoticeBean noticeBean = noticeBeanList.get(0);
@@ -677,8 +677,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onAdvertiseRefresh(Object obj) {
         List<GuangGaoBean> obj1 = (List<GuangGaoBean>) obj;
         Log.d(TAG, "UpdateAdvertise: 8");
-        advertiseHandler.initData(obj1, mainMessage, (currentStatus == ONVIDEO_MODE),
-                adverErrorCallBack, adverTongJiCallBack);
+        advertiseHandler.initData(obj1, mainMessage, (currentStatus == ONVIDEO_MODE), adverErrorCallBack,
+                adverTongJiCallBack);
     }
 
     /**
@@ -768,8 +768,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 setStatusBarIcon(true);
                 initSystemtime();
             }
-            sendMainMessager(MainService.MAIN_ACTIVITY_INIT, NetWorkUtils.isNetworkAvailable
-                    (MainActivity
+            sendMainMessager(MainService.MAIN_ACTIVITY_INIT, NetWorkUtils.isNetworkAvailable(MainActivity
                     .this));
             initNetListen();
         }
@@ -931,8 +930,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @SuppressLint("WifiManagerLeak")
     private void initNet() {
-        wifiManager = (WifiManager) MainApplication.getApplication().getSystemService
-                (WIFI_SERVICE);//获得WifiManager
+        wifiManager = (WifiManager) MainApplication.getApplication().getSystemService(WIFI_SERVICE);//获得WifiManager
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -1435,8 +1433,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         //创建远端view
         if (MainService.callConnection != null) {
-            remoteView = (SurfaceView) MainService.callConnection.createVideoView(false, this,
-                    true);
+            remoteView = (SurfaceView) MainService.callConnection.createVideoView(false, this, true);
         }
         if (remoteView != null) {
             remoteView.setVisibility(View.INVISIBLE);
@@ -1466,8 +1463,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * 开始启动拍照
      */
-    protected void takePicture(final String thisValue, final boolean isCall, final
-    TakePictureCallback callback) {
+    String curUrl;
+
+    protected void takePicture(final String thisValue, final boolean isCall, final TakePictureCallback callback) {
         if (currentStatus == CALLING_MODE || currentStatus == PASSWORD_CHECKING_MODE) {
             final String uuid = getUUID(); //随机生成UUID
             lastImageUuid = uuid;
@@ -1475,7 +1473,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //创建地址
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String date = sdf.format(new Date(System.currentTimeMillis()));
-            final String curUrl = "upload/menjin/img/" + "android_" + date + ".jpg";
+            curUrl = API.PIC+"door/img/" + "android_" + date + ".jpg";
             callback.beforeTakePickture(thisValue, curUrl, isCall, uuid);
             Log.v("MainActivity", "开始启动拍照");
             new Thread() {
@@ -1497,8 +1495,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private synchronized void doTakePicture(final String thisValue, final String curUrl, final
-    boolean isCall, final String uuid, final TakePictureCallback callback) {
+    private synchronized void doTakePicture(final String thisValue, final String curUrl, final boolean isCall, final
+    String uuid, final TakePictureCallback callback) {
         mCamerarelease = false;
         try {
             camera = Camera.open();
@@ -1527,67 +1525,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         try {
                             Log.v("MainActivity", "拍照成功");
                             Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                            final File file = new File(Environment.getExternalStorageDirectory(),
-                                    System.currentTimeMillis() + ".jpg");
+                            final File file = new File(Environment.getExternalStorageDirectory(), System
+                                    .currentTimeMillis() + ".jpg");
                             FileOutputStream outputStream = new FileOutputStream(file);
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
                             outputStream.close();
-                            final String url = DeviceConfig.SERVER_URL + "/app/upload/image";
-
                             if (checkTakePictureAvailable(uuid)) {
-                                new Thread() {
+                                OkHttpUtils.post().url(API.QINIU_IMG).build().execute(new StringCallback() {
                                     @Override
-                                    public void run() {
-                                        Log.i(TAG, "开始上传照片");
-//                                        String s = HttpApi.getInstance().loadHttpforGet
-// (DeviceConfig.GET_QINIUTOKEN,
-//                                                "");
-//                                        String token = "";
-//                                        if (s != null && !"".equals(s)) {
-//                                            JSONObject jsonObject = Ajax.getJSONObject(s);
-//
-//                                            try {
-//                                                token = (String) jsonObject.get("uptoken");
-//                                            } catch (JSONException e) {
-//                                                e.printStackTrace();
-//                                            }
-//                                        }
-//                                        Log.e(TAG, "Token==" + token);
-                                        Log.e(TAG, "file七牛储存地址：" + curUrl);
-                                        Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file
-                                                .length());
-                                        uploadManager.put(file.getPath(), curUrl, "", new
-                                                UpCompletionHandler() {
-                                            @Override
-                                            public void complete(String key, ResponseInfo info,
-                                                                 JSONObject response) {
-                                                if (info.isOK()) {
-                                                    Log.e(TAG, "七牛上传图片成功");
-
-                                                } else {
-                                                    Log.e(TAG, "七牛上传图片失败");
-                                                }
-                                                if (checkTakePictureAvailable(uuid) && info.isOK
-                                                        ()) {
-                                                    Log.i(TAG, "开始发送图片");
-                                                    callback.afterTakePickture(thisValue, curUrl,
-                                                            isCall, uuid);
-                                                } else {
-                                                    Log.v("MainActivity", "上传照片成功,但已取消");
-                                                }
-                                                clearImageUuidAvaible(uuid);
-                                                Log.v(TAG, "正常清除" + uuid);
-                                                try {
-                                                    if (file != null) {
-                                                        file.delete();
-                                                    }
-                                                } catch (Exception e) {
-                                                }
-                                            }
-                                        }, null);
-
+                                    public void onError(Call call, Exception e, int id) {
+                                        Log.i(TAG, "获取七牛token失败 e" + e.toString());
                                     }
-                                }.start();
+
+                                    @Override
+                                    public void onResponse(final String response, int id) {
+                                        new Thread() {
+                                            @Override
+                                            public void run() {
+                                                String token = JsonUtil.getFieldValue(response, "data");
+                                                Log.i(TAG, "获取七牛token成功 开始上传照片  token"+token);
+                                                Log.e(TAG, "file七牛储存地址：" + curUrl);
+                                                Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
+
+                                                uploadManager.put(file.getPath(), curUrl, token, new UpCompletionHandler
+                                                        () {
+                                                    @Override
+                                                    public void complete(String key, ResponseInfo info, JSONObject
+                                                            response) {
+                                                        if (info.isOK()) {
+                                                            Log.e(TAG, "七牛上传图片成功");
+
+                                                        } else {
+                                                            Log.e(TAG, "七牛上传图片失败");
+                                                        }
+                                                        if (checkTakePictureAvailable(uuid) && info.isOK()) {
+                                                            Log.i(TAG, "开始发送图片");
+                                                            callback.afterTakePickture(thisValue, curUrl, isCall, uuid);
+                                                        } else {
+                                                            Log.v("MainActivity", "上传照片成功,但已取消");
+                                                        }
+                                                        clearImageUuidAvaible(uuid);
+                                                        Log.v(TAG, "正常清除" + uuid);
+                                                        try {
+                                                            if (file != null) {
+                                                                file.delete();
+                                                            }
+                                                        } catch (Exception e) {
+                                                        }
+                                                    }
+                                                }, null);
+
+                                            }
+                                        }.start();
+                                    }
+                                });
                             } else {
                                 Log.v("MainActivity", "拍照成功，但已取消");
                             }
@@ -1743,8 +1734,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * 开始呼叫
      */
-    protected void startDialorPasswordDirectly(final String thisValue, final String fileUrl,
-                                               final boolean isCall, String uuid) {
+    protected void startDialorPasswordDirectly(final String thisValue, final String fileUrl, final boolean isCall,
+                                               String uuid) {
         if (currentStatus == CALLING_MODE || currentStatus == PASSWORD_CHECKING_MODE) {
             Message message = Message.obtain();
             String[] parameters = new String[3];
@@ -1780,8 +1771,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @param isCall
      * @param uuid
      */
-    protected void startSendPictureDirectly(final String thisValue, final String fileUrl, final
-    boolean isCall, String uuid) {
+    protected void startSendPictureDirectly(final String thisValue, final String fileUrl, final boolean isCall,
+                                            String uuid) {
         if (fileUrl == null || fileUrl.length() == 0) {
             return;
         }
@@ -2078,8 +2069,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     case R.id.action_settings10://退出
 //                        LogDoor.e(TAG,"menu 退出");
                         setResult(RESULT_OK);
-                        MainActivity.this.stopService(new Intent(MainActivity.this, MainService
-                                .class));
+                        MainActivity.this.stopService(new Intent(MainActivity.this, MainService.class));
                         finish();
                         sendBroadcast(new Intent("com.android.action.display_navigationbar"));
                         break;
@@ -2120,8 +2110,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //人脸跟踪初始化引擎，设置检测角度、范围，数量。创建对象后，必须先于其他成员函数调用，否则其他成员函数会返回 MERR_BAD_STATE
         //orientsPriority 指定检测的角度 scale 指定支持检测的最小人脸尺寸(16) maxFaceNum 最多能检测到的人脸个数(5)
-        AFT_FSDKError err = engine.AFT_FSDK_InitialFaceEngine(arc_appid, ft_key, AFT_FSDKEngine
-                .AFT_OPF_0_HIGHER_EXT, 16, 5);
+        AFT_FSDKError err = engine.AFT_FSDK_InitialFaceEngine(arc_appid, ft_key, AFT_FSDKEngine.AFT_OPF_0_HIGHER_EXT,
+                16, 5);
         Log.d(TAG, "AFT_FSDK_InitialFaceEngine =" + err.getCode());
         err = engine.AFT_FSDK_GetVersion(version);//获取版本信息
         Log.d(TAG, "AFT_FSDK_GetVersion:" + version.toString() + "," + err.getCode());
@@ -2131,8 +2121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         faceHandler = new Handler(new Handler.Callback() {
             @Override
             public boolean handleMessage(Message msg) {
-                Log.v(TAG, "face" + "handleMessage-->" + msg.what + "/" + Thread.currentThread()
-                        .getName());
+                Log.v(TAG, "face" + "handleMessage-->" + msg.what + "/" + Thread.currentThread().getName());
                 switch (msg.what) {
                     case MSG_FACE_DETECT_CHECK://门开了以后identification设为false
                         // ，发送此消息MSG_FACE_DETECT_CHECK
@@ -2320,8 +2309,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Object onPreview(byte[] data, int width, int height, int format, long timestamp) {
 //        LogDoor.e(TAG, "相机" + "onPreview");
         //检测输入的图像中存在的人脸，输出结果和初始化时设置的参数有密切关系,检测到的人脸会add到此result
-        AFT_FSDKError err = engine.AFT_FSDK_FaceFeatureDetect(data, width, height, AFT_FSDKEngine
-                .CP_PAF_NV21, result);
+        AFT_FSDKError err = engine.AFT_FSDK_FaceFeatureDetect(data, width, height, AFT_FSDKEngine.CP_PAF_NV21, result);
 //        LogDoor.d(TAG, "AFT_FSDK_FaceFeatureDetect =" + err.getCode());
 //        LogDoor.d(TAG, "Face=" + result.size());
 //        for (AFT_FSDKFace face : result) {
@@ -2491,13 +2479,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //检测输入图像中的人脸特征信息，输出结果保存在 AFR_FSDKFace feature
                 //data 输入的图像数据,width 图像宽度,height 图像高度,format 图像格式,face 已检测到的脸框,ori 已检测到的脸角度,
                 // feature 检测到的人脸特征信息
-                AFR_FSDKError error = engine.AFR_FSDK_ExtractFRFeature(mImageNV21, mWidth,
-                        mHeight, AFR_FSDKEngine.CP_PAF_NV21, mAFT_FSDKFace.getRect(),
-                        mAFT_FSDKFace.getDegree(), result);
+                AFR_FSDKError error = engine.AFR_FSDK_ExtractFRFeature(mImageNV21, mWidth, mHeight, AFR_FSDKEngine
+                        .CP_PAF_NV21, mAFT_FSDKFace.getRect(), mAFT_FSDKFace.getDegree(), result);
 //                LogDoor.d(TAG, "AFR_FSDK_ExtractFRFeature cost :" + (System.currentTimeMillis() -
 //                 time) + "ms");
-                Log.d(TAG, "Face=" + result.getFeatureData()[0] + "," + result.getFeatureData()
-                        [1] + "," + result.getFeatureData()[2] + "," + error.getCode());
+                Log.d(TAG, "Face=" + result.getFeatureData()[0] + "," + result.getFeatureData()[1] + "," + result
+                        .getFeatureData()[2] + "," + error.getCode());
                 AFR_FSDKMatching score = new AFR_FSDKMatching();//这个类用来保存特征信息匹配度
                 float max = 0.0f;//匹配度的值
                 String name = null;
@@ -2510,8 +2497,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                     for (AFR_FSDKFace face : fr.mFaceList) {
                         //比较两份人脸特征信息的匹配度(result 脸部特征信息对象,face 脸部特征信息对象,score 匹配度对象)
-                        Log.e("人脸识别 比较值 ", "result " + result.toString() + " face " + face
-                                .toString());
+                        Log.e("人脸识别 比较值 ", "result " + result.toString() + " face " + face.toString());
                         error = engine.AFR_FSDK_FacePairMatching(result, face, score);
                         Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
                         if (max < score.getScore()) {
