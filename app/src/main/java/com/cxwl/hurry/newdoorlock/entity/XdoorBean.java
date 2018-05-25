@@ -26,7 +26,7 @@ public class XdoorBean {
     private String ip;
     private String mac;
     private String type;//0 为大门 1 为 单元门
-    private String danyuan_id;
+    private String danyuan_id;//
     private String loudong_id;
     private int xiangmu_id;
     private String gongsi_id;

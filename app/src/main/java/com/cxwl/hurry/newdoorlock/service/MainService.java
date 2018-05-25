@@ -1000,11 +1000,13 @@ public class MainService extends Service {
                 try {
                     out.close();
                 } catch (IOException e) {
+                    result = null;
                     e.printStackTrace();
                 }
                 try {
                     in.close();
                 } catch (IOException e) {
+                    result = null;
                     e.printStackTrace();
                 }
             }
@@ -1018,6 +1020,7 @@ public class MainService extends Service {
                     output.close();
                 }
             } catch (Exception e) {
+                result = null;
             }
         }
         setDownloadingFlag(0);
@@ -1770,19 +1773,18 @@ public class MainService extends Service {
         // "xintiao_time":null
         XdoorBean result = (XdoorBean) msg.obj;
         if ("0".equals(result.getType())) {//大门
-
+            DeviceConfig.DEVICE_TYPE = "C";
+            lockName = "大门";
         } else if ("1".equals(result.getType())) {//单元门
+            DeviceConfig.DEVICE_TYPE = "B";
             blockId = Integer.parseInt(result.getLoudong_id());
             lockId = Integer.parseInt(result.getDanyuan_id());
+            lockName = lockId + "单元";
         }
         communityId = result.getXiangmu_id();
         //目前服务器返回为空
         communityName = result.getXiangmu_name() == null ? "欣社区" : result.getXiangmu_name();
-        lockName = result.getDanyuan_name() == null ? lockId + "单元" : result.getDanyuan_name();
 
-        if (blockId == 0) {
-            DeviceConfig.DEVICE_TYPE = "C";
-        }
         // 保存消息  需要操作
         saveInfoIntoLocal(communityId, blockId, lockId, communityName, lockName);
         Message message = Message.obtain();
