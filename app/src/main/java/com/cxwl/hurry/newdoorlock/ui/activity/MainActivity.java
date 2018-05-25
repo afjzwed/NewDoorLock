@@ -79,6 +79,7 @@ import com.cxwl.hurry.newdoorlock.utils.HttpApi;
 import com.cxwl.hurry.newdoorlock.utils.HttpUtils;
 import com.cxwl.hurry.newdoorlock.utils.Intenet;
 import com.cxwl.hurry.newdoorlock.utils.JsonUtil;
+import com.cxwl.hurry.newdoorlock.utils.MacUtils;
 import com.cxwl.hurry.newdoorlock.utils.NetWorkUtils;
 import com.google.gson.reflect.TypeToken;
 import com.guo.android_extend.java.AbsLoop;
@@ -144,6 +145,8 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_DISCONNECT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_NEWCALL;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_ONVIDEO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_REGISTER;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_PIC;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_VEDIO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.ONVIDEO_MODE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.PASSWORD_CHECKING_MODE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.PASSWORD_MODE;
@@ -399,7 +402,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         adverTongJiCallBack = new AdverTongJiCallBack() {
             @Override
             public void sendTj(List<AdTongJiBean> list) {
-                Log.e("adv", list.toString());
+                sendMainMessager(MSG_TONGJI_VEDIO, list);
             }
         };
 //        advertiseHandler.initData(rows, dialMessenger, (currentStatus == ONVIDEO_MODE),
@@ -686,8 +689,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      *
      * @param obj
      */
+    private List<AdTongJiBean> mTongJiBeanList;
+    private AdTongJiBean mAdTongJiBean;
+
     public void onAdvertiseRefreshPic(Object obj) {
-        List<GuangGaoBean> obj1 = (List<GuangGaoBean>) obj;
+        final List<GuangGaoBean> obj1 = (List<GuangGaoBean>) obj;
         Log.d(TAG, "banner加载图片");
         //白天banner
         banner.setImageLoader(new GlideImagerBannerLoader());
@@ -705,6 +711,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onPageSelected(int i) {
                 Log.i("banner", "onPageSelected" + i);
                 //// TODO: 2018/5/22 这里记录广告播放次数
+                mTongJiBeanList = new ArrayList<>();
+                mAdTongJiBean = new AdTongJiBean();
+//                mAdTongJiBean.setStart_time("");
+//                mAdTongJiBean.setEnd_time("");
+                mAdTongJiBean.setAdd_id(obj1.get(i).getId());
+                mAdTongJiBean.setMac(MacUtils.getMac());
+                mTongJiBeanList.add(mAdTongJiBean);
+                sendMainMessager(MSG_TONGJI_PIC, mTongJiBeanList);
             }
 
             @Override
@@ -1471,7 +1485,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             lastImageUuid = uuid;
             setImageUuidAvaibale(uuid);
             //创建地址
-            curUrl ="door/img/" + System.currentTimeMillis()+ ".jpg";
+            curUrl = "door/img/" + System.currentTimeMillis() + ".jpg";
             callback.beforeTakePickture(thisValue, curUrl, isCall, uuid);
             Log.v("MainActivity", "开始启动拍照");
             new Thread() {
@@ -1513,7 +1527,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Camera.Parameters parameters = camera.getParameters();
                 parameters.setPreviewSize(320, 240);
                 camera.setParameters(parameters);
-             //   camera.setPreviewDisplay(autoCameraHolder);
+                //   camera.setPreviewDisplay(autoCameraHolder);
                 camera.startPreview();
                 camera.autoFocus(null);
                 Log.v("MainActivity", "开始拍照");
@@ -1524,7 +1538,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             camera.setPreviewCallback(null);
                             camera.stopPreview();
                             camera.release();
-                            camera=null;
+                            camera = null;
                             mCamerarelease = true;
                             Log.v("MainActivity", "释放照相机资源");
                             Log.v("MainActivity", "拍照成功");
@@ -1547,12 +1561,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                             @Override
                                             public void run() {
                                                 String token = JsonUtil.getFieldValue(response, "data");
-                                                Log.i(TAG, "获取七牛token成功 开始上传照片  token"+token);
+                                                Log.i(TAG, "获取七牛token成功 开始上传照片  token" + token);
                                                 Log.e(TAG, "file七牛储存地址：" + curUrl);
                                                 Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
 
-                                                uploadManager.put(file.getPath(), curUrl, token, new UpCompletionHandler
-                                                        () {
+                                                uploadManager.put(file.getPath(), curUrl, token, new
+                                                        UpCompletionHandler() {
                                                     @Override
                                                     public void complete(String key, ResponseInfo info, JSONObject
                                                             response) {
@@ -1706,7 +1720,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @param blockNo
      */
     private void startDialing(String blockNo) {
-        if (blockNo.equals("9999")||blockNo.equals("99999999")) {
+        if (blockNo.equals("9999") || blockNo.equals("99999999")) {
             if (faceHandler != null) {
                 //人脸识别录入
                 faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_PAUSE, 100);
@@ -2367,7 +2381,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onAccountReceived(String acc) {
-        String account =  reverseNum(acc);
+        String account = reverseNum(acc);
 
         //这里接收到刷卡后获得的卡ID
         cardId = account;
@@ -2391,11 +2405,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /**
      * 反转卡号（高低位颠倒）
+     *
      * @param acc
      */
-    private String  reverseNum(String acc) {
-        String s = acc.substring(6, 8) + acc.substring(4, 6) + acc.substring(2, 4) + acc
-                .substring(0, 2);
+    private String reverseNum(String acc) {
+        String s = acc.substring(6, 8) + acc.substring(4, 6) + acc.substring(2, 4) + acc.substring(0, 2);
         return s.toLowerCase();
     }
 

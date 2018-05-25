@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.media.AudioManager;
+import android.nfc.Tag;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -128,6 +129,8 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_DISCONNECT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_NEWCALL;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_ONVIDEO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_REGISTER;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_PIC;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_VEDIO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_ID;
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_KEY;
 import static com.cxwl.hurry.newdoorlock.config.Constant.SP_LIXIAN_MIMA;
@@ -248,18 +251,19 @@ public class MainService extends Service {
 
 
     /**
-     * 测试统计接口
+     * 统计广告视频信息接口
      */
-    private void testTJ() {
-        List<AdTongJiBean> list = new ArrayList<>();
-        AdTongJiBean ad = new AdTongJiBean();
-        ad.setAdd_id(20);
-        ad.setMac("44:2c:05:e6:9c:c5");
-        ad.setEnd_time("12324");
-        ad.setStart_time("454");
-        list.add(ad);
+    private void tongjiVedio(Object obj) {
+        Log.e(TAG, "开始上传统计广告");
+        List<AdTongJiBean> list = (List<AdTongJiBean>) obj;
+//        AdTongJiBean ad = new AdTongJiBean();
+//        ad.setAdd_id(20);
+//        ad.setMac("44:2c:05:e6:9c:c5");
+//        ad.setEnd_time("12324");
+//        ad.setStart_time("454");
+//        list.add(ad);
         String json = JsonUtil.parseListToJson(list);
-        Log.e(TAG, "json" + json);
+        Log.e(TAG, "广告视频统计请求 json " + json);
         OkHttpUtils.postString().url(API.ADV_TONGJI).content(json).mediaType(MediaType.parse
                 ("application/json; " + "charset=utf-8")).tag(this).build().execute(new StringCallback() {
             @Override
@@ -273,7 +277,33 @@ public class MainService extends Service {
             }
         });
     }
+    /**
+     * 统计广告视频信息接口
+     */
+    private void tongjiPic(Object obj) {
 
+        List<AdTongJiBean> list = (List<AdTongJiBean>) obj;
+//        AdTongJiBean ad = new AdTongJiBean();
+//        ad.setAdd_id(20);
+//        ad.setMac("44:2c:05:e6:9c:c5");
+//        ad.setEnd_time("12324");
+//        ad.setStart_time("454");
+//        list.add(ad);
+        String json = JsonUtil.parseListToJson(list);
+        Log.e(TAG, "广告图片统计请求 json " + json);
+        OkHttpUtils.postString().url(API.ADV_TONGJI).content(json).mediaType(MediaType.parse
+                ("application/json; " + "charset=utf-8")).tag(this).build().execute(new StringCallback() {
+            @Override
+            public void onError(Call call, Exception e, int id) {
+                Log.e(TAG, "er");
+            }
+
+            @Override
+            public void onResponse(String response, int id) {
+                Log.e(TAG, "onResponse" + response);
+            }
+        });
+    }
 
     /**
      * 初始化handle
@@ -312,6 +342,14 @@ public class MainService extends Service {
                     case MSG_DISCONNECT_VIEDO:
                         Log.i(TAG, "挂断正在通话的视频");
                         disconnectCallingConnection();
+                        break;
+                    case MSG_TONGJI_VEDIO:
+                        Log.i(TAG, "统计广告视频消息");
+                        tongjiVedio(msg.obj);
+                        break;
+                    case MSG_TONGJI_PIC:
+                        Log.i(TAG, "统计广告图片消息");
+                        tongjiPic(msg.obj);
                         break;
                     case MSG_START_DIAL:
                         Log.i(TAG, "开始呼叫");
@@ -1670,7 +1708,8 @@ public class MainService extends Service {
                         DoorBean doorBean = JsonUtil.parseJsonToBean(result, DoorBean.class);
                         httpServerToken = doorBean.getToken();
                         Log.e(TAG, doorBean.toString());
-
+                        //重置广告，图片，通知版本为0，登录时重新加载
+                        saveVisionInfo();
                         //保存返回数据，通知主线程继续下一步逻辑
                         Message message = mHandler.obtainMessage();
                         message.what = MSG_LOGIN;
@@ -2049,9 +2088,18 @@ public class MainService extends Service {
             //开门操作
             Log.e(TAG, "进行开门操作 开门开门");
             openLock();
-            //上传日志
             List<LogDoor> list = new ArrayList<>();
+            //拼接图片地址
+            if (StringUtils.isNoEmpty(logDoor.getKaimenjietu())) {
+                logDoor.setKaimenshijian(logDoor.getKaimenjietu());
+            } else {
+                if (StringUtils.isNoEmpty(imageUrl)) {
+                    logDoor.setKaimenshijian(imageUrl);
+                }
+            }
+            Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
             list.add(logDoor);
+            //上传日志
             createAccessLog(list);
         } else if (content.startsWith("refuse call")) { //拒绝接听
 //            if (!rejectUserList.contains(from)) {
@@ -2906,12 +2954,13 @@ public class MainService extends Service {
     protected void openLock() {
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
-        if (result != -1) {
-            sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
-            SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
-        } else {
-            ToastUtil.showShort("继电器节点操作失败");
-        }
+        sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
+//        if (result != -1) {
+//            sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
+//            SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
+//        } else {
+//            ToastUtil.showShort("继电器节点操作失败");
+//        }
     }
 
     /**

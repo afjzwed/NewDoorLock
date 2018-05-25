@@ -133,8 +133,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         surfaceViewCreate = false;
     }
 
-    public void initData(List<GuangGaoBean> rows, Messenger dialMessenger, boolean isOnVideo,
-                         AdverErrorCallBack errorCallBack, AdverTongJiCallBack mCallBack) {
+    public void initData(List<GuangGaoBean> rows, Messenger dialMessenger, boolean isOnVideo, AdverErrorCallBack
+            errorCallBack, AdverTongJiCallBack mCallBack) {
         this.dialMessenger = dialMessenger;
         list = rows;
         listIndex = 0;
@@ -332,7 +332,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         mAdTongJiBean = new AdTongJiBean();
         mAdTongJiBean.setStart_time(start_time);
         mAdTongJiBean.setEnd_time(endTime);
-        mAdTongJiBean.setAdd_id(1);
+        mAdTongJiBean.setAdd_id(list.get(listIndex).getId());
+        mAdTongJiBean.setMac(MacUtils.getMac());
         mTongJiBeanList.add(mAdTongJiBean);
         mAdverTongJiCallBack.sendTj(mTongJiBeanList);
 
