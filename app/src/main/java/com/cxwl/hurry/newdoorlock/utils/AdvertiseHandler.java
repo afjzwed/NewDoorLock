@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 import com.cxwl.hurry.newdoorlock.callback.AdverErrorCallBack;
 import com.cxwl.hurry.newdoorlock.callback.AdverTongJiCallBack;
-import com.cxwl.hurry.newdoorlock.entity.AdTongJiBean;
+import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 
 import org.json.JSONArray;

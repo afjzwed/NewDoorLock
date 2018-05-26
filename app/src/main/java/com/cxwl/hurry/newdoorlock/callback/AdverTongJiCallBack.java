@@ -1,7 +1,7 @@
 package com.cxwl.hurry.newdoorlock.callback;
 
 
-import com.cxwl.hurry.newdoorlock.entity.AdTongJiBean;
+import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
 
 import java.util.List;
 

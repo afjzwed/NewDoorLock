@@ -61,7 +61,7 @@ import com.cxwl.hurry.newdoorlock.callback.AdverErrorCallBack;
 import com.cxwl.hurry.newdoorlock.callback.AdverTongJiCallBack;
 import com.cxwl.hurry.newdoorlock.callback.GlideImagerBannerLoader;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
-import com.cxwl.hurry.newdoorlock.entity.AdTongJiBean;
+import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.NoticeBean;
 import com.cxwl.hurry.newdoorlock.entity.XdoorBean;

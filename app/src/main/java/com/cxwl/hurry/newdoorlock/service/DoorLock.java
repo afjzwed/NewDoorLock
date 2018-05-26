@@ -3,6 +3,8 @@ package com.cxwl.hurry.newdoorlock.service;
 import android.util.Log;
 
 import com.cxwl.hurry.newdoorlock.callback.AccountCallback;
+import com.cxwl.hurry.newdoorlock.db.Lian;
+import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.hurray.plugins.rkctrl;
 import com.hurray.plugins.serialport;
 
@@ -53,7 +55,7 @@ public class DoorLock {
     private String substring;
     private String str = "";
     private String strData = "";
-
+    Lian lian;
     public void runReadSerial(final int fd) {
         Runnable run = new Runnable() {
             public void run() {
@@ -76,7 +78,13 @@ public class DoorLock {
                         str += strData;
                         if (str.length() > 27) {
                             substring = str.substring(16, 24).toUpperCase();
+                            //// TODO: 2018/5/26 测试刷卡 
 //                            Log.e(TAG, "卡号 " + substring);
+//                            DbUtils.getInstans().deleteAllLian();
+//                             lian = new Lian();
+//                            lian.setLian_id(substring);
+//                            DbUtils.getInstans().insertOneLian(lian);
+//                            DbUtils.getInstans().quaryAllLian();
                             accountCallback.onAccountReceived(substring);
                             str = "";
                         }
