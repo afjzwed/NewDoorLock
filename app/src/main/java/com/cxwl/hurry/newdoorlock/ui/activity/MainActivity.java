@@ -240,6 +240,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean identification = false;//人脸识别可以开始对比的标识
     private FRAbsLoop mFRAbsLoop = null;//人脸对比线程
 
+    private Thread noticeThread = null;//通告更新线程
+    private boolean isTongGaoThreadStart = false;//通告更新线程是否开启的标志
+    private ArrayList<NoticeBean> noticeBeanList = new ArrayList<>();//通告集合
+    private NoticeBean currentNoticeBean = null;//当前显示通告
+    private int i = 0;//通告更新计数
+
     Timer timer = new Timer();
 
     private boolean mCamerarelease = true; //判断照相机是否释放
@@ -309,6 +315,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initFaceDetectAndIDCard();
 //测试自动关广告
         //  textColseAd();
+        isTongGaoThreadStart = false;//每次初始化都重启一次通告更新线程
     }
 
     //测试自动关广告
@@ -334,6 +341,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /*************************************************初始化一些基本东西start
      * ********************************************/
+
+    /**
+     * 开启通告更新线程
+     */
+    private void startTonggaoThread() {
+        if (null != noticeThread) {
+            noticeThread.interrupt();
+            noticeThread = null;
+        }
+        Log.e(TAG, "通告线程开始"+isTongGaoThreadStart);
+        noticeThread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    setTongGaoInfo();
+                    while (!isInterrupted()) {//检测线程是否已经中断
+                        sleep(1000 * 60);//间隔时间
+                        setTongGaoInfo();
+                    }
+                } catch (InterruptedException e) {
+
+                }
+            }
+        };
+        noticeThread.start();
+    }
 
     /**
      * 开启界面时间(本地)更新线程 之后放到MainService中
@@ -635,14 +668,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         break;
                     case MSG_GET_NOTICE: //获取通告成功
                         String value = (String) msg.obj;
-                        ArrayList<NoticeBean> noticeBeanList = (ArrayList<NoticeBean>) JsonUtil.parseJsonToList
-                                (value, new TypeToken<List<NoticeBean>>() {
-                        }.getType());
+                        noticeBeanList = (ArrayList<NoticeBean>) JsonUtil.parseJsonToList(value,
+                                new TypeToken<List<NoticeBean>>() {
+                                }.getType());
 
-                        NoticeBean noticeBean = noticeBeanList.get(0);
-                        Log.e(TAG, "设置通告" + noticeBeanList.toString());
-
-                        setTongGaoInfo(noticeBean);
+                        if (!isTongGaoThreadStart) {//线程未开启
+                            isTongGaoThreadStart =!isTongGaoThreadStart;
+                            startTonggaoThread();//开启线程
+                        }
                         break;
                     case MSG_ADVERTISE_REFRESH://刷新广告
                         Log.i(TAG, "刷新广告");
@@ -1927,12 +1960,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    private void setTongGaoInfo(final NoticeBean value) {
+    private void setTongGaoInfo() {
+        if (null != noticeBeanList && noticeBeanList.size() > 0) {//通告列表有数据
+            currentNoticeBean = noticeBeanList.get(i);
+            i++;
+            if (i == noticeBeanList.size()) {//循环一遍以后，重置游标
+                i = 0;
+            }
+        } else {//通告列表无数据
+            currentNoticeBean = new NoticeBean();
+            currentNoticeBean.setBiaoti("暂无通知");
+            currentNoticeBean.setNeirong("暂无通知");
+        }
+        Log.e(TAG, "设置通告 currentNoticeBean" + currentNoticeBean.toString());
         handler.post(new Runnable() {
             @Override
             public void run() {
-                setTextView(R.id.gonggao, value.getNeirong());
-                setTextView(R.id.gonggao_title, value.getBiaoti());
+                setTextView(R.id.gonggao, currentNoticeBean.getNeirong());
+                setTextView(R.id.gonggao_title, currentNoticeBean.getBiaoti());
             }
         });
     }

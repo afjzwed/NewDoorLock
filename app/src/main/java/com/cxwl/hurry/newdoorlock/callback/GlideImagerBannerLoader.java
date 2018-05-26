@@ -5,7 +5,6 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
-import com.cxwl.hurry.newdoorlock.http.API;
 import com.youth.banner.loader.ImageLoader;
 
 /**
@@ -40,7 +39,7 @@ public class GlideImagerBannerLoader extends ImageLoader {
     @Override
     public ImageView createImageView(Context context) {
         //使用fresco，需要创建它提供的ImageView，当然你也可以用自己自定义的具有图片加载功能的ImageView
-       // SimpleDraweeView simpleDraweeView=new SimpleDraweeView(context);
+        // SimpleDraweeView simpleDraweeView=new SimpleDraweeView(context);
         return new ImageView(context);
     }
 }

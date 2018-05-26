@@ -870,7 +870,8 @@ public class MainService extends Service {
                             List<GuangGaoBean> guangGaoBeen = JsonUtil.fromJsonArray(guanggao, GuangGaoBean.class);
                             Log.i(TAG, "获取广告图片接口 guangGaoBeen " + guangGaoBeen);
                             sendMessageToMainAcitivity(MSG_ADVERTISE_REFRESH_PIC, guangGaoBeen);
-                            adpicInfoStatus = 1;
+                            adpicInfoStatus = 0;
+                            syncCallBack("3",v);
                             //保存版本信息
                             SPUtil.put(MainService.this, SP_VISION_GUANGGAO, v);
                         } catch (Exception e) {
@@ -1201,8 +1202,7 @@ public class MainService extends Service {
                                                 adjustAdvertiseFiles();
                                                 restartAdvertise(guangGaoBeen);
                                                 removeAdvertiseFiles();
-                                                //同步通知
-                                                syncCallBack("3", v);
+                                                syncCallBack("5",v);//同步通知
                                                 SPUtil.put(MainService.this, Constant.SP_VISION_GUANGGAO_VIDEO, v);
                                                 //保存最新广告视频版本
                                                 adInfoStatus = 0;//重置广告视频下载状态
@@ -1476,7 +1476,7 @@ public class MainService extends Service {
     /**
      * 同步完成更新的信息信息
      *
-     * @param type   1 卡，2 人脸，3 广告，4 通告
+     * @param type   1 卡，2 人脸，3 图片广告，4 通告 ，5.视频广告
      * @param vision 版本
      */
     private void syncCallBack(final String type, float vision) {
@@ -2165,6 +2165,7 @@ public class MainService extends Service {
 
     /**
      * 上传开门日志
+     * 开门方式:1卡2手机3人脸4邀请码5离线密码6临时密码
      */
     protected void createAccessLog(final List<LogDoor> data) {
         Log.e(TAG, "开门日志上传" + data.toString());
@@ -2213,6 +2214,11 @@ public class MainService extends Service {
         });
     }
 
+    /**
+     * 离线日志上传
+     * 开门方式:1卡2手机3人脸4邀请码5离线密码6临时密码
+     * @param data
+     */
     protected void createAccessLogLixian(List<LogDoor> data) {
         Log.e(TAG, "开门离线日志上传" + data.toString());
         String url = API.LOG;
