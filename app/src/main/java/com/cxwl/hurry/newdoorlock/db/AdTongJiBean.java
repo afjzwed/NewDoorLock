@@ -63,4 +63,10 @@ public class AdTongJiBean {
     @Generated(hash = 1025819527)
     public AdTongJiBean() {
     }
+
+    @Override
+    public String toString() {
+        return "AdTongJiBean{" + "id=" + id + ", add_id=" + add_id + ", start_time='" +
+                start_time + '\'' + ", end_time='" + end_time + '\'' + ", mac='" + mac + '\'' + '}';
+    }
 }
