@@ -318,6 +318,7 @@ public class MainService extends Service {
 
     /**
      * 离线统计信息上传
+     *
      * @param list
      */
     private void lixianTongji(List<AdTongJiBean> list) {
@@ -871,7 +872,7 @@ public class MainService extends Service {
                             Log.i(TAG, "获取广告图片接口 guangGaoBeen " + guangGaoBeen);
                             sendMessageToMainAcitivity(MSG_ADVERTISE_REFRESH_PIC, guangGaoBeen);
                             adpicInfoStatus = 0;
-                            syncCallBack("3",v);
+                            syncCallBack("3", v);
                             //保存版本信息
                             SPUtil.put(MainService.this, SP_VISION_GUANGGAO, v);
                         } catch (Exception e) {
@@ -916,11 +917,13 @@ public class MainService extends Service {
             }
         } else {
             // TODO: 2018/5/18  下载失败，整理.temp文件  absolutePath为apk存储路径的文件夹
-//            File file = new File(absolutePath + "/" + fileName);
-//            if (file.exists()) {
+            String absolutePath = Environment.getExternalStorageDirectory() + "/" + LOCAL_APK_PATH + "/" + fileName +
+                    ".apk";
+            File file = new File(absolutePath);
+            if (file.exists()) {
 //                Log.e("下载", "删除");
-//                file.delete();
-//            }
+                file.delete();
+            }
             lastVersionStatus = "L";//等待下次心跳重新获取URL下载apk文件
         }
     }
@@ -1130,7 +1133,7 @@ public class MainService extends Service {
                             String list = JsonUtil.getFieldValue(result, "lian");//服务器字段命名错误
                             faceUrlList = (ArrayList<FaceUrlBean>) JsonUtil.parseJsonToList(list, new
                                     TypeToken<List<FaceUrlBean>>() {
-                            }.getType());
+                                    }.getType());
 
                             //通知MainActivity开始人脸录入流程
                             sendMessageToMainAcitivity(MSG_FACE_INFO, null);
@@ -1202,7 +1205,7 @@ public class MainService extends Service {
                                                 adjustAdvertiseFiles();
                                                 restartAdvertise(guangGaoBeen);
                                                 removeAdvertiseFiles();
-                                                syncCallBack("5",v);//同步通知
+                                                syncCallBack("5", v);//同步通知
                                                 SPUtil.put(MainService.this, Constant.SP_VISION_GUANGGAO_VIDEO, v);
                                                 //保存最新广告视频版本
                                                 adInfoStatus = 0;//重置广告视频下载状态
@@ -2217,6 +2220,7 @@ public class MainService extends Service {
     /**
      * 离线日志上传
      * 开门方式:1卡2手机3人脸4邀请码5离线密码6临时密码
+     *
      * @param data
      */
     protected void createAccessLogLixian(List<LogDoor> data) {

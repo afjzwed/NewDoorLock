@@ -350,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             noticeThread.interrupt();
             noticeThread = null;
         }
-        Log.e(TAG, "通告线程开始"+isTongGaoThreadStart);
+        Log.e(TAG, "通告线程开始" + isTongGaoThreadStart);
         noticeThread = new Thread() {
             @Override
             public void run() {
@@ -673,7 +673,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 }.getType());
 
                         if (!isTongGaoThreadStart) {//线程未开启
-                            isTongGaoThreadStart =!isTongGaoThreadStart;
+                            isTongGaoThreadStart = !isTongGaoThreadStart;
                             startTonggaoThread();//开启线程
                         }
                         break;
@@ -726,14 +726,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AdTongJiBean mAdTongJiBean;
     private String startTime;
     private String endTime;
+
     public void onAdvertiseRefreshPic(Object obj) {
 
         final List<GuangGaoBean> obj1 = (List<GuangGaoBean>) obj;
-        if (obj1.size()==1){
+        if (obj1.size() == 1) {
             //表示只有一张图片 需要轮播 在添加一张一样的开始轮播
             obj1.add(obj1.get(0));
         }
-        Log.d(TAG, "banner加载图片 size"+obj1.size());
+        Log.d(TAG, "banner加载图片 size" + obj1.size());
         //白天banner
         banner.setImageLoader(new GlideImagerBannerLoader());
         banner.setBannerStyle(BannerConfig.NOT_INDICATOR);
@@ -761,7 +762,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mTongJiBeanList.add(mAdTongJiBean);
                 sendMainMessager(MSG_TONGJI_PIC, mTongJiBeanList);
                 //设置下一张图片开始播放时间
-                startTime=endTime;
+                startTime = endTime;
             }
 
             @Override
@@ -1162,7 +1163,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 } else if (key >= 0) {//数字键
                     if (currentStatus == CALL_MODE) {
-                        callInput(key);
+                        unitNoInput(key);
+//                        callInput(key);
                     } else {
                         passwordInput(key);//密码开门
                     }
