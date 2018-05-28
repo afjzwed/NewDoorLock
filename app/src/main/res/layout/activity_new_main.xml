@@ -72,6 +72,7 @@
                     android:layout_marginTop="10dp"
                     android:background="@android:drawable/edit_text"
                     android:gravity="center"
+                    android:maxLength="11"
                     android:hint="请输入手机号码"/>
 
                 <TextView
