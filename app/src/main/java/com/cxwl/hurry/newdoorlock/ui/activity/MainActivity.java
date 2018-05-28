@@ -241,6 +241,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean identification = false;//人脸识别可以开始对比的标识
     private FRAbsLoop mFRAbsLoop = null;//人脸对比线程
     private boolean hasFaceInfo = false;//是否有本地脸数据的标识
+    private String phone_face = "";
 
     private Thread noticeThread = null;//通告更新线程
     private boolean isTongGaoThreadStart = false;//通告更新线程是否开启的标志
@@ -697,6 +698,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         rl_nfc.setVisibility(View.GONE);
                         nfcFlag = false;
                         isFlag = false;
+                        phone_face = "";
                         if (delete) {//删除成功
                             Toast.makeText(MainActivity.this, "删除成功", Toast.LENGTH_SHORT).show();
                         } else {//没有此人脸信息或删除失败
@@ -1217,6 +1219,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 nfcFlag = false;
                 initDialStatus();
                 isFlag = false;
+                phone_face = "";
             } else if (isFlag && !TextUtils.isEmpty(unit)) {
                 unit = backKey(unit);
                 setTextValue(R.id.et_unitno, unit);
@@ -1235,6 +1238,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         } else {
             int key = convertKeyCode(keyCode);
+            if (key >= 0) {
+                phone_face = phone_face + key;
+                setTextValue(R.id.et_unitno, phone_face);
+            }
         }
     }
 
