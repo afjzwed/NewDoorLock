@@ -52,7 +52,9 @@ import com.cxwl.hurry.newdoorlock.utils.JsonUtil;
 import com.cxwl.hurry.newdoorlock.utils.MacUtils;
 import com.cxwl.hurry.newdoorlock.utils.SPUtil;
 import com.cxwl.hurry.newdoorlock.utils.ShellUtils;
+import com.cxwl.hurry.newdoorlock.utils.SoundPoolUtil;
 import com.cxwl.hurry.newdoorlock.utils.StringUtils;
+import com.cxwl.hurry.newdoorlock.utils.ToastUtil;
 import com.google.gson.reflect.TypeToken;
 import com.guo.android_extend.image.ImageConverter;
 import com.zhy.http.okhttp.OkHttpUtils;
@@ -2017,7 +2019,7 @@ public class MainService extends Service {
 
         @Override
         public void onSendIm(int i) {
-            Log.e(RTCTAG, "onSendIm()" + (i == 0 ? "成功" : "失败"));
+            Log.e(RTCTAG, "onSendIm()" + (i == RtcConst.CallCode_Success ? "成功" : "失败"));
             if (callConnectState == CALL_VIDEO_CONNECTING) {
                 checkSendCallMessageParall(i);
             }
@@ -2402,6 +2404,7 @@ public class MainService extends Service {
                         String userUrl = RtcRules.UserToRemoteUri_new(username, RtcConst.UEType_Any);
                         Log.e(TAG, "发送取消呼叫的消息");
                         device.sendIm(userUrl, "cmd/json", command.toString());
+                        Log.e(RTCTAG, userUrl + "---" + command.toString());
                     }
                 }
             } else {
@@ -2433,9 +2436,12 @@ public class MainService extends Service {
                         username = username.replaceAll(":", "");
                     }
                     String userUrl = RtcRules.UserToRemoteUri_new(username, RtcConst.UEType_Any);
-                    int sendResult = device.sendIm(userUrl, "cmd/json", data.toString());
-                    Log.v("MainService", "发送访客图片-->" + username);
-                    Log.v("MainService", "sendIm(): " + sendResult);
+                    Log.e("timeimage", System.currentTimeMillis()+"");
+                    device.sendIm(userUrl, "cmd/json", data.toString());
+                    Log.v(TAG, "发送访客图片-->" + username);
+                    Log.e(RTCTAG, userUrl + "---" + data.toString());
+                    Log.e("timeimage", System.currentTimeMillis()+"");
+
                 }
             }
         } catch (JSONException e) {
@@ -2610,15 +2616,9 @@ public class MainService extends Service {
                 if (allUserList.size() > 0) {
                     YeZhuBean userObject = allUserList.remove(0);
                     String username = userObject.getYezhu_dianhua();
-//                    if (username.length() == 17) {
-//                        username = username.replaceAll(":", "");
-//                    }
                     String userUrl = RtcRules.UserToRemoteUri_new(username, RtcConst.UEType_Any);
-                    HttpApi.i("拨号中->准备拨号userUrl = " + userUrl);
-                    HttpApi.i("拨号中->准备拨号data = " + data.toString());
                     int sendResult = device.sendIm(userUrl, "cmd/json", data.toString());
-                    Log.v("MainService", "sendIm(): " + sendResult);
-                    HttpApi.i("拨号中->sendIm()" + sendResult);
+                    Log.e(RTCTAG, "sendIm(): " + userUrl+"---"+data.toString());
                     triedUserList.add(userObject);
 
                 } else {
@@ -2967,13 +2967,13 @@ public class MainService extends Service {
     protected void openLock() {
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
-        sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
-//        if (result != -1) {
-//            sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
-//            SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
-//        } else {
-//            ToastUtil.showShort("继电器节点操作失败");
-//        }
+     //   sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
+        if (result != -1) {
+            sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
+            SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
+        } else {
+            ToastUtil.showShort("继电器节点操作失败");
+        }
     }
 
     /**

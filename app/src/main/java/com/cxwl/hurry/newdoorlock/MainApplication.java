@@ -1,10 +1,15 @@
 package com.cxwl.hurry.newdoorlock;
 
+import android.app.AlarmManager;
 import android.app.Application;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 
 import com.cxwl.hurry.newdoorlock.db.DaoMaster;
 import com.cxwl.hurry.newdoorlock.db.DaoSession;
 import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
+import com.tencent.bugly.crashreport.CrashReport;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.log.LoggerInterceptor;
 
@@ -17,7 +22,7 @@ import okhttp3.OkHttpClient;
  * Created by William on 2018/4/26.
  */
 
-public class MainApplication  extends Application {
+public class MainApplication  extends Application  implements Thread.UncaughtExceptionHandler{
 
     private static MainApplication application;
 
@@ -38,6 +43,8 @@ public class MainApplication  extends Application {
                 //其他配置
                 .build();
         OkHttpUtils.initClient(okHttpClient);
+        //初始化腾讯buggly
+        CrashReport.initCrashReport(this, "4e8a21b88b", true);
     }
     static DaoSession mDaoSessin;
     public static DaoSession getGreenDaoSession() {
@@ -50,5 +57,24 @@ public class MainApplication  extends Application {
     }
     public static MainApplication getApplication() {
         return application;
+    }
+    // 捕获系统运行停止错误
+    @Override
+    public void uncaughtException(Thread thread, Throwable ex) {
+        // System.exit(0);
+
+        Intent intent = getBaseContext().getPackageManager()
+                .getLaunchIntentForPackage(getBaseContext().getPackageName());
+
+        PendingIntent restartIntent = PendingIntent.getActivity(
+                getApplicationContext(),
+                0, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        // 退出程序
+        AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 500, restartIntent); // 1秒钟后重启应用
+
+        System.exit(0);
+
     }
 }
