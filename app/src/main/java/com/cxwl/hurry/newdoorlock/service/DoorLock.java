@@ -139,10 +139,13 @@ public class DoorLock {
      * @return
      */
     public int openLock() {
+        int i = m_rkctrl.exec_io_cmd(19, 0);// 参数cmd:1 打开 0 关闭
+        return i;
+    }
+    public int closeLock() {
         int i = m_rkctrl.exec_io_cmd(19, 1);// 参数cmd:1 打开 0 关闭
         return i;
     }
-
 /*    public class MyHandler extends Handler {
         public MyHandler() {
         }

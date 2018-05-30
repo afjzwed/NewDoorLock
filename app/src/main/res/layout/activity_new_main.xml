@@ -122,6 +122,7 @@
                     android:id="@+id/iv_erweima"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
+                    android:visibility="gone"
                     android:layout_alignParentBottom="true"
                     android:layout_marginLeft="20dp"/>
 
@@ -186,7 +187,7 @@
 
                     <EditText
                         android:id="@+id/tv_input_text"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_marginLeft="10dp"
                         android:layout_toRightOf="@+id/tv_input_label"

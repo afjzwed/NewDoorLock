@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.media.AudioManager;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -245,6 +246,7 @@ public class MainService extends Service {
         // TODO: 2018/5/14 放在MainActivity中  initDB();
         initMacKey();
         //testTJ();
+        initCountDownTimer();
     }
 
 
@@ -2963,7 +2965,26 @@ public class MainService extends Service {
     }
 
     /****************************卡相关end************************/
+    private CountDownTimer countDownTimer;
+    private void  initCountDownTimer(){
+        countDownTimer = new CountDownTimer(5000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+               Log.i("开门","-------------------剩余"+millisUntilFinished/1000);
+            }
 
+            @Override
+            public void onFinish() {
+                Log.i("开门","剩余"+0);
+                int result = DoorLock.getInstance().closeLock();
+                if (result != -1) {
+                    Log.i("开门", "关闭继电器成功");
+                } else {
+                    ToastUtil.showShort("继电器节点操作失败");
+                }
+            }
+        };
+    }
     protected void openLock() {
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
@@ -2971,6 +2992,8 @@ public class MainService extends Service {
         if (result != -1) {
             sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
             SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
+            countDownTimer.cancel();
+            countDownTimer.start();
         } else {
             ToastUtil.showShort("继电器节点操作失败");
         }
