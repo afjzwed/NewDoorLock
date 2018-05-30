@@ -888,8 +888,6 @@ public class MainService extends Service {
                             sendMessageToMainAcitivity(MSG_ADVERTISE_REFRESH_PIC, guangGaoBeen);
                             adpicInfoStatus = 0;
                             syncCallBack("3", v);
-                            //保存版本信息
-                            SPUtil.put(MainService.this, SP_VISION_GUANGGAO, v);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -953,6 +951,7 @@ public class MainService extends Service {
             Map<String, String> map = new HashMap<>();
             map.put("mac", mac);
             map.put("version", getVersionName());
+            map.put("mac_id", mac_id);
             OkHttpUtils.postString().url(url).content(JsonUtil.parseMapToJson(map)).mediaType(MediaType.parse
                     ("application/json; " + "charset=utf-8")).addHeader("Authorization", httpServerToken).tag(this)
                     .build().execute(new StringCallback() {
@@ -966,16 +965,20 @@ public class MainService extends Service {
                 public void onResponse(String response, int id) {
                     Log.i(TAG, "onResponse 获取app下载地址" + response);
 
-                    String result = JsonUtil.getResult(response);
-                    final String address = JsonUtil.getFieldValue(result, "dizhi");
-                    final String fileName = "menjin";
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            downloadApp(address, fileName);
-                        }
-                    }).start();
+                    if ("0".equals(JsonUtil.getFieldValue(response, "code"))) {
+                        String result = JsonUtil.getResult(response);
+                        final String address = JsonUtil.getFieldValue(result, "version");
+                        final String fileName = "door";
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                downloadApp(address, fileName);
+                            }
+                        }).start();
+                    } else {
+                        lastVersionStatus = "L";//等待下次心跳重新获取URL
 
+                    }
                 }
             });
 
@@ -1221,8 +1224,6 @@ public class MainService extends Service {
                                                 restartAdvertise(guangGaoBeen);
                                                 removeAdvertiseFiles();
                                                 syncCallBack("5", v);//同步通知
-                                                SPUtil.put(MainService.this, Constant.SP_VISION_GUANGGAO_VIDEO, v);
-                                                //保存最新广告视频版本
                                                 adInfoStatus = 0;//重置广告视频下载状态
                                             } catch (Exception e) {
                                                 e.printStackTrace();
@@ -1404,8 +1405,6 @@ public class MainService extends Service {
                             Log.e(TAG, "设置通告notice" + tonggao);
                             //通知主线程，显示通知
                             sendMessageToMainAcitivity(MSG_GET_NOTICE, tonggao);
-                            //保存本次更新版本
-                            SPUtil.put(MainService.this, Constant.SP_VISION_TONGGAO, version);
                             //调用更新通知接口
                             syncCallBack("4", version);
                             noticesStatus = 0;//修改状态，等待下次（新）数据
@@ -1462,8 +1461,6 @@ public class MainService extends Service {
                                     DbUtils.getInstans().addAllKa(kas);
                                     //查询卡信息成功
                                     //DbUtils.getInstans().quaryAllKa();
-                                    //保存卡信息的版本
-                                    SPUtil.put(MainService.this, SP_VISION_KA, kaVison);
                                     syncCallBack("1", kaVison);
                                     cardInfoStatus = 0;//修改状态，等待下次（新）数据
                                 } catch (Exception e) {
@@ -1497,7 +1494,7 @@ public class MainService extends Service {
      * @param type   1 卡，2 人脸，3 图片广告，4 通告 ，5.视频广告
      * @param vision 版本
      */
-    private void syncCallBack(final String type, long vision) {
+    private void syncCallBack(final String type, final long vision) {
         try {
             //开始获取门禁卡信息
             String url = API.SYNC_CALLBACK;
@@ -1519,13 +1516,34 @@ public class MainService extends Service {
                     if (null != response) {
                         String code = JsonUtil.getFieldValue(response, "code");
                         if ("0".equals(code)) {
-
+                            switch (type) {
+                                case "1":
+                                    //保存卡信息的版本
+                                    SPUtil.put(MainService.this, SP_VISION_KA, vision);
+                                    break;
+                                case "2":
+                                    break;
+                                case "3":
+                                    //保存图片广告信息的版本
+                                    SPUtil.put(MainService.this, SP_VISION_GUANGGAO, vision);
+                                    break;
+                                case "4":
+                                    // 保存通告告信息的版本
+                                    SPUtil.put(MainService.this, Constant.SP_VISION_TONGGAO, vision);
+                                    break;
+                                case "5":
+                                    //保存最新广告视频版本
+                                    SPUtil.put(MainService.this, Constant.SP_VISION_GUANGGAO_VIDEO, vision);
+                                    break;
+                                default:
+                                    break;
+                            }
                         } else {
-
+                            Log.e(TAG, "同步信息失败+ type "+type);
                         }
                     } else {
                         //服务器异常或没有网络
-
+                        Log.e(TAG, "同步信息失败+ type "+type);
                     }
                 }
             });
