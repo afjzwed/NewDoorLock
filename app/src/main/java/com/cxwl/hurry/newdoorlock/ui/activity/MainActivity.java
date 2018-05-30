@@ -13,6 +13,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
@@ -73,6 +74,7 @@ import com.cxwl.hurry.newdoorlock.interfac.TakePictureCallback;
 import com.cxwl.hurry.newdoorlock.service.DoorLock;
 import com.cxwl.hurry.newdoorlock.service.MainService;
 import com.cxwl.hurry.newdoorlock.utils.AdvertiseHandler;
+import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.cxwl.hurry.newdoorlock.utils.DialogUtil;
 import com.cxwl.hurry.newdoorlock.utils.HttpApi;
@@ -83,6 +85,7 @@ import com.cxwl.hurry.newdoorlock.utils.MacUtils;
 import com.cxwl.hurry.newdoorlock.utils.NetWorkUtils;
 import com.google.gson.reflect.TypeToken;
 import com.guo.android_extend.java.AbsLoop;
+import com.guo.android_extend.java.ExtByteArrayOutputStream;
 import com.guo.android_extend.widget.CameraFrameData;
 import com.guo.android_extend.widget.CameraGLSurfaceView;
 import com.guo.android_extend.widget.CameraSurfaceView;
@@ -100,6 +103,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -1617,6 +1621,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 开始启动拍照
      */
     String curUrl;
+    String faceOpenUrl;//人脸开门截图URL
 
     protected void takePicture(final String thisValue, final boolean isCall, final TakePictureCallback callback) {
         if (currentStatus == CALLING_MODE || currentStatus == PASSWORD_CHECKING_MODE) {
@@ -2652,7 +2657,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 onPause();
             }
             try {
-                Thread.sleep(1 * 1000);
+                Thread.sleep(2 * 1000);//两秒一次
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -2697,7 +2702,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     //fr success.
                     //final float max_score = max;
                     //LogDoor.v(FACE_TAG, "置信度：" + (float) ((int) (max_score * 1000)) / 1000.0);
-                    sendMainMessager(MSG_FACE_OPENLOCK, name);
+                    if (DeviceConfig.OPEN_RENLIAN_STATE == 0) {//开启截图、上传图片、开门、上传日志流程
+                        DeviceConfig.OPEN_RENLIAN_STATE = 1;//已开始处理图片
+                        //将byte数组转成bitmap再转成图片文件
+                        byte[] data = mImageNV21;
+                        YuvImage yuv = new YuvImage(data, ImageFormat.NV21, mWidth, mHeight, null);
+                        ExtByteArrayOutputStream ops = new ExtByteArrayOutputStream();
+                        yuv.compressToJpeg(mAFT_FSDKFace.getRect(), 80, ops);
+                        Bitmap bmp = BitmapFactory.decodeByteArray(ops.getByteArray(), 0, ops.getByteArray().length);
+                        try {
+                            ops.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        File file = null;
+                        if (null != bmp) {
+                            file = BitmapUtils.saveBitmap(MainActivity.this, bmp);//本地截图文件地址
+                        }
+
+                        String[] parameters = new String[2];
+                        parameters[0] = name;
+                        if (null != file && !TextUtils.isEmpty(file.getPath())) {
+//                            parameters[1]  = filePath;
+                            uploadToQiNiu(file);//这里做上传到七牛的操作，不返回图片URL
+                            parameters[1] = faceOpenUrl;
+                        } else {
+                            parameters[1] = "";
+                        }
+                        DeviceConfig.OPEN_RENLIAN_STATE = 0;//图片处理完成（异步处理，成功与否尽人事，听天命）,重置状态
+                        sendMainMessager(MSG_FACE_OPENLOCK, parameters);
+                        file = null;
+                        bmp = null;
+                        yuv = null;
+                        data = null;
+                    }
                 }
                 mImageNV21 = null;
             }
@@ -2709,6 +2747,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //LogDoor.v(FACE_TAG, "AFR_FSDK_UninitialEngine : " + error.getCode());
         }
     }
+
+    /**
+     * 上传图片至七牛
+     *
+     * @param file
+     * @return
+     */
+    private void uploadToQiNiu(final File file) {
+        //创建地址
+        faceOpenUrl = "door/img/" + System.currentTimeMillis() + ".jpg";
+        OkHttpUtils.post().url(API.QINIU_IMG).build().execute(new StringCallback() {//七牛token值不固定，每次请求使用
+            @Override
+            public void onError(Call call, Exception e, int id) {
+                Log.i(TAG, "获取七牛token失败 e" + e.toString());
+                DeviceConfig.OPEN_RENLIAN_STATE = 0;//重置处理图片并上传日志的状态
+            }
+
+            @Override
+            public void onResponse(final String response, int id) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        String token = JsonUtil.getFieldValue(response, "data");
+                        Log.i(TAG, "获取七牛token成功 开始上传照片  token" + token);
+                        Log.e(TAG, "file七牛储存地址：" + curUrl);
+                        Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
+                        uploadManager.put(file.getPath(), faceOpenUrl, token, new UpCompletionHandler() {
+                            @Override
+                            public void complete(String key, ResponseInfo info, JSONObject response) {
+                                if (info.isOK()) {
+                                    Log.e(TAG, "七牛上传图片成功");
+
+                                } else {
+                                    Log.e(TAG, "七牛上传图片失败");
+                                }
+                                try {//删除本地图片文件
+                                    if (file != null) {
+                                        file.delete();
+                                    }
+                                } catch (Exception e) {
+                                }
+                                DeviceConfig.OPEN_RENLIAN_STATE = 0;//重置处理图片并上传日志的状态
+                            }
+                        }, null);
+                    }
+                }.start();
+            }
+        });
+    }
+
     /****************************虹软相关end*********************************************/
 
     /****************************生命周期start*******************************************/

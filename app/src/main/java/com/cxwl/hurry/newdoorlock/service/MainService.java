@@ -199,6 +199,7 @@ public class MainService extends Service {
     public static int lockId = 0;//锁ID
     public String imageUrl = null;//对应呼叫访客图片地址
     public String imageUuid = null;//图片对应的uuid
+    public String faceImageUrl = null;//人脸开门的图片地址
 
     private Thread timeoutCheckThread = null;//自动取消呼叫的定时器
     Thread downloadThread = null;//下载文件的线程
@@ -467,15 +468,22 @@ public class MainService extends Service {
                     }
                     case MSG_FACE_OPENLOCK: {
                         openLock();
-                        String obj = (String) msg.obj;
+                        String[] parame = (String[]) msg.obj;
+                        String phoneNum = parame[0];//手机号码
+                        String picUrl = parame[1];//图片URL
+
                         LogDoor data = new LogDoor();
                         data.setMac(mac);
                         data.setKaimenfangshi("3");
-                        data.setKaimenjietu("");
-                        if (!TextUtils.isEmpty(obj)) {
-                            data.setPhone(obj);
-                        } else {
+                        if (TextUtils.isEmpty(phoneNum)) {
                             data.setPhone("");
+                        } else {
+                            data.setPhone(phoneNum);
+                        }
+                        if (TextUtils.isEmpty(picUrl)) {
+                            data.setKaimenjietu("");
+                        } else {
+                            data.setKaimenjietu(picUrl);
                         }
                         data.setKa_id("");
                         data.setKaimenshijian(System.currentTimeMillis() + "");

@@ -43,6 +43,8 @@ public class DeviceConfig {
     public static int BLOCK_NO_LENGTH = 2;
     public static int BLOCK_LENGTH = 8;//楼栋房屋号长度
 
+    public static int OPEN_RENLIAN_STATE = 0;//人脸开门是否开始处理图片并上传日志的状态  0:未开始 1:已开始
+
 
     //    public static final int DEVICE_KEYCODE_POUND = 66;//确认键
 //    public static final int DEVICE_KEYCODE_STAR = 67;//删除键

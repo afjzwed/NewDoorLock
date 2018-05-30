@@ -28,7 +28,7 @@
                 android:id="@+id/image_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@mipmap/bg1"
+                android:background="@mipmap/bg_19da"
                 android:scaleType="fitXY"/>
 
 
@@ -193,7 +193,6 @@
                         android:layout_toRightOf="@+id/tv_input_label"
                         android:gravity="center_vertical"
                         android:hint="确认键切换房号/密码"
-                        android:maxLength="11"
                         android:textColor="#ffffff"
                         android:textColorHint="#878686"
                         android:textSize="20sp"
