@@ -18,6 +18,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.arcsoft.facedetection.AFD_FSDKEngine;
@@ -30,9 +31,9 @@ import com.arcsoft.facerecognition.AFR_FSDKFace;
 import com.arcsoft.facerecognition.AFR_FSDKVersion;
 import com.cxwl.hurry.newdoorlock.config.Constant;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
+import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
 import com.cxwl.hurry.newdoorlock.db.Ka;
 import com.cxwl.hurry.newdoorlock.db.LogDoor;
-import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
 import com.cxwl.hurry.newdoorlock.entity.ConnectReportBean;
 import com.cxwl.hurry.newdoorlock.entity.DoorBean;
 import com.cxwl.hurry.newdoorlock.entity.FaceUrlBean;
@@ -464,18 +465,26 @@ public class MainService extends Service {
                         }
                         break;
                     }
-                    case MSG_FACE_OPENLOCK:
+                    case MSG_FACE_OPENLOCK: {
                         openLock();
+                        String obj = (String) msg.obj;
                         LogDoor data = new LogDoor();
                         data.setMac(mac);
                         data.setKaimenfangshi("3");
                         data.setKaimenjietu("");
+                        if (!TextUtils.isEmpty(obj)) {
+                            data.setPhone(obj);
+                        } else {
+                            data.setPhone("");
+                        }
+                        data.setKa_id("");
                         data.setKaimenshijian(System.currentTimeMillis() + "");
                         data.setUuid("");
                         List<LogDoor> list = new ArrayList<>();
                         list.add(data);
                         createAccessLog(list);
                         break;
+                    }
                     default:
                         break;
                 }
@@ -784,10 +793,12 @@ public class MainService extends Service {
                             }
                             //// TODO: 2018/5/17 拿app版本信息 去掉点
                             if (StringUtils.isNoEmpty(connectReportBean.getVersion())) {
-                                String appVision = (String) SPUtil.get(MainService.this, Constant.SP_VISION_APP, getVersionName());
+                                String appVision = (String) SPUtil.get(MainService.this, Constant.SP_VISION_APP,
+                                        getVersionName());
                                 Log.i(TAG, "心跳--当前app版本：" + appVision + "   服务器app版本：" +
                                         (connectReportBean.getVersion()));
-                                if (Integer.parseInt(connectReportBean.getVersion().replace(".","")) > Integer.parseInt(appVision.replace(".",""))) {
+                                if (Integer.parseInt(connectReportBean.getVersion().replace(".", "")) > Integer
+                                        .parseInt(appVision.replace(".", ""))) {
                                     Log.i(TAG, "心跳中有APP信息更新");
                                     if (lastVersionStatus.equals("D")) {//正在下载最新包
                                         //不获取地址
@@ -1137,7 +1148,7 @@ public class MainService extends Service {
                             String list = JsonUtil.getFieldValue(result, "lian");//服务器字段命名错误
                             faceUrlList = (ArrayList<FaceUrlBean>) JsonUtil.parseJsonToList(list, new
                                     TypeToken<List<FaceUrlBean>>() {
-                            }.getType());
+                                    }.getType());
 
                             //通知MainActivity开始人脸录入流程
                             sendMessageToMainAcitivity(MSG_FACE_INFO, null);
@@ -1728,7 +1739,7 @@ public class MainService extends Service {
                         String result = JsonUtil.getResult(response);
                         DoorBean doorBean = JsonUtil.parseJsonToBean(result, DoorBean.class);
                         httpServerToken = doorBean.getToken();
-                        mac_id=doorBean.getMac_id()+"";
+                        mac_id = doorBean.getMac_id() + "";
                         Log.e(TAG, doorBean.toString());
                         //重置广告，图片，通知版本为0，登录时重新加载
                         saveVisionInfo();
@@ -1845,7 +1856,7 @@ public class MainService extends Service {
             DeviceConfig.DEVICE_TYPE = "B";
             blockId = Integer.parseInt(result.getLoudong_id());
             lockId = Integer.parseInt(result.getDanyuan_id());
-            lockName =blockId+"栋"+lockId + "单元";
+            lockName = blockId + "栋" + lockId + "单元";
         }
         communityId = result.getXiangmu_id();
         //目前服务器返回为空
@@ -2438,11 +2449,11 @@ public class MainService extends Service {
                         username = username.replaceAll(":", "");
                     }
                     String userUrl = RtcRules.UserToRemoteUri_new(username, RtcConst.UEType_Any);
-                    Log.e("timeimage", System.currentTimeMillis()+"");
+                    Log.e("timeimage", System.currentTimeMillis() + "");
                     device.sendIm(userUrl, "cmd/json", data.toString());
                     Log.v(TAG, "发送访客图片-->" + username);
                     Log.e(RTCTAG, userUrl + "---" + data.toString());
-                    Log.e("timeimage", System.currentTimeMillis()+"");
+                    Log.e("timeimage", System.currentTimeMillis() + "");
 
                 }
             }
@@ -2620,7 +2631,7 @@ public class MainService extends Service {
                     String username = userObject.getYezhu_dianhua();
                     String userUrl = RtcRules.UserToRemoteUri_new(username, RtcConst.UEType_Any);
                     int sendResult = device.sendIm(userUrl, "cmd/json", data.toString());
-                    Log.e(RTCTAG, "sendIm(): " + userUrl+"---"+data.toString());
+                    Log.e(RTCTAG, "sendIm(): " + userUrl + "---" + data.toString());
                     triedUserList.add(userObject);
 
                 } else {
@@ -2966,16 +2977,17 @@ public class MainService extends Service {
 
     /****************************卡相关end************************/
     private CountDownTimer countDownTimer;
-    private void  initCountDownTimer(){
+
+    private void initCountDownTimer() {
         countDownTimer = new CountDownTimer(5000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-               Log.i("开门","-------------------剩余"+millisUntilFinished/1000);
+                Log.i("开门", "-------------------剩余" + millisUntilFinished / 1000);
             }
 
             @Override
             public void onFinish() {
-                Log.i("开门","剩余"+0);
+                Log.i("开门", "剩余" + 0);
                 int result = DoorLock.getInstance().closeLock();
                 if (result != -1) {
                     Log.i("开门", "关闭继电器成功");
@@ -2985,6 +2997,7 @@ public class MainService extends Service {
             }
         };
     }
+
     protected void openLock() {
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
