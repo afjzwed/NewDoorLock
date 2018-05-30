@@ -156,6 +156,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.fr_key;
 import static com.cxwl.hurry.newdoorlock.config.Constant.ft_key;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.DEVICE_KEYCODE_POUND;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.DEVICE_KEYCODE_STAR;
+import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.OPENDOOR_STATE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_ETHERNET;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_MOBILE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_NONE;
@@ -711,7 +712,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     default:
                         break;
                 }
-
             }
         };
         mainMessage = new Messenger(handler);
@@ -1131,8 +1131,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void onKeyDown(int keyCode) {
         Log.i(TAG, "默认按键key=" + keyCode);
         if (nfcFlag) {
-            //  inputCardInfo(keyCode);//录入卡片信息
             deleteFaceInfo(keyCode);//删除人脸信息
+            //  inputCardInfo(keyCode);//录入卡片信息
         } else {
             int key = convertKeyCode(keyCode);
             Log.i(TAG, "按键key=" + key + "模式currentStatus" + currentStatus);
@@ -1235,7 +1235,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this, "手机号长度不对", Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (isFlag && unit.length() == 11 && hasFaceInfo) {
+            if (isFlag && unit.length() == 11) {
                 deleteFaceInfoThread(unit);
             }
         } else {
@@ -1873,17 +1873,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // TODO: 2018/5/28 不暂停人脸识别
 //                faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_PAUSE, 100);
 //                faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_INPUT, 100);
-                rl_nfc.setVisibility(View.VISIBLE);
-                tv_message.setText("");
-                nfcFlag = true;
-                cardId = null;
-                isFlag = true;
-
-                //录卡楼栋号输入栏强制获取焦点
-                getFocus(et_unitno);
-
-                et_unitno.setText("");
-                return;
+                if (ArcsoftManager.getInstance().mFaceDB.mRegister.isEmpty()) {
+                    Utils.DisplayToast(MainActivity.this, "没有注册人脸，请先注册");
+                } else {
+                    rl_nfc.setVisibility(View.VISIBLE);
+                    tv_message.setText("");
+                    nfcFlag = true;
+                    isFlag = true;
+                    cardId = null;
+                    //录卡楼栋号输入栏强制获取焦点
+                    getFocus(et_unitno);
+                    et_unitno.setText("");
+                    return;
+                }
             }
         }
 
@@ -1891,7 +1893,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (faceHandler != null) {
             faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_PAUSE, 0);
         }
-
 
         Log.i(TAG, "拍摄访客照片 并进行呼叫" + blockNo);
         setCurrentStatus(CALLING_MODE);
@@ -2768,14 +2769,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             netTimer = null;
         }
 
+        mSurfaceView.setVisibility(View.GONE);
+        mGLSurfaceView.setVisibility(View.GONE);
+        identification = false;
+        if (mFRAbsLoop != null) {
+            mFRAbsLoop.shutdown();
+        }
+
         if (doorLock != null) {
             doorLock.setIsNfcFlag(false);
             doorLock = null;
         }
 
+        AFT_FSDKError err = engine.AFT_FSDK_UninitialFaceEngine();
         if (faceHandler != null) {
             faceHandler.removeCallbacksAndMessages(null);
         }
+
+        OkHttpUtils.getInstance().cancelTag(MainService.class);//取消网络请求
+
 
         // TODO: 2018/5/15 还有资源未释放，之后再查
 

@@ -2988,7 +2988,6 @@ public class MainService extends Service {
     protected void openLock() {
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
-     //   sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
         if (result != -1) {
             sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
             SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);

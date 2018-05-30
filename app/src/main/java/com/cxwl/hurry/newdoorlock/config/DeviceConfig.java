@@ -11,8 +11,9 @@ public class DeviceConfig {
 //    public static final String SERVER_URL="http://www.lockaxial.com";
     public static final String SERVER_URL = "http://192.168.8.142:8084";
 
-//    public static final String GET_QINIUTOKEN = "http://wy.iot.xin/qiniu/qiniu_getQiniuToken.action";
-    public static final String GET_QINIUTOKEN = "http://192.168.8.133:8080/wygl/qiniu/qiniu_getQiniuToken.action";//七牛访问地址
+    //    public static final String GET_QINIUTOKEN = "http://wy.iot.xin/qiniu/qiniu_getQiniuToken.action";
+    public static final String GET_QINIUTOKEN = "http://192.168.8.133:8080/wygl/qiniu/qiniu_getQiniuToken.action";
+    //七牛访问地址
     //   public static final String SERVER_URL = "http://www.lockaxial.com";
 
     public static final String LOCAL_FILE_PATH = "adv";//广告储存位置
@@ -25,10 +26,11 @@ public class DeviceConfig {
 
     public static String RFID_PORT = "/dev/ttyS1";//卡阅读器使用
 
-
+    public static int OPENDOOR_TIME = 1000 * 5;//开门持续时间
+    public static int OPENDOOR_STATE = 0;//开门状态 0为关闭门锁 1为打开门锁 默认关闭
     public static int CANCEL_CALL_WAIT_TIME = 1000 * 30;//自动取消呼叫等待时间
     public static int CONNECT_REPORT_WAIT_TIME = 1000 * 60;//心跳间隔时间
-    public static int PASSWORD_WAIT_TIME=1000*20;//密码验证线程等待时间
+    public static int PASSWORD_WAIT_TIME = 1000 * 20;//密码验证线程等待时间
 
     public static int VOLUME_STREAM_MUSIC = 5;//音乐音量
     public static int VOLUME_STREAM_VOICE_CALL = 5;//通话音量
@@ -42,12 +44,10 @@ public class DeviceConfig {
     public static int BLOCK_LENGTH = 8;//楼栋房屋号长度
 
 
-//    public static final int DEVICE_KEYCODE_POUND = 66;//确认键
+    //    public static final int DEVICE_KEYCODE_POUND = 66;//确认键
 //    public static final int DEVICE_KEYCODE_STAR = 67;//删除键
     public static final int DEVICE_KEYCODE_POUND = 30;//确认键
     public static final int DEVICE_KEYCODE_STAR = 32;//删除键
-
-
 
 
     /*******************************/
