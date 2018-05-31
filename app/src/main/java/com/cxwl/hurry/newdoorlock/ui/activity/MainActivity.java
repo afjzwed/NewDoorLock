@@ -28,6 +28,7 @@ import android.os.RemoteException;
 import android.provider.Settings;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputFilter;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -65,6 +66,7 @@ import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
 import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.NoticeBean;
+import com.cxwl.hurry.newdoorlock.entity.ResponseBean;
 import com.cxwl.hurry.newdoorlock.entity.XdoorBean;
 import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
 import com.cxwl.hurry.newdoorlock.face.FaceDB;
@@ -492,7 +494,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     protected void initVoiceVolume(AudioManager audioManager, int type, int value) {
         int thisValue = audioManager.getStreamMaxVolume(type);//得到最大音量
-        thisValue = thisValue * value / 10;//具体音量值
+       // thisValue = thisValue * value / 10;//具体音量值
         audioManager.setStreamVolume(type, thisValue, AudioManager.FLAG_PLAY_SOUND);//调整音量时播放声音
     }
 
@@ -640,7 +642,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         break;
                     case MSG_PASSWORD_CHECK:
                         Log.i(TAG, "服务器验证密码后的返回");
-                        onPasswordCheck((String) msg.obj);
+                        onPasswordCheck((ResponseBean) msg.obj);
                         break;
                     case MSG_LIXIAN_PASSWORD_CHECK_AFTER:
                         Log.i(TAG, "验证离线验证密码后");
@@ -655,7 +657,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         //开锁
                         // TODO: 2018/5/16   //做UI显示，并开启其他的任务
                         Log.i(TAG, "开锁");
-                        onLockOpened();
+                        onLockOpened((int)msg.obj);
                         final Dialog weituoDialog = DialogUtil.showBottomDialog(MainActivity.this);
                         final TimerTask task = new TimerTask() {
                             @Override
@@ -803,14 +805,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * 开门
      */
-    private void onLockOpened() {
+    private void onLockOpened(int typy) {
         blockNo = "";
         setDialValue("");
         setTempkeyValue("");
         if (currentStatus != PASSWORD_MODE && currentStatus != PASSWORD_CHECKING_MODE) {
             setCurrentStatus(CALL_MODE);
         }
-        Toast.makeText(this, "门开了", Toast.LENGTH_LONG).show();
+        String msg = "门开了";
+        switch (typy) {
+            case 1:
+                msg = "刷卡开门成功";
+                break;
+            case 2:
+                msg = "手机一键开门成功";
+                break;
+            case 3:
+                msg = "刷脸开门成功";
+                break;
+            case 4:
+                //二维码暂无
+                break;
+            case 5:
+                msg = "离线密码开门成功";
+                break;
+            case 6:
+                msg = "临时密码开门成功";
+                break;
+            default:
+                // Toast.makeText(this, "门开了", Toast.LENGTH_LONG).show();
+                break;
+        }
+
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 
         identification = false;
         if (faceHandler != null) {
@@ -1143,12 +1170,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.i(TAG, "按键key=" + key + "模式currentStatus" + currentStatus);
             if (currentStatus == CALL_MODE || currentStatus == PASSWORD_MODE) {//处于呼叫模式或密码模式
                 // TODO: 2018/5/4 这里的判断得改成输入框是否有值,有值确认键走呼叫或密码,没值走切换模式
+                tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(11)});
+
                 str = tv_input_text.getText().toString();
                 if (keyCode == DEVICE_KEYCODE_POUND) {//确认键
                     if ("".equals(str)) {//输入框没值走切换模式
                         if (currentStatus == CALL_MODE) {//呼叫模式下，按确认键切换成密码模式
+                            //密码模式
+                            tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(6)});
                             initPasswordStatus();
                         } else {
+                            tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(11)});
+
                             initDialStatus();
                         }
                     } else {//输入框有值走呼叫或密码
@@ -1189,6 +1222,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 } else if (key >= 0) {//数字键
                     if (currentStatus == CALL_MODE) {
+
                         unitNoInput(key);
 //                        callInput(key);
                     } else {
@@ -1198,12 +1232,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (currentStatus == ERROR_MODE) {
                 Utils.DisplayToast(MainActivity.this, "当前网络异常");
             } else if (currentStatus == CALLING_MODE) {//处于正在呼叫模式
+                tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
+
                 Log.v(TAG, "onKeyDown-->111");
                 if (keyCode == KeyEvent.KEYCODE_STAR || keyCode == DEVICE_KEYCODE_STAR) {
                     Log.v(TAG, "onKeyDown-->222");
                     startCancelCall();//取消呼叫
                 }
             } else if (currentStatus == ONVIDEO_MODE) {
+                tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
+
                 if (keyCode == KeyEvent.KEYCODE_STAR || keyCode == DEVICE_KEYCODE_STAR) {
                     sendMainMessager(MSG_DISCONNECT_VIEDO, "");
                 }
@@ -1322,6 +1360,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void unitNoInput(int key) {
         blockNo = blockNo + key;
+        if (blockNo.length() > 11) {
+            blockNo = blockNo.substring(0, 11);
+        }
         setDialValue(blockNo);
         // TODO: 2018/5/4 这个判断交给确认键去做,暂时注释
 //        if (DeviceConfig.DEVICE_TYPE.equals("C")) {
@@ -1382,6 +1423,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void passwordInput(int key) {
         guestPassword = guestPassword + key;
+        if (guestPassword.length() > 6) {
+            guestPassword = guestPassword.substring(0, 6);
+        }
         setTempkeyValue(guestPassword);
         // TODO: 2018/5/4 这个判断交给确认键去做,暂时注释
 //        if (guestPassword.length() == 6) {
@@ -1456,23 +1500,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      *
      * @param code
      */
-    private void onPasswordCheck(String code) {
+    private void onPasswordCheck(ResponseBean code) {
         setCurrentStatus(PASSWORD_MODE);
         setTempkeyValue("");
-        if ("0".equals(code)) {
-            Utils.DisplayToast(MainActivity.this, "您输入的密码验证成功");
-        } else {
-//            if (code == 1) {
-//                Utils.DisplayToast(MainActivity.this, "您输入的密码不存在");
-//            } else if (code == 2) {
-//                Utils.DisplayToast(MainActivity.this, "您输入的密码已经过期");
-//            } else if (code < 0) {
-//                Utils.DisplayToast(MainActivity.this, "密码验证不成功，请联系管理员");
-//            }
-            Utils.DisplayToast(MainActivity.this, "密码验证不成功，请联系管理员");
-        }
-    }
 
+        if (code != null) {
+            if ("0".equals(code.getCode())) {
+                Log.i(TAG, "临时密码验证成功");
+            } else {
+                if (code.getMsg() != null) {
+                    Toast.makeText(MainActivity.this, code.getMsg(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        } else {
+            Toast.makeText(MainActivity.this, "密码验证不成功", Toast.LENGTH_SHORT).show();
+        }
+
+//        if (faceHandler != null) {
+//            faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 3000);
+//        }
+    }
     /**
      * 离线密码验证后 是否成功等
      *
@@ -1550,7 +1597,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void onRtcVideoOn() {
-        setDialValue("正在和" + blockNo + "视频通话");
+        setDialValue1("正在和" + blockNo + "视频通话");
         initVideoViews();
         Log.e(TAG, "开始创建remoteView");
         if (mCamerarelease) {
@@ -1915,7 +1962,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Message message = Message.obtain();
             String[] parameters = new String[3];
             if (isCall) {
-                setDialValue("呼叫" + thisValue + "，取消请按删除键");
+                setDialValue1("呼叫" + thisValue + "，取消请按删除键");
                 message.what = MainService.MSG_START_DIAL;
                 if (DeviceConfig.DEVICE_TYPE.equals("C")) {
                     parameters[0] = thisValue;
@@ -1923,6 +1970,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     parameters[0] = thisValue;
                 }
             } else {
+                tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
                 setTempkeyValue("准备验证密码" + thisValue + "...");
                 message.what = MainService.MSG_CHECK_PASSWORD;
                 parameters[0] = thisValue;
@@ -1995,7 +2043,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
-
+    private void setDialValue1(String value) {
+        final String thisValue = value;
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
+                setTextView(R.id.tv_input_text, thisValue);
+            }
+        });
+    }
     /**
      * 设置自定义状态栏的状态（WiFi标志）
      *
@@ -2691,7 +2748,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         if (max < score.getScore()) {
                             max = score.getScore();//匹配度赋值
                             name = fr.mName;
-                            if (max > 0.7f) {//匹配度的值高于设定值,退出循环
+                            if (max > 0.68f) {//匹配度的值高于设定值,退出循环
                                 break;
                             }
                         }
@@ -2699,7 +2756,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
                 Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
-                if (max > 0.7f) {//匹配度的值高于设定值,发出消息,开门
+                if (max > 0.68f) {//匹配度的值高于设定值,发出消息,开门
                     //fr success.
                     //final float max_score = max;
                     //LogDoor.v(FACE_TAG, "置信度：" + (float) ((int) (max_score * 1000)) / 1000.0);

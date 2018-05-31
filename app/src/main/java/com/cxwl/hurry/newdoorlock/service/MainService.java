@@ -39,6 +39,7 @@ import com.cxwl.hurry.newdoorlock.entity.DoorBean;
 import com.cxwl.hurry.newdoorlock.entity.FaceUrlBean;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.LogListBean;
+import com.cxwl.hurry.newdoorlock.entity.ResponseBean;
 import com.cxwl.hurry.newdoorlock.entity.XdoorBean;
 import com.cxwl.hurry.newdoorlock.entity.YeZhuBean;
 import com.cxwl.hurry.newdoorlock.http.API;
@@ -425,7 +426,7 @@ public class MainService extends Service {
                         break;
                     case MSG_GUEST_PASSWORD_CHECK:
                         Log.i(TAG, "获取获取到服务器返回的密码");
-                        onCheckGuestPassword(msg.obj == null ? null : (String) msg.obj);
+                        onCheckGuestPassword((ResponseBean) msg.obj);
                         break;
                     case MSG_LIXIAN_PASSWORD_CHECK:
                         Log.i(TAG, "获取获取到离线验证密码");
@@ -467,7 +468,8 @@ public class MainService extends Service {
                         break;
                     }
                     case MSG_FACE_OPENLOCK: {
-                        openLock();
+                        //脸开门
+                        openLock(3);
                         String[] parame = (String[]) msg.obj;
                         String phoneNum = parame[0];//手机号码
                         String picUrl = parame[1];//图片URL
@@ -635,10 +637,8 @@ public class MainService extends Service {
                     message.what = MSG_GUEST_PASSWORD_CHECK;
                     HttpApi.e("验证密码接口->成功" + response);
                     if (null != response) {
-                        String code = JsonUtil.getFieldValue(response, "code");
-                        if ("0".equals(code)) {
-                            message.obj = code;
-                        }
+                        ResponseBean responseBean = JsonUtil.parseJsonToBean(response, ResponseBean.class);
+                        message.obj=responseBean;
                     }
                     mHandler.sendMessage(message);
                 }
@@ -654,35 +654,36 @@ public class MainService extends Service {
         }
     }
 
-    private void onCheckGuestPassword(String result) {
-        if (result != null) {
-            if ("0".equals(result)) {
-                Log.e(TAG, "-----------------密码开门成功  开门开门------------------");
-                openLock();
-                List<LogDoor> list = new ArrayList<>();
-                LogDoor logDoor = new LogDoor();
-                logDoor.setMac(mac);
-                logDoor.setKa_id("");
-                logDoor.setUuid("");
-                logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
-                logDoor.setPhone("");
-                logDoor.setKaimenshijian(System.currentTimeMillis() + "");
-                logDoor.setKaimenfangshi("6");
-                Log.i(TAG, "上传密码开门日志" + "---logDoor=" + logDoor.toString());
-                list.add(logDoor);
-                createAccessLog(list);
-            } else {
-                Log.e(TAG, "--------------------密码开门失败  --------------------");
-            }
+    private void onCheckGuestPassword(ResponseBean result) {
+
+        if (result != null&&"0".equals(result.getCode())) {
+            Log.e(TAG, "-----------------临时密码开门成功  开门开门------------------");
+            openLock(6);
+            List<LogDoor> list = new ArrayList<>();
+            LogDoor logDoor = new LogDoor();
+            logDoor.setMac(mac);
+            logDoor.setKa_id("");
+            logDoor.setUuid("");
+            logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
+            logDoor.setPhone("");
+            logDoor.setKaimenshijian(System.currentTimeMillis() + "");
+            logDoor.setKaimenfangshi("6");
+            Log.i(TAG, "上传密码开门日志" + "---logDoor=" + logDoor.toString());
+            list.add(logDoor);
+            createAccessLog(list);
+        } else {
+            Log.e(TAG, "--------------------密码开门失败  --------------------");
         }
+
         sendMessageToMainAcitivity(MSG_PASSWORD_CHECK, result);
     }
+
 
     private void onCheckLixianPassword(Boolean result) {
         if (result != null) {
             if (result) {
                 Log.e(TAG, "-----------------离线密码开门成功  开门开门------------------");
-                openLock();
+                openLock(5);
                 List<LogDoor> list = new ArrayList<>();
                 LogDoor logDoor = new LogDoor();
                 logDoor.setMac(mac);
@@ -2135,12 +2136,12 @@ public class MainService extends Service {
         } else if (content.startsWith("{")) {
             LogDoor logDoor = JsonUtil.parseJsonToBean(content, LogDoor.class);
             cancelOtherMembers(from);
-            Log.v("MainService", "用户直接开门，取消其他呼叫");
+            Log.v("MainService", "用户手机一键开门，取消其他呼叫");
             resetCallMode();
             stopTimeoutCheckThread();
             //开门操作
             Log.e(TAG, "进行开门操作 开门开门");
-            openLock();
+            openLock(2);
             List<LogDoor> list = new ArrayList<>();
             //拼接图片地址
             if (StringUtils.isNoEmpty(logDoor.getKaimenjietu())) {
@@ -2977,9 +2978,11 @@ public class MainService extends Service {
             Log.v("MainService", "onCard====卡信息：" + card);
             DbUtils.getInstans().quaryAllKa();
             Ka kaInfo = DbUtils.getInstans().getKaInfo(card);
-            if (kaInfo != null) {//判断数据库中是否有卡
+            Log.v("MainService", "onCard====当前时间：" + System.currentTimeMillis() + "卡过期时间：" + kaInfo.getGuoqi_time()
+                    +"是否失效  》0表示失效" +(System.currentTimeMillis() - Long.parseLong(kaInfo.getGuoqi_time())));
+            if (kaInfo != null && System.currentTimeMillis() <Long.parseLong(kaInfo.getGuoqi_time())) {//判断数据库中是否有卡
                 Log.i(TAG, "刷卡开门成功" + card);
-                openLock();
+                openLock(1);
                 Log.e(TAG, "onCard====:" + card);
                 // TODO: 2018/5/16 调用日志接口,传卡号 startCardAccessLog(card);
                 LogDoor data = new LogDoor();
@@ -3024,11 +3027,11 @@ public class MainService extends Service {
         };
     }
 
-    protected void openLock() {
+    protected void openLock(int type) {
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
         if (result != -1) {
-            sendMessageToMainAcitivity(MSG_LOCK_OPENED, null);//开锁
+            sendMessageToMainAcitivity(MSG_LOCK_OPENED, type);//开锁
             SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
             countDownTimer.cancel();
             countDownTimer.start();
