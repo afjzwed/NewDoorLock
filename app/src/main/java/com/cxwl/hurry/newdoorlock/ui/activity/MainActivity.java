@@ -165,6 +165,7 @@ import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_ETHERNE
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_MOBILE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_NONE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_WIFI;
+import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.isNetworkAvailable;
 
 /**
  * MainActivity
@@ -2690,7 +2691,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         if (max < score.getScore()) {
                             max = score.getScore();//匹配度赋值
                             name = fr.mName;
-                            if (max > 0.732f) {//匹配度的值高于设定值,退出循环
+                            if (max > 0.7f) {//匹配度的值高于设定值,退出循环
                                 break;
                             }
                         }
@@ -2698,7 +2699,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
                 Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
-                if (max > 0.732f) {//匹配度的值高于设定值,发出消息,开门
+                if (max > 0.7f) {//匹配度的值高于设定值,发出消息,开门
                     //fr success.
                     //final float max_score = max;
                     //LogDoor.v(FACE_TAG, "置信度：" + (float) ((int) (max_score * 1000)) / 1000.0);
@@ -2722,10 +2723,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         String[] parameters = new String[2];
                         parameters[0] = name;
-                        if (null != file && !TextUtils.isEmpty(file.getPath())) {
+                        if (NetWorkUtils.isNetworkAvailable(MainActivity.this)) {
+                            if (null != file && !TextUtils.isEmpty(file.getPath())) {
 //                            parameters[1]  = filePath;
-                            uploadToQiNiu(file);//这里做上传到七牛的操作，不返回图片URL
-                            parameters[1] = faceOpenUrl;
+                                uploadToQiNiu(file);//这里做上传到七牛的操作，不返回图片URL
+                                parameters[1] = faceOpenUrl;
+                            } else {
+                                parameters[1] = "";
+                            }
                         } else {
                             parameters[1] = "";
                         }
@@ -2762,6 +2767,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onError(Call call, Exception e, int id) {
                 Log.i(TAG, "获取七牛token失败 e" + e.toString());
                 DeviceConfig.OPEN_RENLIAN_STATE = 0;//重置处理图片并上传日志的状态
+                if (file != null) {
+                    file.delete();
+                }
             }
 
             @Override
