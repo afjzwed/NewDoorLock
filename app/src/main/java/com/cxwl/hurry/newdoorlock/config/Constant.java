@@ -75,6 +75,7 @@ public class Constant {
     public static final int MSG_LOCK_OPENED = 10004;//开锁
     public static final int MSG_INVALID_CARD = 10015;//无效房卡
     public static final int MSG_INPUT_CARDINFO = 0x04;//重复录入卡信息
+    public static final int MSG_CARD_OPENLOCK = 10016;//卡开门后截图和上传日志
 
     /********************卡相关*******************/
 
@@ -96,7 +97,6 @@ public class Constant {
     public static final int MSG_ADVERTISE_REFRESH = 10013;//刷新广告
     public static final int MSG_ADVERTISE_REFRESH_PIC = 10014;//刷新广告图片
     public static final int MSG_YIJIANKAIMEN_TAKEPIC = 10098;//手机一键开门拍照片
-
 
 
 }

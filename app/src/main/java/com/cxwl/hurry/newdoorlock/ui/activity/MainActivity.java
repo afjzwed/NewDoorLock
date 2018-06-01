@@ -129,6 +129,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_NO_ONLIN
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_SERVER_ERROR;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_TIMEOUT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CANCEL_CALL;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CARD_OPENLOCK;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_DELETE_FACE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_DISCONNECT_VIEDO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_DETECT_CHECK;
@@ -244,7 +245,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AFT_FSDKVersion version = new AFT_FSDKVersion();//这个类用来保存版本信息
     private AFT_FSDKEngine engine = new AFT_FSDKEngine();//这个类具体实现了人脸跟踪的功能
     private List<AFT_FSDKFace> result = new ArrayList<>();//摄像头检测到的人脸信息集合
-    private byte[] mImageNV21 = null;//图像数据
+    private byte[] mImageNV21 = null;//人脸图像数据
+    private byte[] picData = null;
     private AFT_FSDKFace mAFT_FSDKFace = null;//这个类用来保存检测到的人脸信息
     private Handler faceHandler;//人脸识别handler
     private boolean identification = false;//人脸识别可以开始对比的标识
@@ -723,10 +725,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     default:
                         break;
                 }
+
             }
         };
         mainMessage = new Messenger(handler);
-
     }
 
     protected void onAdvertiseImageChange(Object obj) {
@@ -807,7 +809,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * 开门
+     * 开门 :1卡2手机3人脸4邀请码5离线密码6临时密码'
      */
     private void onLockOpened(int typy) {
         blockNo = "";
@@ -2703,6 +2705,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
+        if (data != null) {
+            picData = data.clone();
+        }
+
         //保存人脸框数组
         Rect[] rects = new Rect[result.size()];
         for (int i = 0; i < result.size(); i++) {
@@ -2851,6 +2857,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
+            if (DeviceConfig.OPEN_CARD_STATE == 1) {
+                //将byte数组转成bitmap再转成图片文件
+                byte[] data = picData;
+                YuvImage yuv = new YuvImage(data, ImageFormat.NV21, mWidth, mHeight, null);
+//                ByteArrayOutputStream stream =newByteArrayOutputStream();
+//                image.compressToJpeg(newRect(0,0, Width, Height),80, stream);
+////Bitmap bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
+//                bmp = BitmapFactory.decodeByteArray(stream.toByteArray(),0, stream.size());
+                ExtByteArrayOutputStream ops = new ExtByteArrayOutputStream();
+                yuv.compressToJpeg(new Rect(0, 0, mWidth, mHeight), 80, ops);
+                Bitmap bmp = BitmapFactory.decodeByteArray(ops.getByteArray(), 0, ops.getByteArray().length);
+                try {
+                    ops.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                File file = null;
+                if (null != bmp) {
+                    file = BitmapUtils.saveBitmap(MainActivity.this, bmp);//本地截图文件地址
+                }
+
+                if (null != file && !TextUtils.isEmpty(file.getPath())) {
+//                            parameters[1]  = filePath;
+                    uploadToQiNiu(file, 1);//这里做上传到七牛的操作，不返回图片URL
+                } else {
+                    faceOpenUrl = "";
+                }
+                DeviceConfig.OPEN_CARD_STATE = 0;//图片处理完成,重置状态
+
+                sendMainMessager(MSG_CARD_OPENLOCK, faceOpenUrl);
+                file = null;
+                bmp = null;
+                yuv = null;
+                data = null;
+            }
+
+
             if (mImageNV21 != null && identification) {//摄像头检测到人脸信息且处于人脸识别状态
                 long time = System.currentTimeMillis();
                 //检测输入图像中的人脸特征信息，输出结果保存在 AFR_FSDKFace feature
@@ -2858,13 +2902,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // feature 检测到的人脸特征信息
                 AFR_FSDKError error = engine.AFR_FSDK_ExtractFRFeature(mImageNV21, mWidth, mHeight, AFR_FSDKEngine
                         .CP_PAF_NV21, mAFT_FSDKFace.getRect(), mAFT_FSDKFace.getDegree(), result);
-//                LogDoor.d(TAG, "AFR_FSDK_ExtractFRFeature cost :" + (System.currentTimeMillis() -
+//                Log.d(TAG, "AFR_FSDK_ExtractFRFeature cost :" + (System.currentTimeMillis() -
 //                 time) + "ms");
                 Log.d(TAG, "Face=" + result.getFeatureData()[0] + "," + result.getFeatureData()[1] + "," + result
                         .getFeatureData()[2] + "," + error.getCode());
                 AFR_FSDKMatching score = new AFR_FSDKMatching();//这个类用来保存特征信息匹配度
                 float max = 0.0f;//匹配度的值
                 String name = null;
+
 
                 //遍历本地信息表
                 for (FaceDB.FaceRegist fr : mResgist) {
@@ -2887,18 +2932,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
 
-                Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
+//                Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
                 if (max > 0.68f) {//匹配度的值高于设定值,发出消息,开门
                     //fr success.
                     //final float max_score = max;
-                    //LogDoor.v(FACE_TAG, "置信度：" + (float) ((int) (max_score * 1000)) / 1000.0);
-                    if (DeviceConfig.OPEN_RENLIAN_STATE == 0) {//开启截图、上传图片、开门、上传日志流程
+                    //Log.v(FACE_TAG, "置信度：" + (float) ((int) (max_score * 1000)) / 1000.0);
+                    if (DeviceConfig.OPEN_RENLIAN_STATE == 0 && DeviceConfig.OPEN_CARD_STATE == 0)
+                    {//开启截图、上传图片、开门、上传日志流程
                         DeviceConfig.OPEN_RENLIAN_STATE = 1;//已开始处理图片
                         //将byte数组转成bitmap再转成图片文件
                         byte[] data = mImageNV21;
                         YuvImage yuv = new YuvImage(data, ImageFormat.NV21, mWidth, mHeight, null);
                         ExtByteArrayOutputStream ops = new ExtByteArrayOutputStream();
-                        yuv.compressToJpeg(mAFT_FSDKFace.getRect(), 80, ops);
+                        yuv.compressToJpeg(new Rect(0, 0, mWidth, mHeight), 80, ops);
                         Bitmap bmp = BitmapFactory.decodeByteArray(ops.getByteArray(), 0, ops.getByteArray().length);
                         try {
                             ops.close();
@@ -2912,14 +2958,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         String[] parameters = new String[2];
                         parameters[0] = name;
-                        if (NetWorkUtils.isNetworkAvailable(MainActivity.this)) {
-                            if (null != file && !TextUtils.isEmpty(file.getPath())) {
+                        if (null != file && !TextUtils.isEmpty(file.getPath())) {
 //                            parameters[1]  = filePath;
-                                uploadToQiNiu(file);//这里做上传到七牛的操作，不返回图片URL
-                                parameters[1] = faceOpenUrl;
-                            } else {
-                                parameters[1] = "";
-                            }
+                            uploadToQiNiu(file, 3);//这里做上传到七牛的操作，不返回图片URL
+                            parameters[1] = faceOpenUrl;
                         } else {
                             parameters[1] = "";
                         }
@@ -2945,19 +2987,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * 上传图片至七牛
      *
-     * @param file
+     * @param file 本地图片
+     * @param i    开门方式:1卡2手机3人脸4邀请码5离线密码6临时密码
      * @return
      */
-    private void uploadToQiNiu(final File file) {
+    private void uploadToQiNiu(final File file, final int i) {
         //创建地址
         faceOpenUrl = "door/img/" + System.currentTimeMillis() + ".jpg";
         OkHttpUtils.post().url(API.QINIU_IMG).build().execute(new StringCallback() {//七牛token值不固定，每次请求使用
             @Override
             public void onError(Call call, Exception e, int id) {
                 Log.i(TAG, "获取七牛token失败 e" + e.toString());
-                DeviceConfig.OPEN_RENLIAN_STATE = 0;//重置处理图片并上传日志的状态
-                if (file != null) {
-                    file.delete();
+                if (i == 1) {
+                    DeviceConfig.OPEN_CARD_STATE = 0;
+                } else if (i == 3) {
+                    DeviceConfig.OPEN_RENLIAN_STATE = 0;//重置处理图片并上传日志的状态
                 }
             }
 
@@ -2968,7 +3012,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void run() {
                         String token = JsonUtil.getFieldValue(response, "data");
                         Log.i(TAG, "获取七牛token成功 开始上传照片  token" + token);
-                        Log.e(TAG, "file七牛储存地址：" + curUrl);
+                        Log.e(TAG, "file七牛储存地址：" + faceOpenUrl);
                         Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
                         uploadManager.put(file.getPath(), faceOpenUrl, token, new UpCompletionHandler() {
                             @Override
@@ -2985,7 +3029,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     }
                                 } catch (Exception e) {
                                 }
-                                DeviceConfig.OPEN_RENLIAN_STATE = 0;//重置处理图片并上传日志的状态
+                                if (i == 1) {
+                                    DeviceConfig.OPEN_CARD_STATE = 0;
+                                } else if (i == 3) {
+                                    DeviceConfig.OPEN_RENLIAN_STATE = 0;//重置处理图片并上传日志的状态
+                                }
                             }
                         }, null);
                     }
@@ -2993,6 +3041,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
+
 
     /****************************虹软相关end*********************************************/
 

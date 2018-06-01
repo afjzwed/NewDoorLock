@@ -113,6 +113,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_NO_ONLIN
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_SERVER_ERROR;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_TIMEOUT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CANCEL_CALL;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CARD_OPENLOCK;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_DISCONNECT_VIEDO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_DOWNLOAD;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_INFO;
@@ -204,11 +205,11 @@ public class MainService extends Service {
     public String faceImageUrl = null;//人脸开门的图片地址
 
     private Thread timeoutCheckThread = null;//自动取消呼叫的定时器
-    Thread downloadThread = null;//下载文件的线程
     private Thread connectReportThread = null;//心跳包线程
 
     private boolean netWorkstate = false;//是否有网的标识
     public String tempKey = "";
+    private Ka kaInfo = null;
 
     private AFD_FSDKEngine engine_afd = new AFD_FSDKEngine();//这个类实现了人脸检测的功能
     private AFD_FSDKVersion version_afd = new AFD_FSDKVersion();//这个类用来保存版本信息
@@ -266,8 +267,7 @@ public class MainService extends Service {
                 "charset=utf-8")).tag(this).build().execute(new StringCallback() {
             @Override
             public void onError(Call call, Exception e, int id) {
-                Log.e(TAG, "er");
-                Log.i(TAG, "onError统计广告视频信息统计接口 上传统计信息失败  保存信息到数据库e");
+                Log.i(TAG, "onError 上传广告视频统计信息失败  保存信息到数据库 " + e.toString());
                 DbUtils.getInstans().addAllTongji(list);
             }
 
@@ -278,11 +278,11 @@ public class MainService extends Service {
                     Log.i(TAG, "onResponse统计广告视频信息统计接口 上传统计信息成功");
                     List<AdTongJiBean> adTongJiBeen = DbUtils.getInstans().quaryTongji();
                     if (adTongJiBeen.size() > 0) {
-                        Log.i(TAG, "本地数据库中--存在--视频图片的统计信息 开始上传离线");
+                        Log.i(TAG, "本地数据库中--存在--视频的统计信息 开始上传离线");
                         lixianTongji(adTongJiBeen);
                     }
                 } else {
-                    Log.i(TAG, "onResponse统计广告视频信息统计接口 上传统计信息失败  保存信息到数据库");
+                    Log.i(TAG, "上传广告视频统计信息失败  保存信息到数据库");
                     DbUtils.getInstans().addAllTongji(list);
                 }
             }
@@ -302,22 +302,22 @@ public class MainService extends Service {
             @Override
             public void onError(Call call, Exception e, int id) {
                 Log.e(TAG, "er");
-                Log.i(TAG, "onError统计广告图片信息统计接口 上传统计信息失败  保存信息到数据库e");
+                Log.i(TAG, "onError 上传广告图片统计信息失败  保存信息到数据库e " + e.toString());
                 DbUtils.getInstans().addAllTongji(list);
             }
 
             @Override
             public void onResponse(String response, int id) {
-                Log.e(TAG, "onResponse" + response);
+                Log.e(TAG, "onResponse 广告图片" + response);
                 if ("0".equals(JsonUtil.getFieldValue(response, "code"))) {
-                    Log.i(TAG, "onResponse统计广告图片信息统计接口 上传统计信息成功 检查是否存在离线信息");
+                    Log.i(TAG, "onResponse上传广告图片统计信息成功 检查是否存在离线信息");
                     List<AdTongJiBean> adTongJiBeen = DbUtils.getInstans().quaryTongji();
                     if (adTongJiBeen.size() > 0) {
-                        Log.i(TAG, "本地数据库中--存在--视频图片的统计信息 开始上传离线");
+                        Log.i(TAG, "本地数据库中--存在--图片的统计信息 开始上传离线");
                         lixianTongji(adTongJiBeen);
                     }
                 } else {
-                    Log.i(TAG, "onResponse统计广告图片信息统计接口 上传统计信息失败  保存信息到数据库");
+                    Log.i(TAG, "onResponse上传广告图片统计信息失败  保存信息到数据库");
                     DbUtils.getInstans().addAllTongji(list);
                 }
             }
@@ -337,7 +337,7 @@ public class MainService extends Service {
             @Override
             public void onError(Call call, Exception e, int id) {
                 Log.e(TAG, "er");
-                Log.e(TAG, "onError统计广告图片信息统计接口 上传离线统计信息失败 ");
+                Log.e(TAG, "onError统计广告图片信息统计接口 上传离线统计信息失败 " + e.toString());
             }
 
             @Override
@@ -348,7 +348,7 @@ public class MainService extends Service {
                     DbUtils.getInstans().deleteAllTongji();
 
                 } else {
-                    Log.i(TAG, "onResponse统计广告图片信息统计接口 上传统计信息失败  保存信息到数据库");
+                    Log.i(TAG, "onResponse 上传离线统计信息失败  保存信息到数据库");
                 }
             }
         });
@@ -442,7 +442,7 @@ public class MainService extends Service {
                         //   startCheckGuestPasswordAppendImage();
                         break;
                     case MSG_CARD_INCOME: {
-                        // TODO: 2018/5/8 下面的方法中进行卡信息处理（判定及开门等）
+                        //进行卡信息处理（判定及开门等）
                         String obj1 = (String) msg.obj;
                         onCardIncome(obj1);
                         Log.e(TAG, "onCardIncome obj1" + obj1);
@@ -470,25 +470,45 @@ public class MainService extends Service {
                     }
                     case MSG_FACE_OPENLOCK: {
                         //脸开门
-                        openLock(3);
                         String[] parame = (String[]) msg.obj;
                         String phoneNum = parame[0];//手机号码
                         String picUrl = parame[1];//图片URL
-
+                        if (!cardRecord.checkLastCard(phoneNum)) {//判断距离上次刷脸时间是否超过2秒
+                            LogDoor data = new LogDoor();
+                            data.setMac(mac);
+                            data.setKaimenfangshi("3");
+                            if (TextUtils.isEmpty(phoneNum)) {
+                                data.setPhone("");
+                            } else {
+                                data.setPhone(phoneNum);
+                            }
+                            if (TextUtils.isEmpty(picUrl)) {
+                                data.setKaimenjietu("");
+                            } else {
+                                data.setKaimenjietu(picUrl);
+                            }
+                            data.setKa_id("");
+                            data.setKaimenshijian(System.currentTimeMillis() + "");
+                            data.setUuid("");
+                            List<LogDoor> list = new ArrayList<>();
+                            list.add(data);
+                            createAccessLog(list);
+                            openLock(3);
+                        }
+                        break;
+                    }
+                    case MSG_CARD_OPENLOCK: {
+                        String pic_url = (String) msg.obj;
                         LogDoor data = new LogDoor();
                         data.setMac(mac);
-                        data.setKaimenfangshi("3");
-                        if (TextUtils.isEmpty(phoneNum)) {
-                            data.setPhone("");
-                        } else {
-                            data.setPhone(phoneNum);
-                        }
-                        if (TextUtils.isEmpty(picUrl)) {
+                        data.setPhone(kaInfo.getYezhu_dianhua());
+                        data.setKa_id(kaInfo.getKa_id());
+                        data.setKaimenfangshi("1");
+                        if (TextUtils.isEmpty(pic_url)) {
                             data.setKaimenjietu("");
                         } else {
-                            data.setKaimenjietu(picUrl);
+                            data.setKaimenjietu(pic_url);
                         }
-                        data.setKa_id("");
                         data.setKaimenshijian(System.currentTimeMillis() + "");
                         data.setUuid("");
                         List<LogDoor> list = new ArrayList<>();
@@ -504,7 +524,6 @@ public class MainService extends Service {
         };
         serviceMessage = new Messenger(mHandler);
     }
-
 
     /**
      * 开启心跳线程
@@ -572,7 +591,6 @@ public class MainService extends Service {
         }
     }
 
-
     /**
      * 验证密码
      */
@@ -593,7 +611,6 @@ public class MainService extends Service {
          }
 
          */
-        //// TODO: 2018/5/16 这里还要添加离线密码操作
         if (!netWorkstate) {
             //断网 离线密码验证
             Message message = mHandler.obtainMessage();
@@ -684,7 +701,7 @@ public class MainService extends Service {
         if (result != null) {
             if (result) {
                 Log.e(TAG, "-----------------离线密码开门成功  开门开门------------------");
-                openLock(5);
+                openLock(5);//调用开门接口
                 List<LogDoor> list = new ArrayList<>();
                 LogDoor logDoor = new LogDoor();
                 logDoor.setMac(mac);
@@ -805,8 +822,8 @@ public class MainService extends Service {
                             if (StringUtils.isNoEmpty(connectReportBean.getVersion())) {
                                 String appVision = (String) SPUtil.get(MainService.this, Constant.SP_VISION_APP,
                                         getVersionName());
-                                Log.i(TAG, "心跳--当前app版本：" + appVision + "   服务器app版本：" +
-                                        (connectReportBean.getVersion()));
+                                Log.i(TAG, "心跳--当前app版本：" + appVision + "   服务器app版本：" + (connectReportBean
+                                        .getVersion()));
                                 if (Integer.parseInt(connectReportBean.getVersion().replace(".", "")) > Integer
                                         .parseInt(appVision.replace(".", ""))) {
                                     Log.i(TAG, "心跳中有APP信息更新");
@@ -974,7 +991,6 @@ public class MainService extends Service {
                 @Override
                 public void onResponse(String response, int id) {
                     Log.i(TAG, "onResponse 获取app下载地址" + response);
-
                     if ("0".equals(JsonUtil.getFieldValue(response, "code"))) {
                         String result = JsonUtil.getResult(response);
                         final String address = JsonUtil.getFieldValue(result, "version");
@@ -989,6 +1005,7 @@ public class MainService extends Service {
                         lastVersionStatus = "L";//等待下次心跳重新获取URL
 
                     }
+
                 }
             });
 
@@ -1356,7 +1373,7 @@ public class MainService extends Service {
         int lastIndex = file.lastIndexOf("/");
         String fileName = file.substring(lastIndex + 1);
         Log.e("filename", fileName);
-        //// TODO: 2018/5/18 包含.mp4去掉
+        //包含.mp4去掉
         if (fileName.contains(".")) {
             fileName = fileName.substring(0, fileName.lastIndexOf("."));
             Log.e("filename .", fileName);
@@ -1549,11 +1566,11 @@ public class MainService extends Service {
                                     break;
                             }
                         } else {
-                            Log.e(TAG, "同步信息失败+ type "+type);
+                            Log.e(TAG, "同步信息失败+ type " + type);
                         }
                     } else {
                         //服务器异常或没有网络
-                        Log.e(TAG, "同步信息失败+ type "+type);
+                        Log.e(TAG, "同步信息失败+ type " + type);
                     }
                 }
             });
@@ -2979,29 +2996,21 @@ public class MainService extends Service {
      * @param card
      */
     private void onCardIncome(String card) {
-        if (!this.cardRecord.checkLastCard(card)) {//判断距离上次刷卡时间是否超过1秒
+        if (!this.cardRecord.checkLastCard(card)) {//判断距离上次刷卡时间是否超过2秒
             Log.v("MainService", "onCard====卡信息：" + card);
             DbUtils.getInstans().quaryAllKa();
-            Ka kaInfo = DbUtils.getInstans().getKaInfo(card);
-            Log.v("MainService", "onCard====当前时间：" + System.currentTimeMillis() + "卡过期时间：" + kaInfo.getGuoqi_time()
-                    +"是否失效  》0表示失效" +(System.currentTimeMillis() - Long.parseLong(kaInfo.getGuoqi_time())));
-            if (kaInfo != null && System.currentTimeMillis() <Long.parseLong(kaInfo.getGuoqi_time())) {//判断数据库中是否有卡
+            kaInfo = DbUtils.getInstans().getKaInfo(card);
+            if (kaInfo != null && System.currentTimeMillis() < Long.parseLong(kaInfo.getGuoqi_time())) {//判断数据库中是否有卡
+                Log.v("MainService", "onCard====当前时间：" + System.currentTimeMillis() + "卡过期时间：" + kaInfo.getGuoqi_time
+                        () + "是否失效  》0表示失效" + (System.currentTimeMillis() - Long.parseLong(kaInfo.getGuoqi_time())));
                 Log.i(TAG, "刷卡开门成功" + card);
-                openLock(1);
+                //开始截图
+                if (DeviceConfig.OPEN_CARD_STATE == 0) {
+                    Log.e(TAG, "刷卡开门，开始截图");
+                    DeviceConfig.OPEN_CARD_STATE = 1;
+                    openLock(1);
+                }
                 Log.e(TAG, "onCard====:" + card);
-                // TODO: 2018/5/16 调用日志接口,传卡号 startCardAccessLog(card);
-                LogDoor data = new LogDoor();
-                data.setMac(mac);
-                data.setPhone(kaInfo.getYezhu_dianhua());
-                data.setKa_id(kaInfo.getKa_id());
-                data.setKaimenfangshi("1");
-                data.setKaimenjietu("");
-                data.setKaimenshijian(System.currentTimeMillis() + "");
-                data.setUuid("");
-                List<LogDoor> list = new ArrayList<>();
-                list.add(data);
-                createAccessLog(list);
-
             } else {
                 Log.e(TAG, "数据库中不存在这个卡 刷卡开门失败" + card);
                 sendMessageToMainAcitivity(MSG_INVALID_CARD, null);//无效房卡
@@ -3021,6 +3030,7 @@ public class MainService extends Service {
 
             @Override
             public void onFinish() {
+                // TODO: 2018/6/1 为啥没做操作
                 Log.i("开门", "剩余" + 0);
                 int result = DoorLock.getInstance().closeLock();
                 if (result != -1) {
