@@ -8,8 +8,8 @@ android {
         applicationId "com.cxwl.hurry.newdoorlock"
         minSdkVersion 19
         targetSdkVersion 26
-        versionCode 3
-        versionName "1.0.3"
+        versionCode 5
+        versionName "1.0.5"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -39,7 +39,7 @@ android {
         }
     }
     greendao {
-        schemaVersion 4
+        schemaVersion 5
         daoPackage 'com.cxwl.hurry.newdoorlock.db'
         targetGenDir 'src/main/java'
     }

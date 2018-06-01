@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
@@ -790,7 +791,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mAdTongJiBean = new AdTongJiBean();
                 mAdTongJiBean.setStart_time(startTime);
                 mAdTongJiBean.setEnd_time(endTime);
-                mAdTongJiBean.setAdd_id(obj1.get(i).getId());
+                mAdTongJiBean.setAd_id(obj1.get(i).getId());
                 mAdTongJiBean.setMac(MacUtils.getMac());
                 mTongJiBeanList.add(mAdTongJiBean);
                 sendMainMessager(MSG_TONGJI_PIC, mTongJiBeanList);
@@ -1715,13 +1716,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.v("MainActivity", "开始启动拍照");
         //启动人脸识别
         if (faceHandler != null) {
-            faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 3000);
+            faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_PAUSE, 0);
+            faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 3500);
         }
         new Thread() {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(300);
+                    Thread.sleep(600);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -1765,12 +1767,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     Log.v("MainActivity", "释放照相机资源");
                                     Log.v("MainActivity", "拍照成功");
                                     Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                    Matrix m = new Matrix();
+                                    m.setRotate(180,bitmap.getWidth() , bitmap.getHeight());
+                                    final Bitmap bm = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, true);
                                     final File file = new File(Environment.getExternalStorageDirectory(), System
                                             .currentTimeMillis() + ".jpg");
                                     FileOutputStream outputStream = new FileOutputStream(file);
-                                    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
+                                    bm.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
                                     outputStream.close();
-
                                     OkHttpUtils.post().url(API.QINIU_IMG).build().execute(new StringCallback() {
                                         @Override
                                         public void onError(Call call, Exception e, int id) {

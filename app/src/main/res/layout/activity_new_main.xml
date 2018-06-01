@@ -407,6 +407,7 @@
             android:background="@mipmap/bg_tongzhi"
             android:orientation="vertical">
 
+
             <!--通告标题-->
             <TextView
                 android:id="@+id/gonggao_title"
@@ -419,8 +420,6 @@
                 android:paddingBottom="10dp"
                 android:paddingLeft="20dp"
                 android:paddingRight="20dp"
-                android:ellipsize="marquee"
-                android:gravity="center"
                 android:text="标题"
                 android:textColor="@android:color/white"
                 android:textSize="30sp"/>

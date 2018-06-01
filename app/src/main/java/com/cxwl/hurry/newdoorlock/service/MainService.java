@@ -656,7 +656,7 @@ public class MainService extends Service {
                     HttpApi.e("验证密码接口->成功" + response);
                     if (null != response) {
                         ResponseBean responseBean = JsonUtil.parseJsonToBean(response, ResponseBean.class);
-                        message.obj=responseBean;
+                        message.obj = responseBean;
                     }
                     mHandler.sendMessage(message);
                 }
@@ -674,7 +674,7 @@ public class MainService extends Service {
 
     private void onCheckGuestPassword(ResponseBean result) {
 
-        if (result != null&&"0".equals(result.getCode())) {
+        if (result != null && "0".equals(result.getCode())) {
             Log.e(TAG, "-----------------临时密码开门成功  开门开门------------------");
             openLock(6);
             List<LogDoor> list = new ArrayList<>();
@@ -1178,7 +1178,7 @@ public class MainService extends Service {
                             String list = JsonUtil.getFieldValue(result, "lian");//服务器字段命名错误
                             faceUrlList = (ArrayList<FaceUrlBean>) JsonUtil.parseJsonToList(list, new
                                     TypeToken<List<FaceUrlBean>>() {
-                                    }.getType());
+                            }.getType());
 
                             //通知MainActivity开始人脸录入流程
                             sendMessageToMainAcitivity(MSG_FACE_INFO, null);
@@ -1246,10 +1246,12 @@ public class MainService extends Service {
                                         @Override
                                         public void run() {
                                             try {
-                                                downloadAdvertisement(guangGaoBeen);
-                                                adjustAdvertiseFiles();
-                                                restartAdvertise(guangGaoBeen);
-                                                removeAdvertiseFiles();
+                                                if (guangGaoBeen != null && guangGaoBeen.size() > 0) {
+                                                    downloadAdvertisement(guangGaoBeen);
+                                                    adjustAdvertiseFiles();
+                                                    restartAdvertise(guangGaoBeen);
+                                                    removeAdvertiseFiles();
+                                                }
                                                 syncCallBack("5", v);//同步通知
                                                 adInfoStatus = 0;//重置广告视频下载状态
                                             } catch (Exception e) {
@@ -2167,7 +2169,7 @@ public class MainService extends Service {
                 if (StringUtils.isFastClick()) {
                     String imgurl = "door/img/" + System.currentTimeMillis() + ".jpg";
                     sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC, imgurl);
-                    logDoor.setKaimenjietu(imageUrl);
+                    logDoor.setKaimenjietu(imgurl);
                 }
             }
             List<LogDoor> list = new ArrayList<>();
@@ -2912,8 +2914,8 @@ public class MainService extends Service {
                     result_afr);
             Log.d("com.arcsoft", "Face=" + result_afr.getFeatureData()[0] + "," + result_afr.getFeatureData()[1] + "," +
                     "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + ""
-                    + "" + "" + "" + "" + "" + "" + "" + "" + "" + "result_afr" + result_afr.toString() + "  " + "" +
-                    result_afr.getFeatureData()[2] + "," + err_afr.getCode());
+                    + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "result_afr" + result_afr.toString() + "" +
+                    "  " + "" + result_afr.getFeatureData()[2] + "," + err_afr.getCode());
             if (err_afr.getCode() == err_afr.MOK) {//人脸特征检测成功
                 mAFR_FSDKFace = result_afr.clone();
                 // TODO: 2018/5/15 保存mAFR_FSDKFace人脸信息，操作数据库
