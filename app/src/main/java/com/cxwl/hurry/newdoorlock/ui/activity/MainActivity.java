@@ -1873,10 +1873,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             Log.v("MainActivity", "释放照相机资源");
                             Log.v("MainActivity", "拍照成功");
                             Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                            //旋转1800
+                            Matrix m = new Matrix();
+                            m.setRotate(180,bitmap.getWidth() , bitmap.getHeight());
+                            final Bitmap bm = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), m, true);
                             final File file = new File(Environment.getExternalStorageDirectory(), System
                                     .currentTimeMillis() + ".jpg");
                             FileOutputStream outputStream = new FileOutputStream(file);
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
+                            bm.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
                             outputStream.close();
                             if (checkTakePictureAvailable(uuid)) {
                                 OkHttpUtils.post().url(API.QINIU_IMG).build().execute(new StringCallback() {
