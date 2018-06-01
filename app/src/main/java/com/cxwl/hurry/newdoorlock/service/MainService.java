@@ -133,6 +133,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_ONVIDEO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_REGISTER;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_PIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_VEDIO;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_ID;
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_KEY;
 import static com.cxwl.hurry.newdoorlock.config.Constant.SP_LIXIAN_MIMA;
@@ -2142,15 +2143,19 @@ public class MainService extends Service {
             //开门操作
             Log.e(TAG, "进行开门操作 开门开门");
             openLock(2);
-            List<LogDoor> list = new ArrayList<>();
-            //拼接图片地址
-            if (StringUtils.isNoEmpty(logDoor.getKaimenjietu())) {
-                logDoor.setKaimenjietu(logDoor.getKaimenjietu());
-            } else {
-                if (StringUtils.isNoEmpty(imageUrl)) {
+            //分为手机开门和视屏开门 1和2 进行区分 上传日志统一传2；
+            if ("1".equals(logDoor.getKaimenfangshi())) {
+                logDoor.setKaimenfangshi("2");
+                //一键开门拍照
+                if (StringUtils.isFastClick()) {
+                    String imgurl = "door/img/" + System.currentTimeMillis() + ".jpg";
+                    sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC, imgurl);
                     logDoor.setKaimenjietu(imageUrl);
                 }
             }
+            List<LogDoor> list = new ArrayList<>();
+            //拼接图片地址
+            logDoor.setKaimenjietu(logDoor.getKaimenjietu());
             Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
             list.add(logDoor);
             //上传日志
