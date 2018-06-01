@@ -2481,8 +2481,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mSurfaceView.setOnCameraListener(this);
 
 
-        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 0);
-//        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, mCameraMirror, 180);
+//        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 0);
+        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 180);
 // mCameraMirror=true:Y轴镜像  180:旋转180度
         mSurfaceView.debug_print_fps(true, false);
 
