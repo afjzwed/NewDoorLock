@@ -490,7 +490,7 @@ public class MainService extends Service {
                                 data.setKaimenjietu(picUrl);
                             }
                             data.setKa_id("");
-                            data.setKaimenshijian(StringUtils.transferLongToDate("yyyy-dd-MM HH:mm:ss",System.currentTimeMillis()));
+                            data.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss",System.currentTimeMillis()));
                             data.setUuid("");
                             data.setState(1);
                             List<LogDoor> list = new ArrayList<>();
@@ -512,7 +512,7 @@ public class MainService extends Service {
                         } else {
                             data.setKaimenjietu(pic_url);
                         }
-                        data.setKaimenshijian(StringUtils.transferLongToDate("yyyy-dd-MM HH:mm:ss",System.currentTimeMillis()));
+                        data.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss",System.currentTimeMillis()));
                         data.setUuid("");
                         data.setState(1);
                         List<LogDoor> list = new ArrayList<>();
@@ -688,7 +688,8 @@ public class MainService extends Service {
             logDoor.setUuid("");
             logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
             logDoor.setPhone("");
-            logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-dd-MM HH:mm:ss",System.currentTimeMillis()));
+            logDoor.setMima(tempKey);
+            logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss",System.currentTimeMillis()));
             logDoor.setKaimenfangshi(6);
             logDoor.setState(1);
             Log.i(TAG, "上传密码开门日志" + "---logDoor=" + logDoor.toString());
@@ -726,7 +727,7 @@ public class MainService extends Service {
                 logDoor.setUuid("");
                 logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
                 logDoor.setPhone("");
-                logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-dd-MM HH:mm:ss",System.currentTimeMillis()));
+                logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss",System.currentTimeMillis()));
                 logDoor.setKaimenfangshi(5);
                 logDoor.setState(1);//1成功 -1失败
                 logDoor.setMima(tempKey);
@@ -742,7 +743,7 @@ public class MainService extends Service {
                 logDoor.setUuid("");
                 logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
                 logDoor.setPhone("");
-                logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-dd-MM HH:mm:ss",System.currentTimeMillis()));
+                logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss",System.currentTimeMillis()));
                 logDoor.setKaimenfangshi(5);
                 logDoor.setState(-1);
                 logDoor.setMima(tempKey);
@@ -2215,7 +2216,7 @@ public class MainService extends Service {
             List<LogDoor> list = new ArrayList<>();
             //拼接图片地址
             logDoor.setKaimenjietu(logDoor.getKaimenjietu());
-            logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-dd-MM HH:mm:ss",System.currentTimeMillis()));
+            logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss",System.currentTimeMillis()));
             Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
             list.add(logDoor);
             //上传日志
