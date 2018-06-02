@@ -32,6 +32,7 @@ import com.arcsoft.facerecognition.AFR_FSDKVersion;
 import com.cxwl.hurry.newdoorlock.config.Constant;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
 import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
+import com.cxwl.hurry.newdoorlock.db.ImgFile;
 import com.cxwl.hurry.newdoorlock.db.Ka;
 import com.cxwl.hurry.newdoorlock.db.LogDoor;
 import com.cxwl.hurry.newdoorlock.entity.ConnectReportBean;
@@ -134,6 +135,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_ONVIDEO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_REGISTER;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_PIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_VEDIO;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LIXIAN_IMG;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_ID;
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_KEY;
@@ -690,7 +692,19 @@ public class MainService extends Service {
             list.add(logDoor);
             createAccessLog(list);
         } else {
-            Log.e(TAG, "--------------------密码开门失败  --------------------");
+            Log.e(TAG, "--------------------临时密码开门失败  --------------------");
+            //                List<LogDoor> list = new ArrayList<>();
+//                LogDoor logDoor = new LogDoor();
+//                logDoor.setMac(mac);
+//                logDoor.setKa_id("-1"); //离线密码1表示成功-1表示失败
+//                logDoor.setUuid("");
+//                logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
+//                logDoor.setPhone("");
+//                logDoor.setKaimenshijian(System.currentTimeMillis() + "");
+//                logDoor.setKaimenfangshi("5");
+//                Log.i(TAG, "上传离线密码开门失败日志" + "---logDoor=" + logDoor.toString());
+//                list.add(logDoor);
+//                createAccessLog(list);
         }
 
         sendMessageToMainAcitivity(MSG_PASSWORD_CHECK, result);
@@ -716,6 +730,18 @@ public class MainService extends Service {
                 createAccessLog(list);
             } else {
                 Log.e(TAG, "--------------------离线密码开门失败  --------------------");
+                //                List<LogDoor> list = new ArrayList<>();
+//                LogDoor logDoor = new LogDoor();
+//                logDoor.setMac(mac);
+//                logDoor.setKa_id("-1"); //离线密码1表示成功-1表示失败
+//                logDoor.setUuid("");
+//                logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
+//                logDoor.setPhone("");
+//                logDoor.setKaimenshijian(System.currentTimeMillis() + "");
+//                logDoor.setKaimenfangshi("5");
+//                Log.i(TAG, "上传离线密码开门失败日志" + "---logDoor=" + logDoor.toString());
+//                list.add(logDoor);
+//                createAccessLog(list);
             }
         }
         sendMessageToMainAcitivity(MSG_LIXIAN_PASSWORD_CHECK_AFTER, result);
@@ -857,6 +883,12 @@ public class MainService extends Service {
                                         getTongGaoInfo(Long.parseLong(connectReportBean.getTonggao()));
                                     }
                                 }
+                            }
+                            //查询数据库中是否有离线照片
+                            List<ImgFile> imgFiles = DbUtils.getInstans().quaryImg();
+                            if (imgFiles!=null&&imgFiles.size()>0){
+                                Log.i(TAG, "存在"+imgFiles.size()+"张离线照片");
+                                sendMessageToMainAcitivity(MSG_UPLOAD_LIXIAN_IMG,imgFiles);
                             }
                         } else {
                             //服务器异常或没有网络
