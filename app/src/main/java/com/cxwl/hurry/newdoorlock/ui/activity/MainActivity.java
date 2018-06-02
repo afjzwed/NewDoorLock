@@ -774,6 +774,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //表示只有一张图片 需要轮播 在添加一张一样的开始轮播
             obj1.add(obj1.get(0));
         }
+        if (obj1.size()==0){
+            banner.update(obj1);
+            return;
+        }
         Log.d(TAG, "banner加载图片 size" + obj1.size());
         //白天banner
         banner.setImageLoader(new GlideImagerBannerLoader());
