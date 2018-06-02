@@ -3039,9 +3039,11 @@ public class MainService extends Service {
                         () + "是否失效  》0表示失效" + (System.currentTimeMillis() - Long.parseLong(kaInfo.getGuoqi_time())));
                 Log.i(TAG, "刷卡开门成功" + card);
                 //开始截图
-                if (DeviceConfig.OPEN_CARD_STATE == 0) {
+//                if (DeviceConfig.OPEN_CARD_STATE == 0) {
+                if (DeviceConfig.PRINTSCREEN_STATE == 0) {
                     Log.e(TAG, "刷卡开门，开始截图");
-                    DeviceConfig.OPEN_CARD_STATE = 1;
+//                    DeviceConfig.OPEN_CARD_STATE = 1;
+                    DeviceConfig.PRINTSCREEN_STATE = 2;
                     openLock(1);
                 }
                 Log.e(TAG, "onCard====:" + card);

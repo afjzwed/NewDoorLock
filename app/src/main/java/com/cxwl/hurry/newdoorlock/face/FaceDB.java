@@ -8,6 +8,7 @@ import com.arcsoft.facerecognition.AFR_FSDKEngine;
 import com.arcsoft.facerecognition.AFR_FSDKError;
 import com.arcsoft.facerecognition.AFR_FSDKFace;
 import com.arcsoft.facerecognition.AFR_FSDKVersion;
+import com.cxwl.hurry.newdoorlock.entity.FaceRegist;
 import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
 import com.guo.android_extend.java.ExtInputStream;
 import com.guo.android_extend.java.ExtOutputStream;
@@ -37,16 +38,16 @@ public class FaceDB {
     AFR_FSDKVersion mFRVersion;
     boolean mUpgrade;
 
-    public class FaceRegist {
-        public String mName;
-        public List<AFR_FSDKFace> mFaceList, mIDFaceList;
-
-        public FaceRegist(String name) {
-            mName = name;
-            mFaceList = new ArrayList<>();
-            mIDFaceList = new ArrayList<>();
-        }
-    }
+//    public class FaceRegist {
+//        public String mName;
+//        public List<AFR_FSDKFace> mFaceList, mIDFaceList;
+//
+//        public FaceRegist(String name) {
+//            mName = name;
+//            mFaceList = new ArrayList<>();
+//            mIDFaceList = new ArrayList<>();
+//        }
+//    }
 
     public FaceDB(String path) {
         mDBPath = path;

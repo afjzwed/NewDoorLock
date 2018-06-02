@@ -66,6 +66,7 @@ import com.cxwl.hurry.newdoorlock.callback.GlideImagerBannerLoader;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
 import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
 import com.cxwl.hurry.newdoorlock.db.ImgFile;
+import com.cxwl.hurry.newdoorlock.entity.FaceRegist;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.NoticeBean;
 import com.cxwl.hurry.newdoorlock.entity.ResponseBean;
@@ -2897,7 +2898,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AFR_FSDKFace result = new AFR_FSDKFace();
 
         // TODO: 2018/5/14 这里拿到本地数据库脸信息表
-        List<FaceDB.FaceRegist> mResgist = ArcsoftManager.getInstance().mFaceDB.mRegister;
+        List<FaceRegist> mResgist = ArcsoftManager.getInstance().mFaceDB.mRegister;
 //        List<Lian> mFaceList = new ArrayList<>();
 
 
@@ -2961,25 +2962,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 e.printStackTrace();
             }
 
-            if (DeviceConfig.OPEN_CARD_STATE == 1) {
+//            if (DeviceConfig.PRINTSCREEN_STATE == 1) {
+            if (DeviceConfig.PRINTSCREEN_STATE == 2) {
                 //将byte数组转成bitmap再转成图片文件
                 byte[] data = picData;
-                YuvImage yuv = new YuvImage(data, ImageFormat.NV21, mWidth, mHeight, null);
-//                ByteArrayOutputStream stream =newByteArrayOutputStream();
-//                image.compressToJpeg(newRect(0,0, Width, Height),80, stream);
-////Bitmap bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
-//                bmp = BitmapFactory.decodeByteArray(stream.toByteArray(),0, stream.size());
-                ExtByteArrayOutputStream ops = new ExtByteArrayOutputStream();
-                yuv.compressToJpeg(new Rect(0, 0, mWidth, mHeight), 80, ops);
-                Bitmap bmp = BitmapFactory.decodeByteArray(ops.getByteArray(), 0, ops.getByteArray().length);
-                try {
-                    ops.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
+                Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
                 File file = null;
-                if (null != bmp) {
-                    file = BitmapUtils.saveBitmap(MainActivity.this, bmp);//本地截图文件地址
+                if (null != bitmap) {
+                    file = BitmapUtils.saveBitmap(MainActivity.this, bitmap);//本地截图文件地址
                 }
 
                 if (null != file && !TextUtils.isEmpty(file.getPath())) {
@@ -2988,12 +2979,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     faceOpenUrl = "";
                 }
-                DeviceConfig.OPEN_CARD_STATE = 0;//图片处理完成,重置状态
-
+//                DeviceConfig.OPEN_CARD_STATE = 0;//图片处理完成,重置状态
+                DeviceConfig.PRINTSCREEN_STATE = 0;//图片处理完成,重置状态
                 sendMainMessager(MSG_CARD_OPENLOCK, faceOpenUrl);
                 file = null;
+                bitmap= null;
                 bmp = null;
-                yuv = null;
                 data = null;
             }
 
@@ -3015,7 +3006,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
                 //遍历本地信息表
-                for (FaceDB.FaceRegist fr : mResgist) {
+                for (FaceRegist fr : mResgist) {
                     Log.v("人脸识别", "loop:" + mResgist.size() + "/" + fr.mFaceList.size());
                     if (fr.mName.length() > 11) {
                         continue;
@@ -3040,25 +3031,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     //fr success.
                     //final float max_score = max;
                     //Log.v(FACE_TAG, "置信度：" + (float) ((int) (max_score * 1000)) / 1000.0);
-                    if (DeviceConfig.OPEN_RENLIAN_STATE == 0 && DeviceConfig.OPEN_CARD_STATE == 0)
-                    {//开启截图、上传图片、开门、上传日志流程
-                        DeviceConfig.OPEN_RENLIAN_STATE = 1;//已开始处理图片
+//                    if (DeviceConfig.OPEN_RENLIAN_STATE == 0 && DeviceConfig.OPEN_CARD_STATE == 0)
+                    if (DeviceConfig.PRINTSCREEN_STATE == 0) {//开启截图、上传图片、开门、上传日志流程
+//                        DeviceConfig.OPEN_RENLIAN_STATE = 1;//已开始处理人脸图片
+                        DeviceConfig.PRINTSCREEN_STATE = 1;
                         //将byte数组转成bitmap再转成图片文件
                         byte[] data = mImageNV21;
-                        YuvImage yuv = new YuvImage(data, ImageFormat.NV21, mWidth, mHeight, null);
-                        ExtByteArrayOutputStream ops = new ExtByteArrayOutputStream();
-                        yuv.compressToJpeg(new Rect(0, 0, mWidth, mHeight), 80, ops);
-                        Bitmap bmp = BitmapFactory.decodeByteArray(ops.getByteArray(), 0, ops.getByteArray().length);
-                        try {
-                            ops.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
+                        Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
                         File file = null;
                         if (null != bmp) {
                             file = BitmapUtils.saveBitmap(MainActivity.this, bmp);//本地截图文件地址
                         }
-
                         String[] parameters = new String[2];
                         parameters[0] = name;
                         if (null != file && !TextUtils.isEmpty(file.getPath())) {
@@ -3068,11 +3052,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         } else {
                             parameters[1] = "";
                         }
-                        DeviceConfig.OPEN_RENLIAN_STATE = 0;//图片处理完成（异步处理，成功与否尽人事，听天命）,重置状态
+//                        DeviceConfig.OPEN_RENLIAN_STATE = 0;//图片处理完成（异步处理，成功与否尽人事，听天命）,重置状态
+                        DeviceConfig.PRINTSCREEN_STATE = 0;
                         sendMainMessager(MSG_FACE_OPENLOCK, parameters);
                         file = null;
+                        bitmap= null;
                         bmp = null;
-                        yuv = null;
                         data = null;
                     }
                 }
@@ -3097,15 +3082,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void uploadToQiNiu(final File file, final int i) {
         //创建地址
         faceOpenUrl = "door/img/" + System.currentTimeMillis() + ".jpg";
+        final ImgFile imgFile = new ImgFile();
+        imgFile.setImg_localurl(file.getAbsolutePath());
+        imgFile.setImg_uploadurl(faceOpenUrl);
         OkHttpUtils.post().url(API.QINIU_IMG).build().execute(new StringCallback() {//七牛token值不固定，每次请求使用
             @Override
             public void onError(Call call, Exception e, int id) {
                 Log.i(TAG, "获取七牛token失败 e" + e.toString());
-                if (i == 1) {
-                    DeviceConfig.OPEN_CARD_STATE = 0;
-                } else if (i == 3) {
-                    DeviceConfig.OPEN_RENLIAN_STATE = 0;//重置处理图片并上传日志的状态
-                }
+                DbUtils.getInstans().insertOneImg(imgFile);//获取token失败，图片存在本地
+                DeviceConfig.PRINTSCREEN_STATE =0;//重置处理图片并上传日志的状态
             }
 
             @Override
@@ -3122,21 +3107,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             public void complete(String key, ResponseInfo info, JSONObject response) {
                                 if (info.isOK()) {
                                     Log.e(TAG, "七牛上传图片成功");
-
+                                    try {//删除本地图片文件
+                                        if (file != null) {
+                                            file.delete();
+                                        }
+                                    } catch (Exception e) {
+                                    }
                                 } else {
                                     Log.e(TAG, "七牛上传图片失败");
+                                    DbUtils.getInstans().insertOneImg(imgFile);//获取token失败，图片存在本地
                                 }
-                                try {//删除本地图片文件
-                                    if (file != null) {
-                                        file.delete();
-                                    }
-                                } catch (Exception e) {
-                                }
-                                if (i == 1) {
-                                    DeviceConfig.OPEN_CARD_STATE = 0;
-                                } else if (i == 3) {
-                                    DeviceConfig.OPEN_RENLIAN_STATE = 0;//重置处理图片并上传日志的状态
-                                }
+                                DeviceConfig.PRINTSCREEN_STATE = 0;//重置处理图片并上传日志的状态
                             }
                         }, null);
                     }
