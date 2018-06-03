@@ -14,7 +14,6 @@ import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
-import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
@@ -57,6 +56,7 @@ import com.arcsoft.facetracking.AFT_FSDKEngine;
 import com.arcsoft.facetracking.AFT_FSDKError;
 import com.arcsoft.facetracking.AFT_FSDKFace;
 import com.arcsoft.facetracking.AFT_FSDKVersion;
+import com.cxwl.hurry.newdoorlock.Bean.NewDoorBean;
 import com.cxwl.hurry.newdoorlock.MainApplication;
 import com.cxwl.hurry.newdoorlock.R;
 import com.cxwl.hurry.newdoorlock.callback.AccountCallback;
@@ -70,9 +70,7 @@ import com.cxwl.hurry.newdoorlock.entity.FaceRegist;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.NoticeBean;
 import com.cxwl.hurry.newdoorlock.entity.ResponseBean;
-import com.cxwl.hurry.newdoorlock.entity.XdoorBean;
 import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
-import com.cxwl.hurry.newdoorlock.face.FaceDB;
 import com.cxwl.hurry.newdoorlock.face.PhotographActivity2;
 import com.cxwl.hurry.newdoorlock.http.API;
 import com.cxwl.hurry.newdoorlock.interfac.TakePictureCallback;
@@ -90,7 +88,6 @@ import com.cxwl.hurry.newdoorlock.utils.MacUtils;
 import com.cxwl.hurry.newdoorlock.utils.NetWorkUtils;
 import com.google.gson.reflect.TypeToken;
 import com.guo.android_extend.java.AbsLoop;
-import com.guo.android_extend.java.ExtByteArrayOutputStream;
 import com.guo.android_extend.widget.CameraFrameData;
 import com.guo.android_extend.widget.CameraGLSurfaceView;
 import com.guo.android_extend.widget.CameraSurfaceView;
@@ -108,7 +105,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -169,12 +165,10 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.ft_key;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.DEVICE_KEYCODE_POUND;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.DEVICE_KEYCODE_STAR;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.LOCAL_IMG_PATH;
-import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.OPENDOOR_STATE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_ETHERNET;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_MOBILE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_NONE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_WIFI;
-import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.isNetworkAvailable;
 
 /**
  * MainActivity
@@ -931,7 +925,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void onLoginAfter(Message msg) {
         if (msg.obj != null) {
-            XdoorBean result = (XdoorBean) msg.obj;
+            NewDoorBean result = (NewDoorBean) msg.obj;
             sendMainMessager(MSG_RTC_REGISTER, null);
             //初始化社区信息
             setCommunityName(result.getXiangmu_name() == null ? "欣社区" : result.getXiangmu_name());
@@ -950,6 +944,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             sendMainMessager(MainService.REGISTER_ACTIVITY_DIAL, null);//开始心跳包
         }
+        // TODO: 2018/6/3 注释
+        /*if (msg.obj != null) {
+            XdoorBean result = (XdoorBean) msg.obj;
+            sendMainMessager(MSG_RTC_REGISTER, null);
+            //初始化社区信息
+            setCommunityName(result.getXiangmu_name() == null ? "欣社区" : result.getXiangmu_name());
+            setLockName(MainService.lockName);
+            if ("C".equals(DeviceConfig.DEVICE_TYPE)) {//判断是否社区大门
+                setDialStatus("请输入楼栋编号");
+            }
+
+            Log.e(TAG, "可以读卡");
+            enableReaderMode();//登录成功后开启读卡
+
+            //人脸识别开始
+            if (faceHandler != null) {
+                faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 1000);
+            }
+
+            sendMainMessager(MainService.REGISTER_ACTIVITY_DIAL, null);//开始心跳包
+        }*/
 //                else if (code == 1) { //登录失败,MAC地址不存在服务器
 //                    //显示MAC地址并提示添加
 //                    showMacaddress(result.getString("mac"));
@@ -3041,7 +3056,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
                         File file = null;
                         if (null != bmp) {
-                            file = BitmapUtils.saveBitmap(MainActivity.this, bmp);//本地截图文件地址
+                            file = BitmapUtils.saveBitmap(MainActivity.this, bitmap);//本地截图文件地址
                         }
                         String[] parameters = new String[2];
                         parameters[0] = name;
