@@ -136,8 +136,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
     public void initData(List<GuangGaoBean> rows, Messenger dialMessenger, boolean isOnVideo, AdverErrorCallBack
             errorCallBack, AdverTongJiCallBack mCallBack) {
         this.dialMessenger = dialMessenger;
-        list = rows;
-        listIndex = 0;
+        initList(rows);
         mAdverTongJiCallBack = mCallBack;
         //initScreen();
         initInterger();
@@ -147,8 +146,13 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         }
 
     }
-
+    private void initList(List<GuangGaoBean> rows){
+        listIndex = 0;
+        list.clear();
+        list.addAll(rows);
+    }
     private void initInterger() {
+        listCount.clear();
         for (int i = 0; i < list.size(); i++) {
             AdTongJiBean tongJiBean = new AdTongJiBean();
             listCount.add(tongJiBean);
@@ -382,14 +386,17 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                     voicePlayer.stop();
                 }
                 voicePlayer.release();
+                voicePlayer = null;
             }
         } catch (IllegalStateException e) {
-            Log.d("AdvertiseHandler", "UpdateAdvertise: onDestroy error");
+            Log.d("AdvertiseHandler", "UpdateAdvertise: onDestroy error="+e.toString());
         }
         Log.e("AdvertiseHandler", "停止播放");
-        videoView.setVisibility(View.GONE);
-        imageView.setVisibility(View.VISIBLE);
-        voicePlayer = null;
+        if (videoView != null && imageView != null) {
+            videoView.setVisibility(View.GONE);
+            imageView.setVisibility(View.VISIBLE);
+        }
+
     }
 
     public void onStop() {
