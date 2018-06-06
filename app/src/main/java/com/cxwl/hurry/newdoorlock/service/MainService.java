@@ -1402,12 +1402,12 @@ public class MainService extends Service {
 // "" + "" + "" + "" + ""
 //                                        + ".com/uploads/allimg/120727/201995-120HG1030762.jpg");
 //                                guangGaoBeen.add(guangGaoBeen1);
-//                                    if (guangGaoBeen==null||guangGaoBeen.size()<1){
-//                                        sendMessageToMainAcitivity(MSG_ADVERTISE_REFRESH,guangGaoBeen);
-//                                        syncCallBack("5", v);//同步视频
-//                                        adInfoStatus = 0;//重置广告视频下载状态
-//                                        return;
-//                                    }
+                                    if (guangGaoBeen==null||guangGaoBeen.size()<1){
+                                        sendMessageToMainAcitivity(MSG_ADVERTISE_REFRESH,guangGaoBeen);
+                                        syncCallBack("5", v);//同步视频
+                                        adInfoStatus = 0;//重置广告视频下载状态
+                                        return;
+                                    }
                                     new Thread(new Runnable() {
                                         @Override
                                         public void run() {

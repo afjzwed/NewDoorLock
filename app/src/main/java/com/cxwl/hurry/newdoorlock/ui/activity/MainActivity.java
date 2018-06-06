@@ -1962,8 +1962,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                 uploadImgStatus = 0;
                                             }
                                         } else {
+                                            if (info.statusCode==614){
+                                                //表示文件已存在
+                                                //删除文件
+                                                file.delete();
+                                                //删除数据库中数据
+                                                DbUtils.getInstans().deleteOneImg(imgFile);
+                                            }
+                                            if ((curUploadImgIndex) == imgFiles.size())
+                                            {
+                                                uploadImgStatus = 0;
+                                            }
                                             //当前图片上传失败
                                             curUploadImgIndexFail++;
+                                            Log.e("七牛info", info.toString());
                                         }
                                     }
                                 }, null);

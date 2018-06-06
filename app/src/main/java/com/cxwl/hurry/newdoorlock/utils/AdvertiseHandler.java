@@ -135,6 +135,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
 
     public void initData(List<GuangGaoBean> rows, Messenger dialMessenger, boolean isOnVideo, AdverErrorCallBack
             errorCallBack, AdverTongJiCallBack mCallBack) {
+        imageView.setVisibility(View.INVISIBLE);
+        videoView.setVisibility(View.VISIBLE);
         this.dialMessenger = dialMessenger;
         initList(rows);
         mAdverTongJiCallBack = mCallBack;
@@ -340,7 +342,22 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         mAdTongJiBean.setMac(MacUtils.getMac());
         mTongJiBeanList.add(mAdTongJiBean);
         mAdverTongJiCallBack.sendTj(mTongJiBeanList);
+        if (Long.parseLong(StringUtils.transferDateToLong(list.get(listIndex).getShixiao_shijian())) < System
+                .currentTimeMillis()) {
+            //视频已失效
+            Log.e("AdvertiseHandler", "当前视频已经失效 list.size()" + list.size());
+            if (list.size() > 1) {
+                list.remove(list.get(listIndex));
+                listIndex = 0;
+                Log.e("AdvertiseHandler", "当前视频已经失效 继续播放重第一个开始" + list.size());
+            } else {
+                list.remove(list.get(listIndex));
+                onDestroy();
+                Log.e("AdvertiseHandler", "当前视频已经失效 停止播放" + list.size());
+                return;
+            }
 
+        }
         next();
     }
 
@@ -380,6 +397,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                     mediaPlayer.stop();
                 }
                 mediaPlayer.release();
+                mediaPlayer=null;
             }
             if (voicePlayer != null) {
                 if (voicePlayer.isPlaying()) {
