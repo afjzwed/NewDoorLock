@@ -261,6 +261,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isTongGaoThreadStart = false;//通告更新线程是否开启的标志
     private ArrayList<NoticeBean> noticeBeanList = new ArrayList<>();//通告集合
     private NoticeBean currentNoticeBean = null;//当前显示通告
+    private NoticeBean defaultNotice = null;//默认通告
     private int tongGaoIndex = 0;//通告更新计数
 
     Timer timer = new Timer();
@@ -363,6 +364,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 开启通告更新线程
      */
     private void startTonggaoThread() {
+        defaultNotice = new NoticeBean();
+        defaultNotice.setBiaoti("暂无通知");
+        defaultNotice.setNeirong("暂无通知");
+        defaultNotice.setShixiao_shijian("2050-06-02 10:17:00.0");
+
         if (null != noticeThread) {
             noticeThread.interrupt();
             noticeThread = null;
@@ -2441,24 +2447,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void setTongGaoInfo() {
-        if (null != noticeBeanList && noticeBeanList.size() > 0) {//通告列表有数据
-            currentNoticeBean = noticeBeanList.get(tongGaoIndex);
-            tongGaoIndex++;
-            if (tongGaoIndex == noticeBeanList.size()) {//循环一遍以后，重置游标
-                tongGaoIndex = 0;
+        if (isTongGaoStart()) {
+            if (null != noticeBeanList && noticeBeanList.size() > 0) {//通告列表有数据
+                currentNoticeBean = noticeBeanList.get(tongGaoIndex);
+                tongGaoIndex++;
+                if (tongGaoIndex == noticeBeanList.size()) {//循环一遍以后，重置游标
+                    tongGaoIndex = 0;
+                }
+            } else {//通告列表无数据
+                currentNoticeBean = defaultNotice;
             }
-        } else {//通告列表无数据
-            currentNoticeBean = new NoticeBean();
-            currentNoticeBean.setBiaoti("暂无通知");
-            currentNoticeBean.setNeirong("暂无通知");
-            currentNoticeBean.setShixiao_shijian("2020-06-02 10:17:00.0");
-        }
-        Log.e(TAG, "设置通告 currentNoticeBean" + currentNoticeBean.toString());
-        Log.e(TAG, "设置通告 过期时间 " + StringUtils.transferDateToLong(currentNoticeBean.getShixiao_shijian()) + " 当前时间 " +
-                System.currentTimeMillis());
-        if (Long.parseLong(StringUtils.transferDateToLong(currentNoticeBean.getShixiao_shijian())) > System
-                .currentTimeMillis()) {
-            Log.e(TAG, "设置通告 有数据");
+            Log.e(TAG, "设置通告 currentNoticeBean" + currentNoticeBean.toString());
+            Log.e(TAG, "设置通告 过期时间 " + currentNoticeBean.getShixiao_shijian() + " 当前时间 " +
+                    StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
+            Log.e(TAG, "设置通告 过期时间 " + StringUtils.transferDateToLong(currentNoticeBean.getShixiao_shijian()) + " 当前时间" +
+                    " " +
+                    System.currentTimeMillis());
+            if (Long.parseLong(StringUtils.transferDateToLong(currentNoticeBean.getShixiao_shijian())) > System
+                    .currentTimeMillis()) {//过期时间大于当前时间
+                Log.e(TAG, "设置通告 有数据");
+                if (Long.parseLong(StringUtils.transferDateToLong(currentNoticeBean.getKaishi_shijian())) < System
+                        .currentTimeMillis()) {//开始时间小于当前时间，可以显示
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setTextView(R.id.gonggao, currentNoticeBean.getNeirong());
+                            setTextView(R.id.gonggao_title, currentNoticeBean.getBiaoti());
+                        }
+                    });
+                } else {//开始时间大于当前时间，跳过，直接显示下一条
+                    setTongGaoInfo();
+                }
+            } else {
+                tongGaoIndex--;
+                if (tongGaoIndex == -1) {
+                    Log.e(TAG, "通告清零");
+                    noticeBeanList.clear();
+                    noticeBeanList = null;
+                } else {
+                    Log.e(TAG, "移除一条通告");
+                    noticeBeanList.remove(tongGaoIndex);
+                }
+                setTongGaoInfo();
+            }
+        } else {
+            currentNoticeBean = defaultNotice;
             handler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -2466,9 +2499,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     setTextView(R.id.gonggao_title, currentNoticeBean.getBiaoti());
                 }
             });
-        } else {
-//            setTongGaoInfo();
         }
+    }
+
+    private boolean isTongGaoStart() {
+        Log.e(TAG, "开始通告判断");
+        boolean b = false;
+        if (null != noticeBeanList && noticeBeanList.size() > 0) {
+            for (NoticeBean noticeBean : noticeBeanList) {
+                if (Long.parseLong(StringUtils.transferDateToLong(noticeBean.getKaishi_shijian())) < System
+                        .currentTimeMillis()) {
+                    b = true;
+                    break;
+                }
+            }
+        }
+        return b;
     }
 
     /**
