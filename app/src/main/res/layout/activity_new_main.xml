@@ -409,20 +409,20 @@
 
 
             <!--通告标题-->
+
+            <!--通告标题-->
             <TextView
                 android:id="@+id/gonggao_title"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
                 android:background="@color/num_red"
-                android:layout_marginTop="24dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:paddingLeft="20dp"
-                android:paddingRight="20dp"
-                android:text="标题"
+                android:gravity="center"
+                android:maxLines="2"
+                android:minLines="2"
+                android:text=""
                 android:textColor="@android:color/white"
-                android:textSize="30sp"/>
+                android:textSize="25sp"/>
 
             <!--通告内容-->
             <TextView
@@ -433,10 +433,10 @@
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:marqueeRepeatLimit="marquee_forever"
-                android:scrollHorizontally="true"
-                android:textColor="@color/black"
-                android:text="暂无通知"
                 android:padding="10dp"
+                android:scrollHorizontally="true"
+                android:text="暂无通知"
+                android:textColor="@color/black"
                 android:textSize="25sp"/>
 
         </LinearLayout>
@@ -454,8 +454,13 @@
             android:layout_height="match_parent"
             android:background="@mipmap/bg_banner"
             app:banner_default_image="@mipmap/bg_banner"
+            android:visibility="gone"
             />
-
-
+        <ImageView
+            android:id="@+id/img_banner"
+            android:scaleType="fitXY"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@mipmap/bg_banner"/>
     </RelativeLayout>
 </LinearLayout>

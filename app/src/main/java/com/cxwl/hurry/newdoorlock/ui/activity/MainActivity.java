@@ -56,6 +56,7 @@ import com.arcsoft.facetracking.AFT_FSDKEngine;
 import com.arcsoft.facetracking.AFT_FSDKError;
 import com.arcsoft.facetracking.AFT_FSDKFace;
 import com.arcsoft.facetracking.AFT_FSDKVersion;
+import com.bumptech.glide.Glide;
 import com.cxwl.hurry.newdoorlock.Bean.NewDoorBean;
 import com.cxwl.hurry.newdoorlock.MainApplication;
 import com.cxwl.hurry.newdoorlock.R;
@@ -173,6 +174,7 @@ import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_ETHERNE
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_MOBILE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_NONE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_WIFI;
+import static java.lang.Thread.sleep;
 
 /**
  * MainActivity
@@ -216,7 +218,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AdvertiseHandler advertiseHandler = null;//广告播放类
 //    public appLibsService hwservice;//hwservice为安卓工控appLibs的服务
 
-
+    private Thread videoThread = null;//视频更新线程
+    private boolean isVideoThreadStart = false;//视频更新线程是否开启的标志
     private boolean isNfcFlag = false;//串口库是否打开的标识（默认失败）
     private DoorLock doorLock;//用于nfc卡扫描
 
@@ -226,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int netWorkFlag = -1;//当前网络是否可用标识 有网为1 无网为0
     private Timer netTimer = new Timer();//检测网络用定时器
     private Banner banner;
+    private ImageView imgBanner;
     private WifiInfo wifiInfo = null;//获得的Wifi信息
     private int level;//信号强度值
     private WifiManager wifiManager = null;//Wifi管理器
@@ -256,7 +260,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FRAbsLoop mFRAbsLoop = null;//人脸对比线程
     private boolean hasFaceInfo = false;//是否有本地脸数据的标识
     private String phone_face = "";
-
+    private Thread picThread = null;//图片更新线程
+    private boolean isPicThreadStart = false;//图片更新线程是否开启的标志
     private Thread noticeThread = null;//通告更新线程
     private boolean isTongGaoThreadStart = false;//通告更新线程是否开启的标志
     private ArrayList<NoticeBean> noticeBeanList = new ArrayList<>();//通告集合
@@ -597,6 +602,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         showMacText = (TextView) findViewById(R.id.show_mac);//mac地址
         videoLayout = (LinearLayout) findViewById(R.id.ll_video);//用于添加视频通话的根布局
         banner = (Banner) findViewById(R.id.banner);//用于添加视频通话的根布局
+        imgBanner = (ImageView) findViewById(R.id.img_banner);//用于添加视频通话的根布局
         tv_gonggao_title = (TextView) findViewById(R.id.gonggao_title);
         //getBgBanners();// 网络获得轮播背景图片数据
         rl_nfc = (RelativeLayout) findViewById(R.id.rl_nfc);//删除脸信息布局(原录卡布局)
@@ -728,12 +734,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         break;
                     case MSG_ADVERTISE_REFRESH://刷新广告
-                        Log.i(TAG, "刷新广告");
-                        onAdvertiseRefresh(msg.obj);
+                        // onAdvertiseRefresh(msg.obj);
+                        videoList = (List<GuangGaoBean>) msg.obj;
+                        if (!isVideoThreadStart) {//线程未开启
+                            isVideoThreadStart = !isVideoThreadStart;
+                            startVedioThread();//开启线程
+                        }
+
                         break;
                     case MSG_ADVERTISE_REFRESH_PIC://刷新广告图片
                         Log.i(TAG, "刷新广告图片");
-                        onAdvertiseRefreshPic(msg.obj);
+                        //  onAdvertiseRefreshPic((ArrayList<GuangGaoBean>) msg.obj);
+                        picStartTime = System.currentTimeMillis();
+                        picList = (ArrayList<GuangGaoBean>) msg.obj;
+                        picIndex = 0;
+                        if (!isPicThreadStart) {//线程未开启
+                            isPicThreadStart = !isPicThreadStart;
+                            startPicTread();//开启线程
+                        }
                         break;
                     case MSG_ADVERTISE_IMAGE:
                         onAdvertiseImageChange(msg.obj);
@@ -956,6 +974,247 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return verName;
     }
 /***********************************初始化一些基本东西end*****************************************/
+    /*************************视频定时播放**********************/
+    private List<GuangGaoBean> videoList;
+    private List<GuangGaoBean> isPlayingList = new ArrayList<>();
+
+    private void startVedioThread() {
+        if (null != videoThread) {
+            videoThread.interrupt();
+            videoThread = null;
+        }
+        videoThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    setVideoInfo();
+                    while (!Thread.interrupted()) {
+                        sleep(30000);
+                        setVideoInfo();
+                    }
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        videoThread.start();
+    }
+
+    private void setVideoInfo() {
+        if (isVideoStart()) {
+            isPlayingList.clear();
+            //有开始播放的视频
+            for (int i = 0; i < videoList.size(); i++) {
+                if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getShixiao_shijian())) > System
+                        .currentTimeMillis()) {//过期时间大于当前时间
+                    Log.e(TAG, "设置通告 有数据");
+                    if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getKaishi_shijian())) < System
+                            .currentTimeMillis()) {//开始时间小于当前时间，可以显示
+                        isPlayingList.add(videoList.get(i));
+
+                    }
+                }
+            }
+            //已过过期时间全部失效
+            if (isPlayingList.size() == 0) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        advertiseHandler.onDestroy();
+                    }
+                });
+                return;
+            }
+            //之前未播放 有新数据播放
+            if (isPlayingList.size() > 0 && advertiseHandler.getList().size() == 0) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        advertiseHandler.initData(isPlayingList, mainMessage, (currentStatus == ONVIDEO_MODE),
+                                adverErrorCallBack, adverTongJiCallBack);
+                    }
+                });
+                return;
+            }
+            //正在播放 有新数据更新
+            if (isSaveOrUpdate(advertiseHandler.getList(), isPlayingList)) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        advertiseHandler.initData(isPlayingList, mainMessage, (currentStatus == ONVIDEO_MODE),
+                                adverErrorCallBack, adverTongJiCallBack);
+                    }
+                });
+            }
+        } else {
+            //没有开始播放的视频
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    advertiseHandler.onDestroy();
+                }
+            });
+
+        }
+
+    }
+
+    public boolean isSaveOrUpdate(List<GuangGaoBean> oldList, List<GuangGaoBean> newList) {
+        if (oldList.size() != newList.size()) {
+            return true;
+        } else {
+            for (GuangGaoBean o : oldList) {
+                if (!newList.contains(o)) {
+                    return true;
+                }
+            }
+            for (GuangGaoBean o : newList) {
+                if (!oldList.contains(o)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isVideoStart() {
+        Log.e(TAG, "开始视频广告判断");
+        boolean b = false;
+        if (null != videoList && videoList.size() > 0) {
+            for (GuangGaoBean noticeBean : videoList) {
+                if (Long.parseLong(StringUtils.transferDateToLong(noticeBean.getKaishi_shijian())) < System
+                        .currentTimeMillis()) {
+                    b = true;
+                    break;
+                }
+            }
+        }
+        return b;
+    }
+    /**************************图片轮播***************/
+    private void startPicTread() {
+        if (null != picThread) {
+            picThread.interrupt();
+            picThread = null;
+        }
+        picThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    setPicInfo();
+                    while (!Thread.interrupted()) {
+                        sleep(10000);
+                        setPicInfo();
+                    }
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        picThread.start();
+    }
+
+    private List<GuangGaoBean> picList;
+    private GuangGaoBean currentGuangGaoBean;
+    private int picIndex = 0;
+    private long picStartTime;
+    private long picEndTime;
+
+    private void setPicInfo() {
+        if (isPicStart()) {
+            if (null != picList && picList.size() > 0) {//通告列表有数据
+
+                currentGuangGaoBean = picList.get(picIndex);
+                picIndex++;
+                if (picIndex == picList.size()) {//循环一遍以后，重置游标
+                    picIndex = 0;
+                }
+            } else {//通告列表无数据
+                // 没有图片
+                // currentNoticeBean = defaultNotice;
+                //设置图片信息
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Glide.with(MainActivity.this).load(R.mipmap.bg_banner).into(imgBanner);
+                    }
+                });
+                return;
+            }
+            Log.e(TAG, "设置通告 currentNoticeBean" + currentGuangGaoBean.toString());
+            Log.e(TAG, "设置通告 过期时间 " + currentGuangGaoBean.getShixiao_shijian() + " 当前时间 " + StringUtils
+                    .transferLongToDate("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
+            Log.e(TAG, "设置通告 过期时间 " + StringUtils.transferDateToLong(currentGuangGaoBean.getShixiao_shijian()) + " "
+                    + "当前时间" + " " + System.currentTimeMillis());
+            if (Long.parseLong(StringUtils.transferDateToLong(currentGuangGaoBean.getShixiao_shijian())) > System
+                    .currentTimeMillis()) {//过期时间大于当前时间
+                Log.e(TAG, "设置通告 有数据");
+                if (Long.parseLong(StringUtils.transferDateToLong(currentGuangGaoBean.getKaishi_shijian())) < System
+                        .currentTimeMillis()) {//开始时间小于当前时间，可以显示
+                    //设置图片信息
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Glide.with(MainActivity.this).load(currentGuangGaoBean.getNeirong()).into(imgBanner);
+                        }
+                    });
+
+                    //上传广告统计日志
+                    picEndTime = System.currentTimeMillis();
+                    mTongJiBeanList = new ArrayList<>();
+                    mAdTongJiBean = new AdTongJiBean();
+                    mAdTongJiBean.setStart_time(picStartTime + "");
+                    mAdTongJiBean.setEnd_time(picEndTime + "");
+                    mAdTongJiBean.setAd_id(currentGuangGaoBean.getId());
+                    mAdTongJiBean.setMac(mac);
+                    mTongJiBeanList.add(mAdTongJiBean);
+                    sendMainMessager(MSG_TONGJI_PIC, mTongJiBeanList);
+                    picStartTime = picEndTime;
+
+
+                } else {//开始时间大于当前时间，跳过，直接显示下一条
+                    setPicInfo();
+                }
+            } else {
+                picIndex--;
+                if (picIndex == -1) {
+                    Log.e(TAG, "通告清零");
+                    picList.clear();
+                    picList = null;
+                } else {
+                    Log.e(TAG, "移除一条通告");
+                    picList.remove(picIndex);
+                }
+                setPicInfo();
+            }
+        } else {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    //设置默认图片
+                    Glide.with(MainActivity.this).load(R.mipmap.bg_banner).into(imgBanner);
+                }
+            });
+        }
+    }
+
+    private boolean isPicStart() {
+        Log.e(TAG, "开始图片广告判断");
+        boolean b = false;
+        if (null != picList && picList.size() > 0) {
+            for (GuangGaoBean noticeBean : picList) {
+                if (Long.parseLong(StringUtils.transferDateToLong(noticeBean.getKaishi_shijian())) < System
+                        .currentTimeMillis()) {
+                    b = true;
+                    break;
+                }
+            }
+        }
+        return b;
+    }
+
     /**
      * 登录成功后
      *
