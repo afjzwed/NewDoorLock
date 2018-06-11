@@ -543,7 +543,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     protected void initVoiceVolume(AudioManager audioManager, int type, int value) {
         int thisValue = audioManager.getStreamMaxVolume(type);//得到最大音量
-        // thisValue = thisValue * value / 10;//具体音量值
+         thisValue = thisValue * value / 30;//具体音量值
         audioManager.setStreamVolume(type, thisValue, AudioManager.FLAG_PLAY_SOUND);//调整音量时播放声音
     }
 
@@ -3362,6 +3362,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             if (DeviceConfig.PRINTSCREEN_STATE == 2) {
+                Log.e("刷卡开门", "人脸截图开始");
                 //将byte数组转成bitmap再转成图片文件
                 byte[] data = picData;
                 Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
@@ -3370,7 +3371,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (null != bitmap) {
                     file = BitmapUtils.saveBitmap(MainActivity.this, bitmap);//本地截图文件地址
                 }
-
                 if (null != file && !TextUtils.isEmpty(file.getPath())) {
                     uploadToQiNiu(file, 1);//这里做上传到七牛的操作，不返回图片URL
                 } else {

@@ -407,9 +407,6 @@
             android:background="@mipmap/bg_tongzhi"
             android:orientation="vertical">
 
-
-            <!--通告标题-->
-
             <!--通告标题-->
             <TextView
                 android:id="@+id/gonggao_title"

@@ -504,6 +504,7 @@ public class MainService extends Service {
                         createAccessLog(list);
                         DLLog.e(TAG, "人脸截图 开始开门");
                         openLock(3);
+                        DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
 //                        }
                         break;
                     }
@@ -902,131 +903,6 @@ public class MainService extends Service {
                             Log.e(TAG, "onResponse 心跳接口 connectReport " + response);
                         }
                     }
-                    // TODO: 2018/6/3 注释
-                    /*if (null != response) {
-                        String code = JsonUtil.getFieldValue(response, "code");
-                        if (code.equals("0")) {
-
-                            *//**
-                     * {"id":1,"ka":"1","ka_gx":"2018-05-09 17:20:50","lian":"1",
-                     * "lian_gx":"2018-05-09
-                     * 17:20:42","guanggaopic":"1","guanggaovideo":"",
-                     * "guanggao_gx":"2018-05-09 17:56:49",
-                     * "tonggao":"1","tonggao_gx":"2018-05-09 17:20:46",
-                     * "mac":"44:2c:05:e6:9c:c5",
-                     * "xiangmu_id":346,"xdoor":null,"xintiao_time":300,
-                     * "fuwuqi_time":"1526610665487",
-                     * "lixian_mima":"123465","version":"1.00","token":null}
-                     *//*
-                            String result = JsonUtil.getResult(response);
-                            ConnectReportBean connectReportBean = JsonUtil.parseJsonToBean(result, ConnectReportBean
-                                    .class);
-                            //测试上传日志
-                            //test();
-
-                            if (StringUtils.isNoEmpty(connectReportBean.getLixian_mima())) {
-                                Log.i(TAG, "心跳--服务器返回的离线密码" + connectReportBean.getLixian_mima());
-                                SPUtil.put(MainService.this, Constant.SP_LIXIAN_MIMA, connectReportBean
-                                        .getLixian_mima());
-                            }
-                            Log.i(TAG, "心跳--服务器返回的心跳时间（秒）" + (long) (connectReportBean.getXintiao_time() * 1000));
-                            if (0L != ((long) (connectReportBean.getXintiao_time()))) {
-                                SPUtil.put(MainService.this, Constant.SP_XINTIAO_TIME, (long) (connectReportBean
-                                        .getXintiao_time() * 1000));
-                            } else {
-                                SPUtil.put(MainService.this, Constant.SP_XINTIAO_TIME, (long) (60000));
-                            }
-                            if (StringUtils.isNoEmpty(connectReportBean.getKa())) {
-                                long kaVision = (long) SPUtil.get(MainService.this, Constant.SP_VISION_KA, 0L);
-                                Log.i(TAG, "心跳--当前卡版本：" + kaVision + "   服务器卡版本：" + Long.parseLong(connectReportBean
-                                        .getKa()));
-                                if (Long.parseLong(connectReportBean.getKa()) > kaVision) {
-                                    Log.i(TAG, "心跳中有卡信息更新");
-                                    getCardInfo(Long.parseLong(connectReportBean.getKa()));
-                                }
-                            }
-                            if (StringUtils.isNoEmpty(connectReportBean.getLian())) {
-                                long lianVision = (long) SPUtil.get(MainService.this, Constant.SP_VISION_LIAN, 0L);
-                                if (Long.parseLong(connectReportBean.getLian()) > lianVision) {
-                                    Log.i(TAG, "心跳中有脸信息更新");
-                                    if (faceStatus == 0) {
-                                        //判断是否正在下载
-//                                    getFaceUrlInfo();
-                                    }
-                                }
-                            }
-                            if (StringUtils.isNoEmpty(connectReportBean.getTupian())) {
-                                long guanggaoVision = (long) SPUtil.get(MainService.this, Constant
-                                        .SP_VISION_GUANGGAO, 0L);
-                                Log.i(TAG, "心跳--当前广告图片版本：" + guanggaoVision + "   服务器广告图片版本：" + Long.parseLong
-                                        (connectReportBean.getTupian()));
-                                if (Long.parseLong(connectReportBean.getTupian()) > guanggaoVision) {
-                                    Log.i(TAG, "心跳中有广告图片信息更新");
-                                    getTupian(Long.parseLong(connectReportBean.getTupian()));
-                                }
-                            }
-                            if (StringUtils.isNoEmpty(connectReportBean.getGuanggao())) {
-                                long guanggaoVadioVision = (long) SPUtil.get(MainService.this, Constant
-                                        .SP_VISION_GUANGGAO_VIDEO, 0L);
-                                Log.i(TAG, "心跳--当前广告视频版本：" + guanggaoVadioVision + "   " + "服务器广告视频版本：" + Long
-                                        .parseLong(connectReportBean.getGuanggao()));
-                                if (Long.parseLong(connectReportBean.getGuanggao()) > guanggaoVadioVision) {
-                                    Log.i(TAG, "心跳中有广告视频信息更新");
-                                    getGuanggao(Long.parseLong(connectReportBean.getGuanggao()));
-                                }
-                            }
-                            //// TODO: 2018/5/17 拿app版本信息 去掉点
-                            if (StringUtils.isNoEmpty(connectReportBean.getVersion())) {
-                                String appVision = (String) SPUtil.get(MainService.this, Constant.SP_VISION_APP,
-                                        getVersionName());
-                                Log.i(TAG, "心跳--当前app版本：" + appVision + "   服务器app版本：" + (connectReportBean
-                                        .getVersion()));
-                                if (Integer.parseInt(connectReportBean.getVersion().replace(".", "")) > Integer
-                                        .parseInt(appVision.replace(".", ""))) {
-                                    Log.i(TAG, "心跳中有APP信息更新");
-                                    if (lastVersionStatus.equals("D")) {//正在下载最新包
-                                        //不获取地址
-                                        Log.e(TAG, "正在下载最新包,不获取地址");
-//                                    setDownloadingFlag(2);
-                                    } else if (lastVersionStatus.equals("P")) {//已下载,未安装
-                                        // TODO: 2018/4/28 这里的数据fileName会做成成员变量，以供使用
-//                                    lastVersionStatus = "I";//版本状态设为正在安装
-//                                    updateApp(fileName);
-                                        //不获取地址
-                                        Log.e(TAG, "已下载等待未安装,不获取地址");
-                                    } else if (lastVersionStatus.equals("I")) {//已下载,安装中
-                                        //不获取地址
-                                        Log.e(TAG, "已下载,安装中,不获取地址");
-                                    } else if (lastVersionStatus.equals("L")) {//未下载状态
-                                        getVersionInfo();
-                                    } else if (lastVersionStatus.equals("N")) {//正在获取下载地址
-                                        //不获取地址
-                                        Log.e(TAG, "未下载,正在获取下载地址,不获取地址");
-                                    }
-                                }
-                            }
-                            if (StringUtils.isNoEmpty(connectReportBean.getTonggao())) {
-                                long tonggaoVision = (long) SPUtil.get(MainService.this, Constant.SP_VISION_TONGGAO,
-                                        0L);
-                                if (Long.parseLong(connectReportBean.getTonggao()) > tonggaoVision) {
-                                    Log.i(TAG, "心跳中有通告信息更新");
-                                    if (noticesStatus == 0) {//判断是否正在下载
-                                        getTongGaoInfo(Long.parseLong(connectReportBean.getTonggao()));
-                                    }
-                                }
-                            }
-                            //查询数据库中是否有离线照片
-                            List<ImgFile> imgFiles = DbUtils.getInstans().quaryImg();
-                            if (imgFiles!=null&&imgFiles.size()>0){
-                                Log.i(TAG, "存在"+imgFiles.size()+"张离线照片");
-                                sendMessageToMainAcitivity(MSG_UPLOAD_LIXIAN_IMG,imgFiles);
-                            }
-                        } else {
-                            //服务器异常或没有网络
-                            HttpApi.e("getClientInfo()->服务器无响应");
-                            Log.e(TAG, "onResponse 心跳接口 connectReport " + response);
-                        }
-                    }*/
                 }
             });
         } catch (JSONException e) {
@@ -3233,11 +3109,9 @@ public class MainService extends Service {
                         () + "是否失效  》0表示失效" + (System.currentTimeMillis() - Long.parseLong(kaInfo.getGuoqi_time())));
                 Log.i(TAG, "刷卡开门成功" + card);
                 //开始截图
-//                if (DeviceConfig.OPEN_CARD_STATE == 0) {
                 if (DeviceConfig.PRINTSCREEN_STATE == 0) {
-                    Log.e(TAG, "刷卡开门，开始截图");
-//                    DeviceConfig.OPEN_CARD_STATE = 1;
                     DeviceConfig.PRINTSCREEN_STATE = 2;
+                    Log.e(TAG, "刷卡开门，开始截图"+DeviceConfig.PRINTSCREEN_STATE);
                     openLock(1);
                 }
                 Log.e(TAG, "onCard====:" + card);
@@ -3273,7 +3147,6 @@ public class MainService extends Service {
     }
 
     protected void openLock(int type) {
-        DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
         if (result != -1) {

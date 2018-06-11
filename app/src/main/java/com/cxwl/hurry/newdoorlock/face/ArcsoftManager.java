@@ -1,6 +1,7 @@
 package com.cxwl.hurry.newdoorlock.face;
 
 import android.app.Application;
+import android.os.Environment;
 import android.util.Log;
 
 import com.cxwl.hurry.newdoorlock.utils.SharedPreferencesUtil;
@@ -9,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
+import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.LOCAL_ADP_PATH;
 
 /**
  * Created by William on 2018/5/17.
@@ -36,6 +39,8 @@ public class ArcsoftManager {
 
     public void initArcsoft(Application application) {
         String path = application.getExternalCacheDir().getPath();
+//        String path = Environment.getExternalStorageDirectory().getPath();
+
         Log.v("人脸识别", "initArcsoft-->" + path);
         mFaceDB = new FaceDB(path);
 //        mImage = null;
