@@ -27,4 +27,21 @@ public class CardRecord {
         }
         return result;
     }
+
+    public boolean checkLastCardNew(String name) {
+        boolean result = false;
+        if (this.card.equals(name)) {
+            long offset = new Date().getTime() - this.creDate.getTime();
+            if (offset > 1000*10) {
+                this.card = name;
+                this.creDate = new Date();
+            } else {
+                result = true;
+            }
+        } else {
+            this.card = name;
+            this.creDate = new Date();
+        }
+        return result;
+    }
 }

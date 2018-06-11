@@ -51,6 +51,7 @@ import com.cxwl.hurry.newdoorlock.ui.activity.MainActivity;
 import com.cxwl.hurry.newdoorlock.utils.Ajax;
 import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
 import com.cxwl.hurry.newdoorlock.utils.CardRecord;
+import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.cxwl.hurry.newdoorlock.utils.HttpApi;
 import com.cxwl.hurry.newdoorlock.utils.HttpUtils;
@@ -478,30 +479,32 @@ public class MainService extends Service {
                         String[] parame = (String[]) msg.obj;
                         String phoneNum = parame[0];//手机号码
                         String picUrl = parame[1];//图片URL
-                        if (!cardRecord.checkLastCard(phoneNum)) {//判断距离上次刷脸时间是否超过2秒
-                            LogDoor data = new LogDoor();
-                            data.setMac(mac);
-                            data.setKaimenfangshi(3);
-                            if (TextUtils.isEmpty(phoneNum)) {
-                                data.setPhone("");
-                            } else {
-                                data.setPhone(phoneNum);
-                            }
-                            if (TextUtils.isEmpty(picUrl)) {
-                                data.setKaimenjietu("");
-                            } else {
-                                data.setKaimenjietu(picUrl);
-                            }
-                            data.setKa_id("");
-                            data.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System
-                                    .currentTimeMillis()));
-                            data.setUuid("");
-                            data.setState(1);
-                            List<LogDoor> list = new ArrayList<>();
-                            list.add(data);
-                            createAccessLog(list);
-                            openLock(3);
+//                        if (!cardRecord.checkLastCard(phoneNum)) {//判断距离上次刷脸时间是否超过2秒
+                        LogDoor data = new LogDoor();
+                        data.setMac(mac);
+                        data.setKaimenfangshi(3);
+                        if (TextUtils.isEmpty(phoneNum)) {
+                            data.setPhone("");
+                        } else {
+                            data.setPhone(phoneNum);
                         }
+                        if (TextUtils.isEmpty(picUrl)) {
+                            data.setKaimenjietu("");
+                        } else {
+                            data.setKaimenjietu(picUrl);
+                        }
+                        data.setKa_id("");
+                        data.setState(1);
+                        data.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System
+                                .currentTimeMillis()));
+                        data.setUuid("");
+                        List<LogDoor> list = new ArrayList<>();
+                        list.add(data);
+                        DLLog.e(TAG, "人脸截图 开始上传日志");
+                        createAccessLog(list);
+                        DLLog.e(TAG, "人脸截图 开始开门");
+                        openLock(3);
+//                        }
                         break;
                     }
                     case MSG_CARD_OPENLOCK: {
@@ -3270,9 +3273,11 @@ public class MainService extends Service {
     }
 
     protected void openLock(int type) {
+        DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
         if (result != -1) {
+            DLLog.e(TAG, "人脸截图 开门完成 显示图片");
             sendMessageToMainAcitivity(MSG_LOCK_OPENED, type);//开锁
             SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
             countDownTimer.cancel();

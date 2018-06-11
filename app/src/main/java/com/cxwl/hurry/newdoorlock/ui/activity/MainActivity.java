@@ -79,6 +79,8 @@ import com.cxwl.hurry.newdoorlock.service.DoorLock;
 import com.cxwl.hurry.newdoorlock.service.MainService;
 import com.cxwl.hurry.newdoorlock.utils.AdvertiseHandler;
 import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
+import com.cxwl.hurry.newdoorlock.utils.CardRecord;
+import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.cxwl.hurry.newdoorlock.utils.DialogUtil;
 import com.cxwl.hurry.newdoorlock.utils.HttpApi;
@@ -88,6 +90,7 @@ import com.cxwl.hurry.newdoorlock.utils.JsonUtil;
 import com.cxwl.hurry.newdoorlock.utils.MacUtils;
 import com.cxwl.hurry.newdoorlock.utils.NetWorkUtils;
 import com.cxwl.hurry.newdoorlock.utils.StringUtils;
+import com.cxwl.hurry.newdoorlock.view.AutoScrollView;
 import com.google.gson.reflect.TypeToken;
 import com.guo.android_extend.java.AbsLoop;
 import com.guo.android_extend.widget.CameraFrameData;
@@ -197,6 +200,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView headPaneTextView, tv_message, tv_battery, showMacText;
     private EditText et_blackno, et_unitno, tv_input_text;
     private TextView tv_gonggao_title;
+    private TextView tv_gonggao;
+    private AutoScrollView as;
 
     private Handler handler;
     private Messenger mainMessage;
@@ -262,12 +267,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String phone_face = "";
     private Thread picThread = null;//图片更新线程
     private boolean isPicThreadStart = false;//图片更新线程是否开启的标志
+    protected CardRecord cardRecord = new CardRecord();
+
     private Thread noticeThread = null;//通告更新线程
     private boolean isTongGaoThreadStart = false;//通告更新线程是否开启的标志
     private ArrayList<NoticeBean> noticeBeanList = new ArrayList<>();//通告集合
     private NoticeBean currentNoticeBean = null;//当前显示通告
     private NoticeBean defaultNotice = null;//默认通告
     private int tongGaoIndex = 0;//通告更新计数
+    private boolean isTongGaoFrist = true;//通告是否是第一次滚动
 
     Timer timer = new Timer();
 
@@ -386,6 +394,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     setTongGaoInfo();
                     while (!isInterrupted()) {//检测线程是否已经中断
                         sleep(1000 * 60);//间隔时间
+                        isTongGaoFrist = false;
                         setTongGaoInfo();
                     }
                 } catch (InterruptedException e) {
@@ -604,6 +613,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         banner = (Banner) findViewById(R.id.banner);//用于添加视频通话的根布局
         imgBanner = (ImageView) findViewById(R.id.img_banner);//用于添加视频通话的根布局
         tv_gonggao_title = (TextView) findViewById(R.id.gonggao_title);
+        tv_gonggao = (TextView) findViewById(R.id.gonggao);
+        as = (AutoScrollView) findViewById(R.id.as);
         //getBgBanners();// 网络获得轮播背景图片数据
         rl_nfc = (RelativeLayout) findViewById(R.id.rl_nfc);//删除脸信息布局(原录卡布局)
         et_unitno = (EditText) findViewById(R.id.et_unitno);//删除脸信息的手机号(录卡时房屋编号)
@@ -2717,11 +2728,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 currentNoticeBean = defaultNotice;
             }
             Log.e(TAG, "设置通告 currentNoticeBean" + currentNoticeBean.toString());
-            Log.e(TAG, "设置通告 过期时间 " + currentNoticeBean.getShixiao_shijian() + " 当前时间 " +
-                    StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
-            Log.e(TAG, "设置通告 过期时间 " + StringUtils.transferDateToLong(currentNoticeBean.getShixiao_shijian()) + " 当前时间" +
-                    " " +
-                    System.currentTimeMillis());
+            Log.e(TAG, "设置通告 过期时间 " + currentNoticeBean.getShixiao_shijian() + " 当前时间 " + StringUtils
+                    .transferLongToDate("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
+            Log.e(TAG, "设置通告 过期时间 " + StringUtils.transferDateToLong(currentNoticeBean.getShixiao_shijian()) + " " +
+                    "当前时间" + " " + System.currentTimeMillis());
             if (Long.parseLong(StringUtils.transferDateToLong(currentNoticeBean.getShixiao_shijian())) > System
                     .currentTimeMillis()) {//过期时间大于当前时间
                 Log.e(TAG, "设置通告 有数据");
@@ -2730,8 +2740,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            setTextView(R.id.gonggao, currentNoticeBean.getNeirong());
-                            setTextView(R.id.gonggao_title, currentNoticeBean.getBiaoti());
+//                            setTextView(R.id.gonggao, currentNoticeBean.getNeirong());
+                            tv_gonggao_title.setText(currentNoticeBean.getBiaoti());
+                            tv_gonggao.setText(currentNoticeBean.getNeirong());
+                            as.setScrolled(false);//关闭自动滚动
+                            as.change();//位置重置
+                            as.setScrolled(true);//打开自动滚动
+                            as.autoScroll(isTongGaoFrist);//开启自动滚动
+//                            tv_gonggao.setText(currentNoticeBean.getNeirong());
                         }
                     });
                 } else {//开始时间大于当前时间，跳过，直接显示下一条
@@ -2751,11 +2767,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         } else {
             currentNoticeBean = defaultNotice;
-            handler.post(new Runnable() {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    setTextView(R.id.gonggao, currentNoticeBean.getNeirong());
-                    setTextView(R.id.gonggao_title, currentNoticeBean.getBiaoti());
+                    tv_gonggao_title.setText(currentNoticeBean.getBiaoti());
+                    tv_gonggao.setText(currentNoticeBean.getNeirong());
+//                    setTextView(R.id.gonggao_title, currentNoticeBean.getBiaoti());
+//                    setTextView(R.id.gonggao, currentNoticeBean.getNeirong());
+                    as.setScrolled(false);//关闭自动滚动
+                    as.change();//位置重置
                 }
             });
         }
@@ -3341,7 +3361,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 e.printStackTrace();
             }
 
-//            if (DeviceConfig.PRINTSCREEN_STATE == 1) {
             if (DeviceConfig.PRINTSCREEN_STATE == 2) {
                 //将byte数组转成bitmap再转成图片文件
                 byte[] data = picData;
@@ -3353,12 +3372,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
                 if (null != file && !TextUtils.isEmpty(file.getPath())) {
-//                            parameters[1]  = filePath;
                     uploadToQiNiu(file, 1);//这里做上传到七牛的操作，不返回图片URL
                 } else {
                     faceOpenUrl = "";
                 }
-//                DeviceConfig.OPEN_CARD_STATE = 0;//图片处理完成,重置状态
                 DeviceConfig.PRINTSCREEN_STATE = 0;//图片处理完成,重置状态
                 sendMainMessager(MSG_CARD_OPENLOCK, faceOpenUrl);
                 file = null;
@@ -3367,81 +3384,79 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 data = null;
             }
 
-            if (DeviceConfig.PRINTSCREEN_STATE == 0) {//开启截图、上传图片、开门、上传日志流程
-                if (mImageNV21 != null && identification) {//摄像头检测到人脸信息且处于人脸识别状态
-                    long time = System.currentTimeMillis();
-                    //检测输入图像中的人脸特征信息，输出结果保存在 AFR_FSDKFace feature
-                    //data 输入的图像数据,width 图像宽度,height 图像高度,format 图像格式,face 已检测到的脸框,ori 已检测到的脸角度,
-                    // feature 检测到的人脸特征信息
-                    AFR_FSDKError error = engine.AFR_FSDK_ExtractFRFeature(mImageNV21, mWidth, mHeight, AFR_FSDKEngine
-                            .CP_PAF_NV21, mAFT_FSDKFace.getRect(), mAFT_FSDKFace.getDegree(), result);
+            if (mImageNV21 != null && identification) {//摄像头检测到人脸信息且处于人脸识别状态
+                long time = System.currentTimeMillis();
+                //检测输入图像中的人脸特征信息，输出结果保存在 AFR_FSDKFace feature
+                //data 输入的图像数据,width 图像宽度,height 图像高度,format 图像格式,face 已检测到的脸框,ori 已检测到的脸角度,
+                // feature 检测到的人脸特征信息
+                AFR_FSDKError error = engine.AFR_FSDK_ExtractFRFeature(mImageNV21, mWidth, mHeight, AFR_FSDKEngine
+                        .CP_PAF_NV21, mAFT_FSDKFace.getRect(), mAFT_FSDKFace.getDegree(), result);
 //                Log.d(TAG, "AFR_FSDK_ExtractFRFeature cost :" + (System.currentTimeMillis() -
 //                 time) + "ms");
-                    Log.d(TAG, "Face=" + result.getFeatureData()[0] + "," + result.getFeatureData()[1] + "," + result
-                            .getFeatureData()[2] + "," + error.getCode());
-                    AFR_FSDKMatching score = new AFR_FSDKMatching();//这个类用来保存特征信息匹配度
-                    float max = 0.0f;//匹配度的值
-                    String name = null;
+                Log.d(TAG, "Face=" + result.getFeatureData()[0] + "," + result.getFeatureData()[1] + "," + result
+                        .getFeatureData()[2] + "," + error.getCode());
+                AFR_FSDKMatching score = new AFR_FSDKMatching();//这个类用来保存特征信息匹配度
+                float max = 0.0f;//匹配度的值
+                String name = null;
 
 
-                    //遍历本地信息表
-                    for (FaceRegist fr : mResgist) {
-                        Log.v("人脸识别", "loop:" + mResgist.size() + "/" + fr.mFaceList.size());
-                        if (fr.mName.length() > 11) {
-                            continue;
-                        }
-                        for (AFR_FSDKFace face : fr.mFaceList) {
-                            //比较两份人脸特征信息的匹配度(result 脸部特征信息对象,face 脸部特征信息对象,score 匹配度对象)
-                            Log.e("人脸识别 比较值 ", "result " + result.toString() + " face " + face.toString());
-                            error = engine.AFR_FSDK_FacePairMatching(result, face, score);
-                            Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
-                            if (max < score.getScore()) {
-                                max = score.getScore();//匹配度赋值
-                                name = fr.mName;
-                                if (max > 0.68f) {//匹配度的值高于设定值,退出循环
-                                    break;
-                                }
+                //遍历本地信息表
+                for (FaceRegist fr : mResgist) {
+                    Log.v("人脸识别", "loop:" + mResgist.size() + "/" + fr.mFaceList.size());
+                    if (fr.mName.length() > 11) {
+                        continue;
+                    }
+                    for (AFR_FSDKFace face : fr.mFaceList) {
+                        //比较两份人脸特征信息的匹配度(result 脸部特征信息对象,face 脸部特征信息对象,score 匹配度对象)
+                        Log.e("人脸识别 比较值 ", "result " + result.toString() + " face " + face.toString());
+                        error = engine.AFR_FSDK_FacePairMatching(result, face, score);
+                        Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
+                        if (max < score.getScore()) {
+                            max = score.getScore();//匹配度赋值
+                            name = fr.mName;
+                            if (max > 0.68f) {//匹配度的值高于设定值,退出循环
+                                break;
                             }
                         }
                     }
+                }
 
 //                Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
-                    if (max > 0.68f) {//匹配度的值高于设定值,发出消息,开门
+                if (max > 0.68f) {//匹配度的值高于设定值,发出消息,开门
+                    if (null != name && !cardRecord.checkLastCardNew(name)) {//判断距离上次刷脸时间是否超过10秒
                         //fr success.
                         //final float max_score = max;
                         //Log.v(FACE_TAG, "置信度：" + (float) ((int) (max_score * 1000)) / 1000.0);
-//                    if (DeviceConfig.OPEN_RENLIAN_STATE == 0 && DeviceConfig.OPEN_CARD_STATE == 0)
-//                    if (DeviceConfig.PRINTSCREEN_STATE == 0) {//开启截图、上传图片、开门、上传日志流程
-//                        DeviceConfig.OPEN_RENLIAN_STATE = 1;//已开始处理人脸图片
-                        DeviceConfig.PRINTSCREEN_STATE = 1;
-                        //将byte数组转成bitmap再转成图片文件
-                        byte[] data = mImageNV21;
-                        Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
-                        Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
-                        File file = null;
-                        if (null != bmp) {
-                            file = BitmapUtils.saveBitmap(MainActivity.this, bitmap);//本地截图文件地址
+                        if (DeviceConfig.PRINTSCREEN_STATE == 0) {//开启截图、上传图片、开门、上传日志流程
+                            DeviceConfig.PRINTSCREEN_STATE = 1;//开启截图、上传图片、开门、上传日志流程
+                            DLLog.e(TAG, "人脸 开启截图、上传图片、开门、上传日志流程  状态值PRINTSCREEN_STATE 为1");
+                            //将byte数组转成bitmap再转成图片文件
+                            byte[] data = mImageNV21;
+                            Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
+                            Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
+                            File file = null;
+                            if (null != bmp) {
+                                file = BitmapUtils.saveBitmap(MainActivity.this, bitmap);//本地截图文件地址
+                            }
+                            String[] parameters = new String[2];
+                            parameters[0] = name;
+                            if (null != file && !TextUtils.isEmpty(file.getPath())) {
+                                uploadToQiNiu(file, 3);//这里做上传到七牛的操作，不返回图片URL
+                                parameters[1] = faceOpenUrl;
+                            } else {
+                                parameters[1] = "";
+                            }
+                            DLLog.e(TAG, "人脸 图片处理完成（异步处理）,重置状态  状态值PRINTSCREEN_STATE 为1 发送消息准备上传日志和开门");
+                            sendMainMessager(MSG_FACE_OPENLOCK, parameters);
+                            file = null;
+                            bitmap = null;
+                            bmp = null;
+                            data = null;
                         }
-                        String[] parameters = new String[2];
-                        parameters[0] = name;
-                        if (null != file && !TextUtils.isEmpty(file.getPath())) {
-//                            parameters[1]  = filePath;
-                            uploadToQiNiu(file, 3);//这里做上传到七牛的操作，不返回图片URL
-                            parameters[1] = faceOpenUrl;
-                        } else {
-                            parameters[1] = "";
-                        }
-//                        DeviceConfig.OPEN_RENLIAN_STATE = 0;//图片处理完成（异步处理，成功与否尽人事，听天命）,重置状态
-                        DeviceConfig.PRINTSCREEN_STATE = 0;
-                        sendMainMessager(MSG_FACE_OPENLOCK, parameters);
-                        file = null;
-                        bitmap = null;
-                        bmp = null;
-                        data = null;
-//                    }
                     }
-                    mImageNV21 = null;
                 }
+                name = null;
+                mImageNV21 = null;
             }
         }
 
@@ -3470,7 +3485,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onError(Call call, Exception e, int id) {
                 Log.i(TAG, "获取七牛token失败 e" + e.toString());
                 DbUtils.getInstans().insertOneImg(imgFile);//获取token失败，图片存在本地
-                DeviceConfig.PRINTSCREEN_STATE = 0;//重置处理图片并上传日志的状态
+                // TODO: 2018/6/6 注释  DeviceConfig.PRINTSCREEN_STATE = 0;//重置处理图片并上传日志的状态
             }
 
             @Override
@@ -3497,7 +3512,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     Log.e(TAG, "七牛上传图片失败");
                                     DbUtils.getInstans().insertOneImg(imgFile);//获取token失败，图片存在本地
                                 }
-                                DeviceConfig.PRINTSCREEN_STATE = 0;//重置处理图片并上传日志的状态
+                                // TODO: 2018/6/6 注释  DeviceConfig.PRINTSCREEN_STATE = 0;//重置处理图片并上传日志的状态
                             }
                         }, null);
                     }
@@ -3517,6 +3532,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (isRestartPlay) {
             isRestartPlay = false;
             advertiseHandler.start(adverErrorCallBack);
+        }
+
+        if (!as.isScrolled()) {
+            as.setScrolled(true);
+            as.autoScroll(isTongGaoFrist);
         }
     }
 
@@ -3548,6 +3568,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_PAUSE, 1000);
             faceHandler.sendEmptyMessageDelayed(MSG_ID_CARD_DETECT_PAUSE, 1000);
         }
+
+        if (as.isScrolled()) {
+            as.setScrolled(false);
+            as.change();
+        }
     }
 
     @Override
@@ -3576,6 +3601,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (doorLock != null) {
             doorLock.setIsNfcFlag(false);
             doorLock = null;
+        }
+
+        if (as != null) {
+            as.removeRunnable();
         }
 
         AFT_FSDKError err = engine.AFT_FSDK_UninitialFaceEngine();

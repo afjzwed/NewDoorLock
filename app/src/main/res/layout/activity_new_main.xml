@@ -424,20 +424,21 @@
                 android:textColor="@android:color/white"
                 android:textSize="25sp"/>
 
-            <!--通告内容-->
-            <TextView
-                android:id="@+id/gonggao"
+            <com.cxwl.hurry.newdoorlock.view.AutoScrollView
+                android:id="@+id/as"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:ellipsize="marquee"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:marqueeRepeatLimit="marquee_forever"
-                android:padding="10dp"
-                android:scrollHorizontally="true"
-                android:text="暂无通知"
-                android:textColor="@color/black"
-                android:textSize="25sp"/>
+                android:layout_height="match_parent">
+
+                <!--通告内容-->
+                <TextView
+                    android:id="@+id/gonggao"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="10dp"
+                    android:text="暂无通知"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"/>
+            </com.cxwl.hurry.newdoorlock.view.AutoScrollView>
 
         </LinearLayout>
 
