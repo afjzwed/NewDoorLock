@@ -43,13 +43,19 @@ public class BitmapUtils {
             Matrix matrix = new Matrix();
 
             if (orientation == ExifInterface.ORIENTATION_ROTATE_90) {
+                Log.e("wh","角度 90" );
                 matrix.postRotate(90);
             } else if (orientation == ExifInterface.ORIENTATION_ROTATE_180) {
-                matrix.postRotate(180);
+                Log.e("wh","角度 180" );
+//                matrix.postRotate(180);
+                matrix.postRotate(0);
             } else if (orientation == ExifInterface.ORIENTATION_ROTATE_270) {
+                Log.e("wh","角度 270" );
                 matrix.postRotate(270);
             } else {
-                matrix.postRotate(0);
+                Log.e("wh","角度 0" );
+//                matrix.postRotate(0);
+                matrix.postRotate(180);
             }
             matrix.postScale(-1, 1); // 镜像水平翻转
 

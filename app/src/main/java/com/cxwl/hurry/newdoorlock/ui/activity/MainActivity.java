@@ -746,12 +746,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         break;
                     case MSG_ADVERTISE_REFRESH://刷新广告
-                        // onAdvertiseRefresh(msg.obj);
-                        videoList = (List<GuangGaoBean>) msg.obj;
-                        if (!isVideoThreadStart) {//线程未开启
-                            isVideoThreadStart = !isVideoThreadStart;
-                            startVedioThread();//开启线程
-                        }
+                         onAdvertiseRefresh(msg.obj);
+//                        videoList = (List<GuangGaoBean>) msg.obj;
+//                        if (!isVideoThreadStart) {//线程未开启
+//                            isVideoThreadStart = !isVideoThreadStart;
+//                            startVedioThread();//开启线程
+//                        }
 
                         break;
                     case MSG_ADVERTISE_REFRESH_PIC://刷新广告图片
@@ -2542,7 +2542,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Message message = Message.obtain();
             String[] parameters = new String[3];
             if (isCall) {
-                setDialValue1("呼叫" + thisValue + "，取消请按删除键");
+                setDialValue1("呼叫" + thisValue + "，取消请按返回键");
                 message.what = MainService.MSG_START_DIAL;
                 if (DeviceConfig.DEVICE_TYPE.equals("C")) {
                     parameters[0] = thisValue;

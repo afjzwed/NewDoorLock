@@ -284,10 +284,10 @@ public class MainService extends Service {
                 if ("0".equals(JsonUtil.getFieldValue(response, "code"))) {
                     Log.i(TAG, "onResponse统计广告视频信息统计接口 上传统计信息成功");
                     List<AdTongJiBean> adTongJiBeen = DbUtils.getInstans().quaryTongji();
-                    if (adTongJiBeen.size() > 0&&adTongJiBeen.size()<=10) {
+                    if (adTongJiBeen!=null&&adTongJiBeen.size() > 0&&adTongJiBeen.size()<=10) {
                         Log.i(TAG, "本地数据库中--存在--视频的统计信息 开始上传离线");
                         lixianTongji(adTongJiBeen);
-                    }else {
+                    }else if(adTongJiBeen!=null&&adTongJiBeen.size()>10) {
                         adTongJiBeen=DbUtils.getInstans().quaryTenTongji();
                         lixianTongji(adTongJiBeen);
                     }
@@ -322,10 +322,10 @@ public class MainService extends Service {
                 if ("0".equals(JsonUtil.getFieldValue(response, "code"))) {
                     Log.i(TAG, "onResponse上传广告图片统计信息成功 检查是否存在离线信息");
                     List<AdTongJiBean> adTongJiBeen = DbUtils.getInstans().quaryTongji();
-                    if (adTongJiBeen.size() > 0&&adTongJiBeen.size()<=10) {
+                    if (adTongJiBeen!=null&&adTongJiBeen.size() > 0&&adTongJiBeen.size()<=10) {
                         Log.i(TAG, "本地数据库中--存在--图片的统计信息 开始上传离线");
                         lixianTongji(adTongJiBeen);
-                    }else {
+                    }else if(adTongJiBeen!=null&&adTongJiBeen.size()>10){
                         adTongJiBeen=DbUtils.getInstans().quaryTenTongji();
                         lixianTongji(adTongJiBeen);
                     }
@@ -855,7 +855,7 @@ public class MainService extends Service {
                                             .parseLong(banbenBean.getGuanggao()));
                                     if (Long.parseLong(banbenBean.getGuanggao()) > guanggaoVadioVision) {
                                         Log.i(TAG, "心跳中有广告视频信息更新");
-                                        // TODO: 2018/6/12    getGuanggao(Long.parseLong(banbenBean.getGuanggao()));
+                                        getGuanggao(Long.parseLong(banbenBean.getGuanggao()));
                                     }
                                 }
                                 //// TODO: 2018/5/17 拿app版本信息 去掉点
@@ -2379,11 +2379,11 @@ public class MainService extends Service {
                         Log.i(TAG, "日志上传成功 查询离线日志");
                         List<LogDoor> doors = DbUtils.getInstans().quaryLog();
 
-                        if (doors.size() > 0&&doors.size()<=10) {
+                        if (doors!=null&&doors.size() > 0&&doors.size()<=10) {
                             //有离线日志 上传离线日志
                             Log.i(TAG, "有离线日志" + doors.size() + "条" + " 开始上传 " + doors.toString());
                             createAccessLogLixian(doors);
-                        }else {
+                        }else if (doors!=null&&doors.size()>10){
                             doors=DbUtils.getInstans().quaryTenLog();
                             if (doors!=null&&doors.size()>0){
                             createAccessLogLixian(doors);}

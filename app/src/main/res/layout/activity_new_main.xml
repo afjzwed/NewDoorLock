@@ -193,7 +193,7 @@
                         android:layout_marginLeft="10dp"
                         android:layout_toRightOf="@+id/tv_input_label"
                         android:gravity="center_vertical"
-                        android:hint="确认键切换房号/密码"
+                        android:hint="拨号键切换房号/密码"
                         android:maxLength="11"
                         android:textColor="#ffffff"
                         android:textColorHint="#878686"
