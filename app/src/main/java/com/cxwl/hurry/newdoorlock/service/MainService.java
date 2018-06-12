@@ -284,8 +284,11 @@ public class MainService extends Service {
                 if ("0".equals(JsonUtil.getFieldValue(response, "code"))) {
                     Log.i(TAG, "onResponse统计广告视频信息统计接口 上传统计信息成功");
                     List<AdTongJiBean> adTongJiBeen = DbUtils.getInstans().quaryTongji();
-                    if (adTongJiBeen.size() > 0) {
+                    if (adTongJiBeen.size() > 0&&adTongJiBeen.size()<=10) {
                         Log.i(TAG, "本地数据库中--存在--视频的统计信息 开始上传离线");
+                        lixianTongji(adTongJiBeen);
+                    }else {
+                        adTongJiBeen=DbUtils.getInstans().quaryTenTongji();
                         lixianTongji(adTongJiBeen);
                     }
                 } else {
@@ -319,8 +322,11 @@ public class MainService extends Service {
                 if ("0".equals(JsonUtil.getFieldValue(response, "code"))) {
                     Log.i(TAG, "onResponse上传广告图片统计信息成功 检查是否存在离线信息");
                     List<AdTongJiBean> adTongJiBeen = DbUtils.getInstans().quaryTongji();
-                    if (adTongJiBeen.size() > 0) {
+                    if (adTongJiBeen.size() > 0&&adTongJiBeen.size()<=10) {
                         Log.i(TAG, "本地数据库中--存在--图片的统计信息 开始上传离线");
+                        lixianTongji(adTongJiBeen);
+                    }else {
+                        adTongJiBeen=DbUtils.getInstans().quaryTenTongji();
                         lixianTongji(adTongJiBeen);
                     }
                 } else {
@@ -336,7 +342,7 @@ public class MainService extends Service {
      *
      * @param list
      */
-    private void lixianTongji(List<AdTongJiBean> list) {
+    private void lixianTongji(final List<AdTongJiBean> list) {
         String json = JsonUtil.parseListToJson(list);
         Log.e(TAG, "上传离线视频图片统计请求 json " + json);
         OkHttpUtils.postString().url(API.ADV_TONGJI).content(json).mediaType(MediaType.parse("application/json; " +
@@ -352,7 +358,7 @@ public class MainService extends Service {
                 Log.e(TAG, "onResponse" + response);
                 if ("0".equals(JsonUtil.getFieldValue(response, "code"))) {
                     Log.i(TAG, "onResponse上传离线视频广告统计信息成功 删除保存本地的信息");
-                    DbUtils.getInstans().deleteAllTongji();
+                    DbUtils.getInstans().deleteSomeTongji(list);
 
                 } else {
                     Log.i(TAG, "onResponse 上传离线统计信息失败  保存信息到数据库");
@@ -2372,10 +2378,14 @@ public class MainService extends Service {
                         Log.i(TAG, "日志上传成功 查询离线日志");
                         List<LogDoor> doors = DbUtils.getInstans().quaryLog();
 
-                        if (doors.size() > 0) {
+                        if (doors.size() > 0&&doors.size()<=10) {
                             //有离线日志 上传离线日志
                             Log.i(TAG, "有离线日志" + doors.size() + "条" + " 开始上传 " + doors.toString());
                             createAccessLogLixian(doors);
+                        }else {
+                            doors=DbUtils.getInstans().quaryTenLog();
+                            if (doors!=null&&doors.size()>0){
+                            createAccessLogLixian(doors);}
                         }
                     } else {
                         Log.e(TAG, "上传日志失败 保存日志信息到数据库");
@@ -2396,7 +2406,7 @@ public class MainService extends Service {
      *
      * @param data
      */
-    protected void createAccessLogLixian(List<LogDoor> data) {
+    protected void createAccessLogLixian(final List<LogDoor> data) {
         Log.e(TAG, "开门离线日志上传" + data.toString());
         String url = API.LOG;
         LogListBean logListBean = new LogListBean();
@@ -2421,7 +2431,7 @@ public class MainService extends Service {
                     String code = JsonUtil.getFieldValue(response, "code");
                     if ("0".equals(code)) {
                         Log.i(TAG, "离线日志上传成功 删除离线日志");
-                        DbUtils.getInstans().deleteAllLog();
+                        DbUtils.getInstans().deleteSomeLog(data);
                     } else {
                         Log.e(TAG, "上传离线日志失败不保存信息到数据库");
                     }
