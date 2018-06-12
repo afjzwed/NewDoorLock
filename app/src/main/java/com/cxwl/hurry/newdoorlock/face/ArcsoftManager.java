@@ -4,8 +4,11 @@ import android.app.Application;
 import android.os.Environment;
 import android.util.Log;
 
+import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
 import com.cxwl.hurry.newdoorlock.utils.SharedPreferencesUtil;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,6 +39,19 @@ public class ArcsoftManager {
 //    public Uri mImage;
 
     public void initArcsoft(Application application) {
+//        String path = application.getExternalCacheDir().getPath();
+//        String path = Environment.getExternalStorageDirectory() + File.separator + DeviceConfig.LOCAL_FACEINFO_PATH;
+//        try {
+//            File file = new File(path);
+//            if (!file.exists()) {
+//                new File(path).mkdirs();//新建文件夹
+//                file.createNewFile();//新建文件
+//            }
+//        } catch (IOException e) {
+//            path = application.getExternalCacheDir().getPath();
+//            e.printStackTrace();
+//        }
+
 //        String path = application.getExternalCacheDir().getPath();
         String path = Environment.getExternalStorageDirectory()+"";
         Log.v("人脸识别", "initArcsoft-->" + path);

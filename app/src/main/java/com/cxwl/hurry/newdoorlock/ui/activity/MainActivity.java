@@ -476,10 +476,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 sendMainMessager(MSG_TONGJI_VEDIO, list);
             }
         };
-//        advertiseHandler.initData(rows, dialMessenger, (currentStatus == ONVIDEO_MODE),
-//                adverErrorCallBack);
-        // TODO: 2018/4/27 随便找个位置增加通告接口，之后要改
-
     }
 
     /**
@@ -1189,7 +1185,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mAdTongJiBean.setStart_time(picStartTime + "");
                     mAdTongJiBean.setEnd_time(picEndTime + "");
                     mAdTongJiBean.setAd_id(currentGuangGaoBean.getId());
-                    mAdTongJiBean.setMac(mac);
+                    mAdTongJiBean.setMac(MacUtils.getMac());
                     mTongJiBeanList.add(mAdTongJiBean);
                     sendMainMessager(MSG_TONGJI_PIC, mTongJiBeanList);
                     picStartTime = picEndTime;
@@ -2296,7 +2292,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Camera.Parameters parameters = camera.getParameters();
                 parameters.setPreviewSize(320, 240);
                 camera.setParameters(parameters);
-                //   camera.setPreviewDisplay(autoCameraHolder);
+                   camera.setPreviewDisplay(autoCameraHolder);
                 camera.startPreview();
                 camera.autoFocus(null);
                 Log.v("MainActivity", "开始拍照");
@@ -2593,7 +2589,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (isCall) {
             message.what = MainService.MSG_START_DIAL_PICTURE;
         } else {
-            message.what = MainService.MSG_CHECK_PASSWORD_PICTURE;
+            // message.what = MainService.MSG_CHECK_PASSWORD_PICTURE;
         }
         String[] parameters = new String[3];
         parameters[0] = thisValue;
@@ -3121,7 +3117,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public Camera setupCamera() {
-//        LogDoor.e(TAG, "相机" + "setupCamera");
+//        Log.e(TAG, "相机" + "setupCamera");
 
         mCamera = Camera.open();
         try {//这里其实不用捕捉错误
@@ -3185,7 +3181,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public boolean startPreviewLater() {
-//        LogDoor.e(TAG, "相机" + "startPreviewLater");
+//        Log.e(TAG, "相机" + "startPreviewLater");
         return false;
     }
 
@@ -3201,11 +3197,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public Object onPreview(byte[] data, int width, int height, int format, long timestamp) {
-//        LogDoor.e(TAG, "相机" + "onPreview");
+//        Log.e(TAG, "相机" + "onPreview");
         //检测输入的图像中存在的人脸，输出结果和初始化时设置的参数有密切关系,检测到的人脸会add到此result
         AFT_FSDKError err = engine.AFT_FSDK_FaceFeatureDetect(data, width, height, AFT_FSDKEngine.CP_PAF_NV21, result);
-//        LogDoor.d(TAG, "AFT_FSDK_FaceFeatureDetect =" + err.getCode());
-//        LogDoor.d(TAG, "Face=" + result.size());
+//        Log.d(TAG, "AFT_FSDK_FaceFeatureDetect =" + err.getCode());
+//        Log.d(TAG, "Face=" + result.size());
 //        for (AFT_FSDKFace face : result) {
 //            LogDoor.d(TAG, "虹软:" + face.toString());
 ////            Rect(145, 164 - 385, 404),1
@@ -3243,7 +3239,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void onBeforeRender(CameraFrameData data) {
-//        LogDoor.e(TAG, "相机" + "onBeforeRender");
+//        Log.e(TAG, "相机" + "onBeforeRender");
     }
 
     /**
@@ -3253,9 +3249,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void onAfterRender(CameraFrameData data) {
-//        LogDoor.e(TAG, "相机" + "onAfterRender");
+//        Log.e(TAG, "相机" + "onAfterRender");
 //        if (null == data.getParams()) {
-//            LogDoor.e(TAG, "相机" + "getParams" + "为空");
+//            Log.e(TAG, "相机" + "getParams" + "为空");
 //        }
         mGLSurfaceView.getGLES2Render().draw_rect((Rect[]) data.getParams(), Color.GREEN, 2);
     }
@@ -3268,41 +3264,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        sendMainMessager(MSG_FACE_DOWNLOAD, null);
     }
 
-    @Override
-    public void onAccountReceived(String acc) {
-        String account = reverseNum(acc);
-
-        //这里接收到刷卡后获得的卡ID
-        cardId = account;
-        Log.e(TAG, "onAccountReceived 卡信息 account " + account + " cardId " + cardId);
-        if (!nfcFlag) {//非录卡状态（卡信息用于开门）
-            Message message = Message.obtain();
-            message.what = MainService.MSG_CARD_INCOME;
-            message.obj = account;
-            try {
-                serviceMessage.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        } else {//正在录卡状态（卡信息用于录入）
-            // TODO: 2018/5/28 注释
-//            Message message = Message.obtain();
-//            message.what = MSG_INPUT_CARDINFO;
-//            message.obj = account;
-//            handler.sendMessage(message);
-        }
-    }
-
-    /**
-     * 反转卡号（高低位颠倒）
-     *
-     * @param acc
-     */
-    private String reverseNum(String acc) {
-        String s = acc.substring(6, 8) + acc.substring(4, 6) + acc.substring(2, 4) + acc.substring(0, 2);
-        return s.toLowerCase();
-    }
-
     class FRAbsLoop extends AbsLoop {
 
         AFR_FSDKVersion version = new AFR_FSDKVersion();
@@ -3313,10 +3274,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         List<FaceRegist> mResgist = ArcsoftManager.getInstance().mFaceDB.mRegister;
 //        List<Lian> mFaceList = new ArrayList<>();
 
-
 //        List<ASAE_FSDKFace> face1 = new ArrayList<>();
 //        List<ASGE_FSDKFace> face2 = new ArrayList<>();
-
 
         private final Object lock = new Object();
         private boolean pause = false;
@@ -3353,18 +3312,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void setup() {
-//            LogDoor.e("人脸识别", "这里走了吗");
+//            Log.e("人脸识别", "这里走了吗");
             AFR_FSDKError error = engine.AFR_FSDK_InitialEngine(arc_appid, fr_key);
-            //LogDoor.v(FACE_TAG, "AFR_FSDK_InitialEngine = " + error.getCode());
+            //Log.v(FACE_TAG, "AFR_FSDK_InitialEngine = " + error.getCode());
             error = engine.AFR_FSDK_GetVersion(version);
-            //LogDoor.v(FACE_TAG, "FR=" + version.toString() + "," + error.getCode()); //(210, 178 -
-            // 478, 446), degree =
-            // 1　780, 2208 - 1942, 3370
+            //Log.v(FACE_TAG, "FR=" + version.toString() + "," + error.getCode()); //(210, 178 -
+            // 478, 446), degree = 1　780, 2208 - 1942, 3370
         }
 
         @Override
         public void loop() {
-//            LogDoor.v(FACE_TAG, "loop1:" + mImageNV21 + "/" + identification);
+//            Log.v(FACE_TAG, "loop1:" + mImageNV21 + "/" + identification);
             while (pause) {
                 onPause();
             }
@@ -3404,8 +3362,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // feature 检测到的人脸特征信息
                 AFR_FSDKError error = engine.AFR_FSDK_ExtractFRFeature(mImageNV21, mWidth, mHeight, AFR_FSDKEngine
                         .CP_PAF_NV21, mAFT_FSDKFace.getRect(), mAFT_FSDKFace.getDegree(), result);
-//                Log.d(TAG, "AFR_FSDK_ExtractFRFeature cost :" + (System.currentTimeMillis() -
-//                 time) + "ms");
+//                Log.d(TAG, "AFR_FSDK_ExtractFRFeature cost :" + (System.currentTimeMillis() - time) + "ms");
                 Log.d(TAG, "Face=" + result.getFeatureData()[0] + "," + result.getFeatureData()[1] + "," + result
                         .getFeatureData()[2] + "," + error.getCode());
                 AFR_FSDKMatching score = new AFR_FSDKMatching();//这个类用来保存特征信息匹配度
@@ -3476,7 +3433,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void over() {
             AFR_FSDKError error = engine.AFR_FSDK_UninitialEngine();//销毁引擎，释放内存资源
-            //LogDoor.v(FACE_TAG, "AFR_FSDK_UninitialEngine : " + error.getCode());
+            //Log.v(FACE_TAG, "AFR_FSDK_UninitialEngine : " + error.getCode());
         }
     }
 
@@ -3635,5 +3592,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /****************************生命周期end*********************************************/
+
+    @Override
+    public void onAccountReceived(String acc) {
+        String account = reverseNum(acc);
+
+        //这里接收到刷卡后获得的卡ID
+        cardId = account;
+        Log.e(TAG, "onAccountReceived 卡信息 account " + account + " cardId " + cardId);
+        if (!nfcFlag) {//非录卡状态（卡信息用于开门）
+            Message message = Message.obtain();
+            message.what = MainService.MSG_CARD_INCOME;
+            message.obj = account;
+            try {
+                serviceMessage.send(message);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        } else {//正在录卡状态（卡信息用于录入）
+            // TODO: 2018/5/28 注释
+//            Message message = Message.obtain();
+//            message.what = MSG_INPUT_CARDINFO;
+//            message.obj = account;
+//            handler.sendMessage(message);
+        }
+    }
+
+    /**
+     * 反转卡号（高低位颠倒）
+     *
+     * @param acc
+     */
+    private String reverseNum(String acc) {
+        String s = acc.substring(6, 8) + acc.substring(4, 6) + acc.substring(2, 4) + acc.substring(0, 2);
+        return s.toLowerCase();
+    }
 
 }

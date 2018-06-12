@@ -343,6 +343,9 @@ public class MainService extends Service {
      * @param list
      */
     private void lixianTongji(final List<AdTongJiBean> list) {
+        for (int i = 0; i < list.size(); i++) {
+            list.get(i).setMac(mac);
+        }
         String json = JsonUtil.parseListToJson(list);
         Log.e(TAG, "上传离线视频图片统计请求 json " + json);
         OkHttpUtils.postString().url(API.ADV_TONGJI).content(json).mediaType(MediaType.parse("application/json; " +
@@ -486,7 +489,6 @@ public class MainService extends Service {
                         String[] parame = (String[]) msg.obj;
                         String phoneNum = parame[0];//手机号码
                         String picUrl = parame[1];//图片URL
-//                        if (!cardRecord.checkLastCard(phoneNum)) {//判断距离上次刷脸时间是否超过2秒
                         LogDoor data = new LogDoor();
                         data.setMac(mac);
                         data.setKaimenfangshi(3);
@@ -512,7 +514,6 @@ public class MainService extends Service {
                         DLLog.e(TAG, "人脸截图 开始开门");
                         openLock(3);
                         DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
-//                        }
                         break;
                     }
                     case MSG_CARD_OPENLOCK: {
@@ -854,7 +855,7 @@ public class MainService extends Service {
                                             .parseLong(banbenBean.getGuanggao()));
                                     if (Long.parseLong(banbenBean.getGuanggao()) > guanggaoVadioVision) {
                                         Log.i(TAG, "心跳中有广告视频信息更新");
-                                        getGuanggao(Long.parseLong(banbenBean.getGuanggao()));
+                                        // TODO: 2018/6/12    getGuanggao(Long.parseLong(banbenBean.getGuanggao()));
                                     }
                                 }
                                 //// TODO: 2018/5/17 拿app版本信息 去掉点
