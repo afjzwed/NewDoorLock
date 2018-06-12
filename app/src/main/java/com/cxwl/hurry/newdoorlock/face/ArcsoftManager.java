@@ -40,20 +40,19 @@ public class ArcsoftManager {
 
     public void initArcsoft(Application application) {
 //        String path = application.getExternalCacheDir().getPath();
-//        String path = Environment.getExternalStorageDirectory() + File.separator + DeviceConfig.LOCAL_FACEINFO_PATH;
-//        try {
-//            File file = new File(path);
-//            if (!file.exists()) {
-//                new File(path).mkdirs();//新建文件夹
-//                file.createNewFile();//新建文件
-//            }
-//        } catch (IOException e) {
+//        String path = Environment.getExternalStorageDirectory()+"";
+        String path = Environment.getExternalStorageDirectory() + File.separator + DeviceConfig.LOCAL_FACEINFO_PATH;
+        try {
+            File file = new File(path);
+            if (!file.exists()) {
+                new File(path).mkdirs();//新建文件夹
+                file.createNewFile();//新建文件
+            }
+        } catch (IOException e) {
 //            path = application.getExternalCacheDir().getPath();
-//            e.printStackTrace();
-//        }
+            e.printStackTrace();
+        }
 
-//        String path = application.getExternalCacheDir().getPath();
-        String path = Environment.getExternalStorageDirectory()+"";
         Log.v("人脸识别", "initArcsoft-->" + path);
         mFaceDB = new FaceDB(path);
 //        mImage = null;

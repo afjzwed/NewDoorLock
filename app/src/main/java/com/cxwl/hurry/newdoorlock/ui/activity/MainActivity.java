@@ -880,12 +880,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //设置第一张图片开始播放时间
         startTime = System.currentTimeMillis() + "";
         banner.start();
+
     }
 
     /**
      * 开门 :1卡2手机3人脸4邀请码5离线密码6临时密码'
      */
     private void onLockOpened(int typy) {
+        DLLog.e(TAG, " 开门完成 开锁了");
         blockNo = "";
         setDialValue("");
         setTempkeyValue("");
@@ -918,7 +920,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-
         identification = false;
         if (faceHandler != null) {
             faceHandler.removeMessages(MSG_FACE_DETECT_CHECK);
@@ -1384,7 +1385,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
     /**
      * 使用定时器,每隔5秒获得一次信号强度值
      */
@@ -1520,7 +1520,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (currentStatus == CALL_MODE || currentStatus == PASSWORD_MODE) {//处于呼叫模式或密码模式
                 // TODO: 2018/5/4 这里的判断得改成输入框是否有值,有值确认键走呼叫或密码,没值走切换模式
                 tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(11)});
-
                 str = tv_input_text.getText().toString();
                 if (keyCode == DEVICE_KEYCODE_POUND) {//确认键
                     if ("".equals(str)) {//输入框没值走切换模式
@@ -1530,7 +1529,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             initPasswordStatus();
                         } else {
                             tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(11)});
-
                             initDialStatus();
                         }
                     } else {//输入框有值走呼叫或密码
@@ -1571,7 +1569,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 } else if (key >= 0) {//数字键
                     if (currentStatus == CALL_MODE) {
-
                         unitNoInput(key);
 //                        callInput(key);
                     } else {
@@ -1582,7 +1579,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Utils.DisplayToast(MainActivity.this, "当前网络异常");
             } else if (currentStatus == CALLING_MODE) {//处于正在呼叫模式
                 tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
-
                 Log.v(TAG, "onKeyDown-->111");
                 if (keyCode == KeyEvent.KEYCODE_STAR || keyCode == DEVICE_KEYCODE_STAR) {
                     Log.v(TAG, "onKeyDown-->222");
@@ -1590,7 +1586,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             } else if (currentStatus == ONVIDEO_MODE) {
                 tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
-
                 if (keyCode == KeyEvent.KEYCODE_STAR || keyCode == DEVICE_KEYCODE_STAR) {
                     sendMainMessager(MSG_DISCONNECT_VIEDO, "");
                 }
@@ -1817,7 +1812,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_PAUSE, 0);
         }
         takePicture(thisPassword, false, this);
-
     }
 
     /**
@@ -2078,7 +2072,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     camera = Camera.open();
                     Log.e(TAG, "打开照相机 1");
-                    Log.e(TAG, "打开照相机 1");
                 } catch (Exception e) {
                     Log.e(TAG, "打开照相机 2 " + e.toString());
                 }
@@ -2259,8 +2252,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                             }
                                             //当前图片上传失败
                                             curUploadImgIndexFail++;
-                                            Log.e("七牛info", info.toString());
                                         }
+                                        Log.e(TAG, "七牛info" + info.toString());
                                     }
                                 }, null);
                             }
@@ -2277,14 +2270,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCamerarelease = false;
         try {
             camera = Camera.open();
-
+            Log.e(TAG, "打开照相机 1");
         } catch (Exception e) {
+            Log.e(TAG, "打开照相机 2 " + e.toString());
         }
-        Log.v(TAG, "打开相机");
+        Log.v(TAG, "打开照相机");
         if (camera == null) {
             try {
                 camera = Camera.open(0);
+                Log.e(TAG, "打开照相机 3");
             } catch (Exception e) {
+                Log.e(TAG, "打开照相机 4" + e.toString());
             }
         }
         if (camera != null) {
@@ -2353,7 +2349,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                             if (file != null) {
                                                                 file.delete();
                                                             }
-
                                                         } else {
                                                             Log.e(TAG, "七牛上传图片失败 保存照片信息到数据库");
                                                             DbUtils.getInstans().insertOneImg(imgFile);
@@ -2367,10 +2362,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                         clearImageUuidAvaible(uuid);
                                                         Log.v(TAG, "正常清除" + uuid);
                                                         Log.e(TAG, "七牛info" + info.toString());
-
                                                     }
                                                 }, null);
-
                                             }
                                         }.start();
                                     }
@@ -2379,6 +2372,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 Log.v("MainActivity", "拍照成功，但已取消");
                             }
                         } catch (Exception e) {
+                            Log.e(TAG, "打开照相机 5" + e.toString());
                             e.printStackTrace();
                         }
                     }
@@ -2392,8 +2386,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Log.v("MainActivity", "照相出异常清除UUID");
                     clearImageUuidAvaible(uuid);
                 } catch (Exception err) {
-                }
 
+                }
             }
         }
     }
@@ -2921,15 +2915,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 switch (item.getItemId()) {
                     case R.id.action_settings1:
 //                        LogDoor.e(TAG,"menu 系統設置");
-
                         Intent intent = new Intent(Settings.ACTION_SETTINGS);//跳轉到系統設置
                         intent.putExtra("back", true);
                         startActivityForResult(intent, INPUT_SYSTEMSET_REQUESTCODE);
                         break;
                     case R.id.action_catIP:
                         Log.e(TAG, "menu 本机的IP");
-//                        Toast.makeText(MainActivity.this, "本机的IP：" + Intenet.getHostIP(), Toast
-//                                .LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "本机的IP：" + Intenet.getHostIP(), Toast.LENGTH_LONG).show();
                         break;
                     case R.id.action_catVersion:
                         Log.e(TAG, "menu 本机的固件版本");
@@ -3118,7 +3110,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public Camera setupCamera() {
 //        Log.e(TAG, "相机" + "setupCamera");
-
         mCamera = Camera.open();
         try {//这里其实不用捕捉错误
             Camera.Parameters parameters = mCamera.getParameters();
@@ -3150,7 +3141,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mCamera.setParameters(parameters);
         } catch (Exception e) {
             e.printStackTrace();
-//            LogDoor.v(TAG, "setupCamera-->" + e.getMessage());
+//            Log.v(TAG, "setupCamera-->" + e.getMessage());
         }
 
         if (mCamera != null) {
@@ -3203,7 +3194,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        Log.d(TAG, "AFT_FSDK_FaceFeatureDetect =" + err.getCode());
 //        Log.d(TAG, "Face=" + result.size());
 //        for (AFT_FSDKFace face : result) {
-//            LogDoor.d(TAG, "虹软:" + face.toString());
+//            Log.d(TAG, "虹软:" + face.toString());
 ////            Rect(145, 164 - 385, 404),1
 ////            Rect(169, 166 - 429, 426),1
 ////            Rect(140, 164 - 404, 428),1
@@ -3333,7 +3324,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             if (DeviceConfig.PRINTSCREEN_STATE == 2) {
-                Log.e("刷卡开门", "人脸截图开始");
                 //将byte数组转成bitmap再转成图片文件
                 byte[] data = picData;
                 Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
@@ -3368,7 +3358,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 AFR_FSDKMatching score = new AFR_FSDKMatching();//这个类用来保存特征信息匹配度
                 float max = 0.0f;//匹配度的值
                 String name = null;
-
 
                 //遍历本地信息表
                 for (FaceRegist fr : mResgist) {
@@ -3555,6 +3544,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
+        Log.i(TAG, "onDestroy");
         unbindService(serviceConnection);
         disableReaderMode();
         if (netTimer != null) {
@@ -3579,12 +3569,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         AFT_FSDKError err = engine.AFT_FSDK_UninitialFaceEngine();
+
         if (faceHandler != null) {
             faceHandler.removeCallbacksAndMessages(null);
         }
 
         OkHttpUtils.getInstance().cancelTag(MainService.class);//取消网络请求
-
 
         // TODO: 2018/5/15 还有资源未释放，之后再查
 
