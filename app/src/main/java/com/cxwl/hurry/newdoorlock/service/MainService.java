@@ -132,6 +132,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_LOADLOCAL_DATA;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_LOCK_OPENED;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_LOGIN;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_LOGIN_AFTER;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_LOGIN_FAILED;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_PASSWORD_CHECK;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_DISCONNECT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_NEWCALL;
@@ -1852,6 +1853,8 @@ public class MainService extends Service {
                         message.what = MSG_LOGIN;
                         message.obj = doorBean.getXdoor();
                         mHandler.sendMessage(message);*/
+                    }else {
+                        sendMessageToMainAcitivity(MSG_LOGIN_FAILED,mac);
                     }
                 } else {
 //                    服务器异常或没有网络
@@ -3175,4 +3178,5 @@ public class MainService extends Service {
         }
         return verName;
     }
+
 }

@@ -1,8 +1,20 @@
 package com.cxwl.hurry.newdoorlock.utils;
 
+import com.qiniu.android.bigdata.Configuration;
+import com.qiniu.android.utils.UrlSafeBase64;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+import static javax.xml.transform.OutputKeys.ENCODING;
 
 /**
  * @author xlei
@@ -10,6 +22,7 @@ import java.util.Date;
  */
 
 public class StringUtils {
+
     /**
      * @param str
      * @return boolean
@@ -77,5 +90,44 @@ public class StringUtils {
             e.printStackTrace();
         }
         return timeStamp;
+    }
+
+
+    public static String getQnToken(){
+        String token="";
+        // 1 构造上传策略
+        JSONObject _json = new JSONObject();
+        long _dataline = System.currentTimeMillis() / 1000 + 3600;
+        try { _json.put("deadline", _dataline);// 有效时间为一个小时
+
+            _json.put("scope", "kymobile");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        String _encodedPutPolicy = UrlSafeBase64.encodeToString(_json
+                .toString().getBytes());
+        byte[] _sign = new byte[0];
+        try {
+            _sign = HmacSHA1Encrypt(_encodedPutPolicy, "OxZU9VOb7wWK1-HkPXvEexuwCJ0rVpK33M-UkfmV");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String _encodedSign = UrlSafeBase64.encodeToString(_sign);
+        String _uploadToken = "qf_oVTYRDM-06tTN7r2nAL8j0dE5JYSxyb4KWRW7" + ':' + _encodedSign + ':'
+                + _encodedPutPolicy;
+        return _uploadToken;
+    }
+    public static byte[] HmacSHA1Encrypt(String encryptText, String encryptKey)
+            throws Exception {
+        byte[] data = encryptKey.getBytes();
+        // 根据给定的字节数组构造一个密钥,第二参数指定一个密钥算法的名称
+        SecretKey secretKey = new SecretKeySpec(data, "HmacSHA1");
+        // 生成一个指定 Mac 算法 的 Mac 对象
+        Mac mac = Mac.getInstance("HmacSHA1");
+        // 用给定密钥初始化 Mac 对象
+        mac.init(secretKey);
+        byte[] text = encryptText.getBytes();
+        // 完成 Mac 操作
+        return mac.doFinal(text);
     }
 }
