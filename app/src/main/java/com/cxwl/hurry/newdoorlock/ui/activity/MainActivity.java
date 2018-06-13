@@ -920,11 +920,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-        identification = false;
-        if (faceHandler != null) {
-            faceHandler.removeMessages(MSG_FACE_DETECT_CHECK);
-            faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CHECK, 10 * 1000);
-        }
+//        identification = false;
+//        if (faceHandler != null) {
+//            faceHandler.removeMessages(MSG_FACE_DETECT_CHECK);
+//            faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CHECK, 1 * 1000);
+//        }
     }
 
     /**
@@ -1192,7 +1192,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     //   sendMainMessager(MSG_TONGJI_PIC, mTongJiBeanList);
                     picStartTime = picEndTime;
 
-
                 } else {//开始时间大于当前时间，跳过，直接显示下一条
                     setPicInfo();
                 }
@@ -1259,34 +1258,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (faceHandler != null) {
                 faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 1000);
             }
-
             sendMainMessager(MainService.REGISTER_ACTIVITY_DIAL, null);//开始心跳包
         }
-        // TODO: 2018/6/3 注释
-        /*if (msg.obj != null) {
-            XdoorBean result = (XdoorBean) msg.obj;
-            sendMainMessager(MSG_RTC_REGISTER, null);
-            //初始化社区信息
-            setCommunityName(result.getXiangmu_name() == null ? "欣社区" : result.getXiangmu_name());
-            setLockName(MainService.lockName);
-            if ("C".equals(DeviceConfig.DEVICE_TYPE)) {//判断是否社区大门
-                setDialStatus("请输入楼栋编号");
-            }
-
-            Log.e(TAG, "可以读卡");
-            enableReaderMode();//登录成功后开启读卡
-
-            //人脸识别开始
-            if (faceHandler != null) {
-                faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 1000);
-            }
-
-            sendMainMessager(MainService.REGISTER_ACTIVITY_DIAL, null);//开始心跳包
-        }*/
-//                else if (code == 1) { //登录失败,MAC地址不存在服务器
-//                    //显示MAC地址并提示添加
-//                    showMacaddress(result.getString("mac"));
-//                }
     }
 
     /**
@@ -3566,7 +3539,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         if (as != null) {
-            as.removeRunnable();
+            as.removeAll();
         }
 
         AFT_FSDKError err = engine.AFT_FSDK_UninitialFaceEngine();
