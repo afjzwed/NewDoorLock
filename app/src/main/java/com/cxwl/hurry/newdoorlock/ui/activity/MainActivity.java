@@ -746,12 +746,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         break;
                     case MSG_ADVERTISE_REFRESH://刷新广告
-                         onAdvertiseRefresh(msg.obj);
-//                        videoList = (List<GuangGaoBean>) msg.obj;
-//                        if (!isVideoThreadStart) {//线程未开启
-//                            isVideoThreadStart = !isVideoThreadStart;
-//                            startVedioThread();//开启线程
-//                        }
+//                         onAdvertiseRefresh(msg.obj);
+                        videoList = (List<GuangGaoBean>) msg.obj;
+                        if (!isVideoThreadStart) {//线程未开启
+                            isVideoThreadStart = !isVideoThreadStart;
+                            startVedioThread();//开启线程
+                        }
 
                         break;
                     case MSG_ADVERTISE_REFRESH_PIC://刷新广告图片
@@ -1188,7 +1188,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mAdTongJiBean.setAd_id(currentGuangGaoBean.getId());
                     mAdTongJiBean.setMac(MacUtils.getMac());
                     mTongJiBeanList.add(mAdTongJiBean);
-                    sendMainMessager(MSG_TONGJI_PIC, mTongJiBeanList);
+                    DbUtils.getInstans().addAllTongji(mTongJiBeanList);
+                    //   sendMainMessager(MSG_TONGJI_PIC, mTongJiBeanList);
                     picStartTime = picEndTime;
 
 
