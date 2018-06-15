@@ -513,11 +513,8 @@ public class MainService extends Service {
                         data.setUuid("");
                         List<LogDoor> list = new ArrayList<>();
                         list.add(data);
-                        DLLog.e(TAG, "人脸截图 开始上传日志");
                         createAccessLog(list);
-                        DLLog.e(TAG, "人脸截图 开始开门");
                         openLock(3);
-                        DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
                         break;
                     }
                     case MSG_CARD_OPENLOCK: {
@@ -892,8 +889,10 @@ public class MainService extends Service {
                                     }
                                 }
                                 if (StringUtils.isNoEmpty(banbenBean.getTonggao())) {
-                                    long tonggaoVision = (long) SPUtil.get(MainService.this, Constant
-                                            .SP_VISION_TONGGAO, 0L);
+                                    long tonggaoVision = (long) SPUtil.get(MainService.this, Constant.SP_VISION_TONGGAO,
+                                            0L);
+                                    Log.i(TAG, "心跳--当前通告版本：" + tonggaoVision + "   服务器通告版本：" + Long.parseLong
+                                            (banbenBean.getTonggao()));
                                     if (Long.parseLong(banbenBean.getTonggao()) > tonggaoVision) {
                                         Log.i(TAG, "心跳中有通告信息更新");
                                         if (noticesStatus == 0) {//判断是否正在下载
@@ -3172,7 +3171,6 @@ public class MainService extends Service {
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
         if (result != -1) {
-            DLLog.e(TAG, "人脸截图 开门完成 显示图片");
             sendMessageToMainAcitivity(MSG_LOCK_OPENED, type);//开锁
             SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
             countDownTimer.cancel();
