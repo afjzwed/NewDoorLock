@@ -2113,7 +2113,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                     Log.e(TAG, "file七牛储存地址：" + imgUrl);
                                                     Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
 
-                                                    uploadManager.put(file.getPath(), imgUrl,token, new
+                                                    uploadManager.put(file.getPath(), imgUrl,StringUtils.getQiniuToken(), new
                                                             UpCompletionHandler() {
                                                         @Override
                                                         public void complete(String key, ResponseInfo info,
@@ -2196,7 +2196,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     continue;
                                 }
                                 final String curUrl = imgFile.getImg_uploadurl();
-                                uploadManager.put(imgFile.getImg_localurl(), curUrl, token, new UpCompletionHandler() {
+                                uploadManager.put(imgFile.getImg_localurl(), curUrl, StringUtils.getQiniuToken(), new UpCompletionHandler() {
                                     @Override
                                     public void complete(String key, ResponseInfo info, JSONObject res) {
                                         curUploadImgIndex++;
@@ -2313,7 +2313,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                 Log.e(TAG, "file七牛储存地址：" + curUrl);
                                                 Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
 
-                                                uploadManager.put(file.getPath(), curUrl, token, new
+                                                uploadManager.put(file.getPath(), curUrl, StringUtils.getQiniuToken(), new
                                                         UpCompletionHandler() {
                                                     @Override
                                                     public void complete(String key, ResponseInfo info, JSONObject
@@ -3430,7 +3430,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.i(TAG, "获取七牛token成功 开始上传照片  token" + token);
                         Log.e(TAG, "file七牛储存地址：" + faceOpenUrl);
                         Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
-                        uploadManager.put(file.getPath(), faceOpenUrl, token, new UpCompletionHandler() {
+                        uploadManager.put(file.getPath(), faceOpenUrl, StringUtils.getQiniuToken(), new UpCompletionHandler() {
                             @Override
                             public void complete(String key, ResponseInfo info, JSONObject response) {
                                 if (info.isOK()) {

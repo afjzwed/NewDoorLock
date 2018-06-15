@@ -1,7 +1,11 @@
 package com.cxwl.hurry.newdoorlock.utils;
 
+import android.media.session.MediaSession;
+import android.util.Log;
+
 import com.qiniu.android.bigdata.Configuration;
 import com.qiniu.android.utils.UrlSafeBase64;
+import com.qiniu.util.Auth;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -91,7 +95,15 @@ public class StringUtils {
         }
         return timeStamp;
     }
-
+    public static String getQiniuToken(){
+        String qiniuak = "qf_oVTYRDM-06tTN7r2nAL8j0dE5JYSxyb4KWRW7";
+        String qiniusk = "OxZU9VOb7wWK1-HkPXvEexuwCJ0rVpK33M-UkfmV";
+        String qiniubcname = "weekreport";
+        Auth auth = Auth.create(qiniuak,qiniusk);
+        String s = auth.uploadToken(qiniubcname);
+        Log.i("token",s);
+        return s;
+    }
 
     public static String getQnToken(){
         String token="";
