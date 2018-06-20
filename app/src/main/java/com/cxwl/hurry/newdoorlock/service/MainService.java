@@ -44,14 +44,12 @@ import com.cxwl.hurry.newdoorlock.entity.FaceUrlBean;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.LogListBean;
 import com.cxwl.hurry.newdoorlock.entity.ResponseBean;
-import com.cxwl.hurry.newdoorlock.entity.XdoorBean;
 import com.cxwl.hurry.newdoorlock.entity.YeZhuBean;
 import com.cxwl.hurry.newdoorlock.http.API;
 import com.cxwl.hurry.newdoorlock.ui.activity.MainActivity;
 import com.cxwl.hurry.newdoorlock.utils.Ajax;
 import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
 import com.cxwl.hurry.newdoorlock.utils.CardRecord;
-import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.cxwl.hurry.newdoorlock.utils.HttpApi;
 import com.cxwl.hurry.newdoorlock.utils.HttpUtils;
@@ -907,7 +905,7 @@ public class MainService extends Service {
                                     sendMessageToMainAcitivity(MSG_UPLOAD_LIXIAN_IMG, imgFiles);
                                 }
                                 //// TODO: 2018/6/13  上传离线统计日志
-                                    lixianTongji();
+                                lixianTongji();
 
                             }
                         } else {
@@ -1230,7 +1228,7 @@ public class MainService extends Service {
                             String list = JsonUtil.getFieldValue(result, "lian");//服务器字段命名错误
                             faceUrlList = (ArrayList<FaceUrlBean>) JsonUtil.parseJsonToList(list, new
                                     TypeToken<List<FaceUrlBean>>() {
-                            }.getType());
+                                    }.getType());
 
                             //通知MainActivity开始人脸录入流程
                             sendMessageToMainAcitivity(MSG_FACE_INFO, null);
@@ -2404,9 +2402,9 @@ public class MainService extends Service {
             public void run() {
                 try {
                     List<LogDoor> data = DbUtils.getInstans().quaryLog();
-                   if (data!=null){
-                       Log.i(TAG, "离线开门日志 size" + data.size() + "条");
-                   }
+                    if (data != null) {
+                        Log.i(TAG, "离线开门日志 size" + data.size() + "条");
+                    }
                     if (data != null && data.size() > 0 && data.size() <= 10) {
 
                     } else if (data != null && data.size() > 10) {

@@ -1,9 +1,7 @@
 package com.cxwl.hurry.newdoorlock.utils;
 
-import android.media.session.MediaSession;
 import android.util.Log;
 
-import com.qiniu.android.bigdata.Configuration;
 import com.qiniu.android.utils.UrlSafeBase64;
 import com.qiniu.util.Auth;
 
@@ -17,8 +15,6 @@ import java.util.Date;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import static javax.xml.transform.OutputKeys.ENCODING;
 
 /**
  * @author xlei

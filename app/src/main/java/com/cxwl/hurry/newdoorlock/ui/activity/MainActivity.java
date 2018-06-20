@@ -80,7 +80,6 @@ import com.cxwl.hurry.newdoorlock.service.MainService;
 import com.cxwl.hurry.newdoorlock.utils.AdvertiseHandler;
 import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
 import com.cxwl.hurry.newdoorlock.utils.CardRecord;
-import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.cxwl.hurry.newdoorlock.utils.DialogUtil;
 import com.cxwl.hurry.newdoorlock.utils.HttpApi;

@@ -22,19 +22,19 @@ public class DaoMaster extends AbstractDaoMaster {
     /** Creates underlying database table using DAOs. */
     public static void createAllTables(Database db, boolean ifNotExists) {
         AdTongJiBeanDao.createTable(db, ifNotExists);
+        ImgFileDao.createTable(db, ifNotExists);
         KaDao.createTable(db, ifNotExists);
         LianDao.createTable(db, ifNotExists);
         LogDoorDao.createTable(db, ifNotExists);
-        ImgFileDao.createTable(db, ifNotExists);
     }
 
     /** Drops underlying database table using DAOs. */
     public static void dropAllTables(Database db, boolean ifExists) {
         AdTongJiBeanDao.dropTable(db, ifExists);
+        ImgFileDao.dropTable(db, ifExists);
         KaDao.dropTable(db, ifExists);
         LianDao.dropTable(db, ifExists);
         LogDoorDao.dropTable(db, ifExists);
-        ImgFileDao.dropTable(db, ifExists);
     }
 
     /**
@@ -54,10 +54,10 @@ public class DaoMaster extends AbstractDaoMaster {
     public DaoMaster(Database db) {
         super(db, SCHEMA_VERSION);
         registerDaoClass(AdTongJiBeanDao.class);
+        registerDaoClass(ImgFileDao.class);
         registerDaoClass(KaDao.class);
         registerDaoClass(LianDao.class);
         registerDaoClass(LogDoorDao.class);
-        registerDaoClass(ImgFileDao.class);
     }
 
     public DaoSession newSession() {
