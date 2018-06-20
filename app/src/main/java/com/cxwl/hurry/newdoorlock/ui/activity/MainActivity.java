@@ -3084,8 +3084,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public Camera setupCamera() {
 //        Log.e(TAG, "相机" + "setupCamera");
-        mCamera = Camera.open();
+
         try {//这里其实不用捕捉错误
+                mCamera = Camera.open();
+            if (mCamera == null) {
+                mCamera = Camera.open(0);
+            }
             Camera.Parameters parameters = mCamera.getParameters();
 //            parameters.setPreviewSize(640, 480);//设置尺寸
             parameters.setPreviewFormat(ImageFormat.NV21);//指定图像的格式
