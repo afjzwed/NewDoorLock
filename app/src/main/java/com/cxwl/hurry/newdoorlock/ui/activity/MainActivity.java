@@ -143,6 +143,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_DETECT_CONTRAS
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_DETECT_INPUT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_DETECT_PAUSE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_INFO;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_INFO_FINISH;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_OPENLOCK;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_GET_NOTICE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_ID_CARD_DETECT_INPUT;
@@ -700,13 +701,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.i(TAG, "验证离线验证密码后");
                         onCheckLixianPasswordAfter(msg.obj == null ? null : (boolean) msg.obj);
                         break;
-                    case MSG_FACE_INFO:
-                        //人脸识别录入
+                    case MSG_FACE_INFO://人脸识别暂停
                         faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_PAUSE, 100);
-                        faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_INPUT, 100);
+                        // TODO: 2018/6/19   sendMainMessager(MSG_FACE_DOWNLOAD, null);
+                        // TODO: 2018/6/19    faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_INPUT, 100);
                         break;
-                    case MSG_LOCK_OPENED:
-                        //开锁
+                    case MSG_FACE_INFO_FINISH://人脸录入完成，重新开始人脸识别
+                        faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 1000);
+                        break;
+                    case MSG_LOCK_OPENED://开锁
                         // TODO: 2018/5/16   //做UI显示，并开启其他的任务
                         Log.i(TAG, "开锁");
                         onLockOpened((int) msg.obj);

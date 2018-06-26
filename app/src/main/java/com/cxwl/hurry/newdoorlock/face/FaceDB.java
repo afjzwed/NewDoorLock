@@ -33,7 +33,7 @@ public class FaceDB {
 
 
     String mDBPath;
-    public List<FaceRegist> mRegister;
+    public List<FaceRegist> mRegister;//已注册的集合（用text文件保存）
     AFR_FSDKEngine mFREngine;
     AFR_FSDKVersion mFRVersion;
     boolean mUpgrade;

@@ -11,6 +11,9 @@ android {
         versionCode 11
         versionName "1.1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        renderscriptTargetApi 19
+        renderscriptSupportModeEnabled true
     }
     buildTypes {
         release {
@@ -83,4 +86,6 @@ dependencies {
     compile 'com.github.bumptech.glide:glide:3.7.0'
     //腾讯buggly
     compile 'com.tencent.bugly:crashreport:2.2.0'
+    //图片压缩、格式转换
+    compile 'io.github.silvaren:easyrs:0.5.3'
 }

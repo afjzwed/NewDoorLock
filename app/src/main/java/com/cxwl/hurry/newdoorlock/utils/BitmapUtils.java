@@ -3,21 +3,21 @@ package com.cxwl.hurry.newdoorlock.utils;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
 import android.graphics.Matrix;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
 import android.media.ExifInterface;
 import android.os.Environment;
+import android.support.v8.renderscript.RenderScript;
 import android.util.Log;
 
+import com.cxwl.hurry.newdoorlock.MainApplication;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
-import com.guo.android_extend.java.ExtByteArrayOutputStream;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
+
+import io.github.silvaren.easyrs.tools.Nv21Image;
 
 /**
  * Created by William on 2018/5/15.
@@ -43,17 +43,17 @@ public class BitmapUtils {
             Matrix matrix = new Matrix();
 
             if (orientation == ExifInterface.ORIENTATION_ROTATE_90) {
-                Log.e("wh","角度 90" );
+                Log.e("wh", "角度 90");
                 matrix.postRotate(90);
             } else if (orientation == ExifInterface.ORIENTATION_ROTATE_180) {
-                Log.e("wh","角度 180" );
+                Log.e("wh", "角度 180");
 //                matrix.postRotate(180);
                 matrix.postRotate(0);
             } else if (orientation == ExifInterface.ORIENTATION_ROTATE_270) {
-                Log.e("wh","角度 270" );
+                Log.e("wh", "角度 270");
                 matrix.postRotate(270);
             } else {
-                Log.e("wh","角度 0" );
+                Log.e("wh", "角度 0");
 //                matrix.postRotate(0);
                 matrix.postRotate(180);
             }
@@ -146,21 +146,24 @@ public class BitmapUtils {
      * @return
      */
     public static Bitmap byteToFile(byte[] data, int width, int height) {
-        YuvImage yuv = new YuvImage(data, ImageFormat.NV21, width, height, null);
-        ExtByteArrayOutputStream ops = new ExtByteArrayOutputStream();
-        yuv.compressToJpeg(new Rect(0, 0, width, height), 80, ops);
-        Bitmap bmp = BitmapFactory.decodeByteArray(ops.getByteArray(), 0, ops.getByteArray().length);
-        try {
-            ops.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        yuv = null;
-        return bmp;
-//                ByteArrayOutputStream stream =newByteArrayOutputStream();
-//                image.compressToJpeg(newRect(0,0, Width, Height),80, stream);
-////Bitmap bmp = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
-//                bmp = BitmapFactory.decodeByteArray(stream.toByteArray(),0, stream.size());
+        //防止厂商没有优化YuvImage.compressToJpeg方法导致native层内存溢出，用以下的方法压缩转换图片
+        RenderScript rs = RenderScript.create(MainApplication.getApplication()); // where context can be your
+// activity, application, etc.
+        Bitmap outputBitmap = Nv21Image.nv21ToBitmap(rs, data, width, height); // where nv21ByteArray contains the
+// NV21 image data
+        return outputBitmap;
+
+//        YuvImage yuv = new YuvImage(data, ImageFormat.NV21, width, height, null);
+//        ExtByteArrayOutputStream ops = new ExtByteArrayOutputStream();
+//        yuv.compressToJpeg(new Rect(0, 0, width, height), 80, ops);
+//        Bitmap bmp = BitmapFactory.decodeByteArray(ops.getByteArray(), 0, ops.getByteArray().length);
+//        try {
+//            ops.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        yuv = null;
+//        return bmp;
     }
 
     /**
@@ -229,8 +232,7 @@ public class BitmapUtils {
         Matrix matrix = new Matrix();
         matrix.reset();
         matrix.setRotate(degrees);
-        return tmpBitmap =
-                Bitmap.createBitmap(tmpBitmap, 0, 0, tmpBitmap.getWidth(), tmpBitmap.getHeight(), matrix,
-                        true);
+        return tmpBitmap = Bitmap.createBitmap(tmpBitmap, 0, 0, tmpBitmap.getWidth(), tmpBitmap.getHeight(), matrix,
+                true);
     }
 }
