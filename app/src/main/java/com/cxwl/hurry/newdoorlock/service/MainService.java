@@ -1280,7 +1280,7 @@ public class MainService extends Service {
 //                                initFaceEngine(); //开始人脸录入流程
                             } else {
                                 syncCallBack("2", version);//同步人脸回调通知
-                                sendMessageToMainAcitivity(MSG_FACE_INFO_FINISH, null);//通知MainActivity开始人脸识别
+//                                sendMessageToMainAcitivity(MSG_FACE_INFO_FINISH, null);//通知MainActivity开始人脸识别
                                 faceStatus = 0;//重置人脸信息下载状态
                                 faceUrlList = null;
                                 return;
@@ -2102,26 +2102,6 @@ public class MainService extends Service {
         }
         Log.e("这里", "" + resultValue);
         return resultValue;
-    }
-
-    private void textDB() {
-        final List<Ka> list = new ArrayList<>();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.i(TAG, System.currentTimeMillis() + "开始前");
-                for (int i = 0; i < 10000; i++) {
-                    Ka ka = new Ka();
-                    ka.setKa_id("" + i);
-                    list.add(ka);
-                }
-                Log.i(TAG, System.currentTimeMillis() + "开始后");
-                mDbUtils.addAllKa(list);
-                Log.i(TAG, System.currentTimeMillis() + "添加后");
-//                boolean hasKa = mDbUtils.isHasKa("1052");
-//                LogDoor.i(TAG, System.currentTimeMillis() + "查询后" + hasKa);
-            }
-        }).start();
     }
 
     /**
