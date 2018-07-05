@@ -1,20 +1,18 @@
 package com.cxwl.hurry.newdoorlock.utils;
 
-import android.nfc.Tag;
 import android.util.Log;
 
+import com.cxwl.hurry.newdoorlock.MainApplication;
 import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
 import com.cxwl.hurry.newdoorlock.db.AdTongJiBeanDao;
+import com.cxwl.hurry.newdoorlock.db.DaoSession;
 import com.cxwl.hurry.newdoorlock.db.ImgFile;
 import com.cxwl.hurry.newdoorlock.db.ImgFileDao;
-import com.cxwl.hurry.newdoorlock.db.KaDao;
-import com.cxwl.hurry.newdoorlock.db.LogDoor;
-
-import com.cxwl.hurry.newdoorlock.MainApplication;
-import com.cxwl.hurry.newdoorlock.db.DaoSession;
 import com.cxwl.hurry.newdoorlock.db.Ka;
+import com.cxwl.hurry.newdoorlock.db.KaDao;
 import com.cxwl.hurry.newdoorlock.db.Lian;
 import com.cxwl.hurry.newdoorlock.db.LianDao;
+import com.cxwl.hurry.newdoorlock.db.LogDoor;
 import com.cxwl.hurry.newdoorlock.db.LogDoorDao;
 
 import java.util.List;
@@ -106,7 +104,6 @@ public class DbUtils {
     public void deleteAllKa() {
         //先删除所有卡信息
         mKaDao.deleteAll();
-
     }
 
     /**
@@ -243,7 +240,7 @@ public class DbUtils {
     }
 
     public List<AdTongJiBean> quaryTenTongji() {
-        List<AdTongJiBean> doors = mAdTongJiBeanDao.queryBuilder().limit(20).list();
+        List<AdTongJiBean> doors = mAdTongJiBeanDao.queryBuilder().limit(300).list();
         if (doors != null) {
             Log.i(TAG, "查询所有离线统计信息 有" + doors.size() + "条");
         }

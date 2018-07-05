@@ -138,4 +138,14 @@ public class StringUtils {
         // 完成 Mac 操作
         return mac.doFinal(text);
     }
+
+    /**
+     * 反转卡号（高低位颠倒）
+     *
+     * @param acc
+     */
+    public static String reverseNum(String acc) {
+        String s = acc.substring(6, 8) + acc.substring(4, 6) + acc.substring(2, 4) + acc.substring(0, 2);
+        return s.toLowerCase();
+    }
 }

@@ -481,7 +481,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * 初始化七牛
      */
-
     private void initQiniu() {
         String fileurl = Environment.getExternalStorageDirectory() + "/" + LOCAL_IMG_PATH + "/" + System
                 .currentTimeMillis() + ".jpg";
@@ -1021,13 +1020,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             isPlayingList.clear();
             //有开始播放的视频
             for (int i = 0; i < videoList.size(); i++) {
-                if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getShixiao_shijian())) > System
-                        .currentTimeMillis()) {//过期时间大于当前时间
-                    Log.e(TAG, "设置通告 有数据");
-                    if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getKaishi_shijian())) < System
-                            .currentTimeMillis()) {//开始时间小于当前时间，可以显示
-                        isPlayingList.add(videoList.get(i));
-
+                if (!TextUtils.isEmpty(videoList.get(i).getShixiao_shijian())&&!TextUtils.isEmpty(videoList.get(i).getKaishi_shijian())) {
+                    if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getShixiao_shijian())) > System
+                            .currentTimeMillis()) {//过期时间大于当前时间
+                        Log.e(TAG, "设置通告 有数据");
+                        if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getKaishi_shijian())) < System
+                                .currentTimeMillis()) {//开始时间小于当前时间，可以显示
+                            isPlayingList.add(videoList.get(i));
+                        }
                     }
                 }
             }
@@ -1070,9 +1070,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     advertiseHandler.onDestroy();
                 }
             });
-
         }
-
     }
 
     public boolean isSaveOrUpdate(List<GuangGaoBean> oldList, List<GuangGaoBean> newList) {
@@ -1161,14 +1159,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
                 return;
             }
-            Log.e(TAG, "设置通告 currentNoticeBean" + currentGuangGaoBean.toString());
-            Log.e(TAG, "设置通告 过期时间 " + currentGuangGaoBean.getShixiao_shijian() + " 当前时间 " + StringUtils
+            Log.e(TAG, "设置广告图片 currentNoticeBean" + currentGuangGaoBean.toString());
+            Log.e(TAG, "设置广告图片 过期时间 " + currentGuangGaoBean.getShixiao_shijian() + " 当前时间 " + StringUtils
                     .transferLongToDate("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
-            Log.e(TAG, "设置通告 过期时间 " + StringUtils.transferDateToLong(currentGuangGaoBean.getShixiao_shijian()) + " "
+            Log.e(TAG, "设置广告图片 过期时间 " + StringUtils.transferDateToLong(currentGuangGaoBean.getShixiao_shijian()) + " "
                     + "当前时间" + " " + System.currentTimeMillis());
             if (Long.parseLong(StringUtils.transferDateToLong(currentGuangGaoBean.getShixiao_shijian())) > System
                     .currentTimeMillis()) {//过期时间大于当前时间
-                Log.e(TAG, "设置通告 有数据");
+                Log.e(TAG, "设置广告图片 有数据");
                 if (Long.parseLong(StringUtils.transferDateToLong(currentGuangGaoBean.getKaishi_shijian())) < System
                         .currentTimeMillis()) {//开始时间小于当前时间，可以显示
                     //设置图片信息
@@ -1200,11 +1198,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else {
                 picIndex--;
                 if (picIndex == -1) {
-                    Log.e(TAG, "通告清零");
+                    Log.e(TAG, "广告图片清零");
                     picList.clear();
                     picList = null;
                 } else {
-                    Log.e(TAG, "移除一条通告");
+                    Log.e(TAG, "移除一条广告图片");
                     picList.remove(picIndex);
                 }
                 setPicInfo();
@@ -2410,7 +2408,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      *
      * @param reason
      */
-
     protected void onCallMemberError(int reason) {
         blockNo = "";
         setDialValue("");
@@ -3350,7 +3347,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             //比较两份人脸特征信息的匹配度(result 脸部特征信息对象,face 脸部特征信息对象,score 匹配度对象)
 //                        Log.e("人脸识别 比较值 ", "result " + result.toString() + " face " + face.toString());
                             error = engine.AFR_FSDK_FacePairMatching(result, face, score);
-//                        Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
+                        Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
                             if (max < score.getScore()) {
                                 max = score.getScore();//匹配度赋值
                                 name = fr.mName;
@@ -3361,7 +3358,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     }
 
-//                Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
+                Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
                     if (max > 0.68f) {//匹配度的值高于设定值,发出消息,开门
                         if (null != name && !cardRecord.checkLastCardNew(name)) {//判断距离上次刷脸时间是否超过10秒
                             //fr success.
@@ -3425,7 +3422,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onError(Call call, Exception e, int id) {
                 Log.i(TAG, "获取七牛token失败 e" + e.toString());
                 DbUtils.getInstans().insertOneImg(imgFile);//获取token失败，图片存在本地
-                // TODO: 2018/6/6 注释  DeviceConfig.PRINTSCREEN_STATE = 0;//重置处理图片并上传日志的状态
             }
 
             @Override
@@ -3437,7 +3433,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.i(TAG, "获取七牛token成功 开始上传照片  token" + token);
                         Log.e(TAG, "file七牛储存地址：" + faceOpenUrl);
                         Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
-                        uploadManager.put(file.getPath(), faceOpenUrl, StringUtils.getQiniuToken(), new UpCompletionHandler() {
+                        uploadManager.put(file.getPath(), faceOpenUrl, token, new UpCompletionHandler() {
                             @Override
                             public void complete(String key, ResponseInfo info, JSONObject response) {
                                 if (info.isOK()) {
@@ -3453,8 +3449,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     DbUtils.getInstans().insertOneImg(imgFile);//获取token失败，图片存在本地
                                 }
                                 Log.e(TAG, "七牛info" + info.toString());
-
-                                // TODO: 2018/6/6 注释  DeviceConfig.PRINTSCREEN_STATE = 0;//重置处理图片并上传日志的状态
                             }
                         }, null);
                     }
@@ -3566,7 +3560,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onAccountReceived(String acc) {
-        String account = reverseNum(acc);
+        String account = StringUtils.reverseNum(acc);
 
         //这里接收到刷卡后获得的卡ID
         cardId = account;
@@ -3587,16 +3581,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            message.obj = account;
 //            handler.sendMessage(message);
         }
-    }
-
-    /**
-     * 反转卡号（高低位颠倒）
-     *
-     * @param acc
-     */
-    private String reverseNum(String acc) {
-        String s = acc.substring(6, 8) + acc.substring(4, 6) + acc.substring(2, 4) + acc.substring(0, 2);
-        return s.toLowerCase();
     }
 
 }

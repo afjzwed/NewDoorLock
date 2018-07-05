@@ -6,8 +6,6 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.Rect;
 import android.media.AudioManager;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -21,14 +19,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.arcsoft.facedetection.AFD_FSDKEngine;
-import com.arcsoft.facedetection.AFD_FSDKError;
-import com.arcsoft.facedetection.AFD_FSDKFace;
-import com.arcsoft.facedetection.AFD_FSDKVersion;
-import com.arcsoft.facerecognition.AFR_FSDKEngine;
-import com.arcsoft.facerecognition.AFR_FSDKError;
 import com.arcsoft.facerecognition.AFR_FSDKFace;
-import com.arcsoft.facerecognition.AFR_FSDKVersion;
 import com.cxwl.hurry.newdoorlock.Bean.BanbenBean;
 import com.cxwl.hurry.newdoorlock.Bean.DeviceBean;
 import com.cxwl.hurry.newdoorlock.Bean.NewDoorBean;
@@ -43,13 +34,13 @@ import com.cxwl.hurry.newdoorlock.entity.DoorBean;
 import com.cxwl.hurry.newdoorlock.entity.FaceUrlBean;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.LogListBean;
+import com.cxwl.hurry.newdoorlock.entity.NewTongJiBean;
 import com.cxwl.hurry.newdoorlock.entity.ResponseBean;
 import com.cxwl.hurry.newdoorlock.entity.YeZhuBean;
 import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
 import com.cxwl.hurry.newdoorlock.http.API;
 import com.cxwl.hurry.newdoorlock.ui.activity.MainActivity;
 import com.cxwl.hurry.newdoorlock.utils.Ajax;
-import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
 import com.cxwl.hurry.newdoorlock.utils.CardRecord;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.cxwl.hurry.newdoorlock.utils.FileUtil;
@@ -64,7 +55,6 @@ import com.cxwl.hurry.newdoorlock.utils.SoundPoolUtil;
 import com.cxwl.hurry.newdoorlock.utils.StringUtils;
 import com.cxwl.hurry.newdoorlock.utils.ToastUtil;
 import com.google.gson.reflect.TypeToken;
-import com.guo.android_extend.image.ImageConverter;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
 
@@ -124,7 +114,6 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_SERVER_E
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_TIMEOUT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CANCEL_CALL;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CARD_OPENLOCK;
-import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_DELETE_FACE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_DISCONNECT_VIEDO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_DOWNLOAD;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_INFO;
@@ -152,12 +141,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPI
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_ID;
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_KEY;
 import static com.cxwl.hurry.newdoorlock.config.Constant.SP_LIXIAN_MIMA;
-import static com.cxwl.hurry.newdoorlock.config.Constant.SP_VISION_GUANGGAO;
-import static com.cxwl.hurry.newdoorlock.config.Constant.SP_VISION_KA;
 import static com.cxwl.hurry.newdoorlock.config.Constant.SP_XINTIAO_TIME;
-import static com.cxwl.hurry.newdoorlock.config.Constant.arc_appid;
-import static com.cxwl.hurry.newdoorlock.config.Constant.fd_key;
-import static com.cxwl.hurry.newdoorlock.config.Constant.fr_key;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.LOCAL_APK_PATH;
 
 
@@ -198,7 +182,7 @@ public class MainService extends Service {
     private Device device;//天翼登陆连接成功 发消息的类
     private DbUtils mDbUtils;//数据库操作
     private Hashtable<String, String> currentAdvertisementFiles = new Hashtable<String, String>(); //广告数据地址
-    private Hashtable<String, String> currentFaceFiles = new Hashtable<String, String>(); //人脸数据地址
+    //    private Hashtable<String, String> currentFaceFiles = new Hashtable<String, String>(); //人脸数据地址
     private AudioManager audioManager;//音频管理器
 
     private ArrayList<YeZhuBean> allUserList = new ArrayList<>();
@@ -210,7 +194,6 @@ public class MainService extends Service {
     private ArrayList<FaceUrlBean> faceAddList = new ArrayList<>();//要添加的人脸信息URL集合(未下载)
     private ArrayList<FaceUrlBean> faceDeleteList = new ArrayList<>();//要删除的人脸信息URL集合(未下载)
     private List<FaceUrlBean> currentFaceList = new ArrayList<>();//本地人脸信息集合（已下载成功的）
-    //    private ArrayList<PathBean> facePathList = new ArrayList<>();//本地人脸信息路径集合
     private byte[] mImageNV21 = null;//人脸图像数据
 
     public String unitNo = "";//呼叫房号
@@ -222,7 +205,6 @@ public class MainService extends Service {
     public static int lockId = 0;//锁ID
     public String imageUrl = null;//对应呼叫访客图片地址
     public String imageUuid = null;//图片对应的uuid
-    public String faceImageUrl = null;//人脸开门的图片地址
 
     private Thread timeoutCheckThread = null;//自动取消呼叫的定时器
     private Thread connectReportThread = null;//心跳包线程
@@ -231,16 +213,6 @@ public class MainService extends Service {
     public String tempKey = "";
     private Ka kaInfo = null;
     private String cardId;//卡ID,用于卡开门失败时保存卡id
-
-    private AFD_FSDKEngine engine_afd = new AFD_FSDKEngine();//这个类实现了人脸检测的功能
-    private AFD_FSDKVersion version_afd = new AFD_FSDKVersion();//这个类用来保存版本信息
-    private List<AFD_FSDKFace> result_afd = new ArrayList<AFD_FSDKFace>();//检测到的人脸信息集合
-    private AFD_FSDKError err_afd = new AFD_FSDKError();//这个类用来保存虹软错误
-
-    private AFR_FSDKVersion version_afr = new AFR_FSDKVersion();//保存版本信息(人脸识别)
-    private AFR_FSDKEngine engine_afr = new AFR_FSDKEngine();//这个类实现了人脸识别的功能
-    private AFR_FSDKFace result_afr = new AFR_FSDKFace();//识别到的人脸信息
-    private AFR_FSDKError err_afr = new AFR_FSDKError();//这个类用来保存虹软错误
 
     private AFR_FSDKFace mAFR_FSDKFace;//用于保存到数据库中的人脸特征信息
 
@@ -316,7 +288,6 @@ public class MainService extends Service {
      * 统计广告图片信息统计接口
      */
     private void tongjiPic(Object obj) {
-
         final List<AdTongJiBean> list = (List<AdTongJiBean>) obj;
         String json = JsonUtil.parseListToJson(list);
         Log.e(TAG, "广告图片统计请求 json " + json);
@@ -353,6 +324,45 @@ public class MainService extends Service {
                 try {
                     List<AdTongJiBean> list = DbUtils.getInstans().quaryTongji();
                     Log.e(TAG, "数据库中离线统计日志 size" + list.size());
+                    if (list == null || list.size() <= 0) {
+                        return;
+                    } else if (list != null && list.size() > 300) {
+                        list = DbUtils.getInstans().quaryTenTongji();//不能一次传过多条数据，内存占用太多，会有内存溢出风险
+                    }
+                    NewTongJiBean newTongJiBean = new NewTongJiBean();
+                    newTongJiBean.setTongjis(list);
+                    String json = JsonUtil.parseBeanToJson(newTongJiBean);
+                    Log.e(TAG, "上传离线统计日志请求 json " + json);
+                    Response execute = OkHttpUtils.postString().url(API.NEW_TONGJI).content(json).mediaType(MediaType
+                            .parse("application/json; " + "charset=utf-8")).tag(this).build().execute();
+                    if (null != execute) {
+                        String response = execute.body().string();
+                        if (null != response && !"".equals(response)) {
+                            Log.e(TAG, "离线统计 onResponse" + response);
+                            if ("0".equals(JsonUtil.getFieldValue(response, "code"))) {
+                                Log.i(TAG, "上传离线统计成功 删除保存本地的信息");
+                                DbUtils.getInstans().deleteSomeTongji(list);
+                            } else {
+                                Log.i(TAG, "onResponse 离线统计  保存信息到数据库");
+                            }
+                        }
+                    } else {
+                        Log.i(TAG, "离线统计 保存信息到数据库 execute为空");
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.i(TAG, "离线统计 保存信息到数据库 服务器无响应 ");
+                }
+            }
+        };
+        mThreadPoolExecutor.execute(run);
+
+        /*Runnable run = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    List<AdTongJiBean> list = DbUtils.getInstans().quaryTongji();
+                    Log.e(TAG, "数据库中离线统计日志 size" + list.size());
                     if (list != null && list.size() > 0 && list.size() <= 10) {
                     } else if (list != null && list.size() > 10) {
                         list = DbUtils.getInstans().quaryTenTongji();
@@ -381,9 +391,9 @@ public class MainService extends Service {
                     e.printStackTrace();
                 }
             }
-        };
+        };*/
 
-        mThreadPoolExecutor.execute(run);
+
     }
 
     /**
@@ -810,6 +820,8 @@ public class MainService extends Service {
             JSONObject data = new JSONObject();
             data.put("mac", mac);
             data.put("mac_id", mac_id);
+
+            Log.e("wh", "httpServerToken " + httpServerToken);
             OkHttpUtils.postString().url(url).content(data.toString()).mediaType(MediaType.parse("application/json; "
                     + "charset=utf-8")).addHeader("Authorization", httpServerToken).tag(this).build().execute(new StringCallback() {
                 @Override
@@ -854,7 +866,7 @@ public class MainService extends Service {
                                     if (Long.parseLong(banbenBean.getLian()) > lianVision) {
                                         Log.i(TAG, "心跳中有人脸信息更新");
                                         if (faceStatus == 0) {//判断是否正在下载
-                                            // TODO: 2018/6/26   getFaceUrlInfo(Long.parseLong(banbenBean.getLian()));
+                                            getFaceUrlInfo(Long.parseLong(banbenBean.getLian()));
                                         }
                                     }
                                 }
@@ -947,7 +959,6 @@ public class MainService extends Service {
      *
      * @param v
      */
-
     private int adpicInfoStatus = 0;
 
     private void getTupian(final long v) {
@@ -1239,7 +1250,6 @@ public class MainService extends Service {
                     Log.e(TAG, "人脸URL 服务器异常或没有网络 " + e.toString());
                     faceStatus = 0;//等待下载数据
                     faceUrlList = null;
-//                    faceUrlList.clear();
                 }
 
                 @Override
@@ -1249,8 +1259,7 @@ public class MainService extends Service {
                         String code = JsonUtil.getFieldValue(response, "code");
                         if ("0".equals(code)) {
                             String result = JsonUtil.getResult(response);
-                            String list = JsonUtil.getFieldValue(result, "lian");//服务器字段命名错误
-                            faceUrlList = (ArrayList<FaceUrlBean>) JsonUtil.parseJsonToList(list, new
+                            faceUrlList = (ArrayList<FaceUrlBean>) JsonUtil.parseJsonToList(result, new
                                     TypeToken<List<FaceUrlBean>>() {
                                     }.getType());
                             if (null != faceUrlList && faceUrlList.size() > 0) {
@@ -1274,18 +1283,14 @@ public class MainService extends Service {
                                         currentFaceList.clear();
                                         mImageNV21 = null;
                                         sendMessageToMainAcitivity(MSG_FACE_INFO_FINISH, null);//通知MainActivity开始人脸识别
-                                        faceUrlList.clear();
                                     }
                                 }).start();
 //                                initFaceEngine(); //开始人脸录入流程
                             } else {
                                 syncCallBack("2", version);//同步人脸回调通知
-//                                sendMessageToMainAcitivity(MSG_FACE_INFO_FINISH, null);//通知MainActivity开始人脸识别
                                 faceStatus = 0;//重置人脸信息下载状态
                                 faceUrlList = null;
-                                return;
                             }
-                            // TODO: 2018/5/17 完全录入完成才改状态 faceStatus = 0;//修改状态，等待下次（新）数据
                         } else {
                             faceStatus = 0;//等待下载数据
                             faceUrlList = null;
@@ -1337,14 +1342,10 @@ public class MainService extends Service {
             // TODO: 2018/6/22 遍历删除集合，删除人脸信息
             for (FaceUrlBean faceUrlBean : faceDeleteList) {
                 boolean delete = ArcsoftManager.getInstance().mFaceDB.delete(faceUrlBean.getYezhuPhone());//删除
+                Log.e(TAG, "人脸更新 遍历删除集合，删除人脸信息 " + faceUrlBean.getYezhuPhone() + " " + delete);
             }
-//        Message message = Message.obtain();
-//        message.what = MSG_DELETE_FACE;
-//        message.obj = delete;
-//        handler.sendMessage(message);
         }
     }
-
 
     /**
      * 清除文件
@@ -1354,20 +1355,27 @@ public class MainService extends Service {
     private void removeFaceFiles(int b) {
         Log.e(TAG, "人脸更新" + " 删除文件");
         String dir = Environment.getExternalStorageDirectory() + "" + "/" + DeviceConfig.LOCAL_FACE_PATH;
-        File[] files = FileUtil.getAllLocalFiles(dir);
-        if (null != files && files.length > 0) {
-            if (b == 0) {
-                for (int i = 0; i < files.length; i++) {
-                    File file = files[i];
-                    file.delete();
-                }
-            } else {
-                //遍历本地文件,如果有临时文件或多余文件,删除
-                for (int i = 0; i < files.length; i++) {
-                    File file = files[i];
-                    String fileName = file.getAbsolutePath();
-                    if (!fileName.endsWith(".bin")) {
+        File filed = new File(dir);
+        if (!filed.exists()) {//不存在不用清除数据
+            Log.e(TAG, "人脸更新 不存在 不用清除数据");
+        } else {
+            File[] files = FileUtil.getAllLocalFiles(dir);
+            if (null != files && files.length > 0) {
+                if (b == 0) {
+                    Log.e(TAG, "人脸更新 删除所有文件");
+                    for (int i = 0; i < files.length; i++) {
+                        File file = files[i];
                         file.delete();
+                    }
+                } else {
+                    Log.e(TAG, "人脸更新 删除多余的临时文件");
+                    //遍历本地文件,如果有临时文件或多余文件,删除
+                    for (int i = 0; i < files.length; i++) {
+                        File file = files[i];
+                        String fileName = file.getAbsolutePath();
+                        if (!fileName.endsWith(".bin")) {
+                            file.delete();
+                        }
                     }
                 }
             }
@@ -1380,6 +1388,7 @@ public class MainService extends Service {
     private void restartFace() {
         Log.e(TAG, "人脸更新" + " restartFace");
         for (FaceUrlBean faceUrlBean : currentFaceList) {
+            Log.e(TAG, "人脸更新 bin文件转换 " + faceUrlBean.toString());
             try {
                 ObjectInputStream ois = new ObjectInputStream(new FileInputStream(faceUrlBean.getPath()));
                 byte[] b = (byte[]) ois.readObject();
@@ -1435,28 +1444,6 @@ public class MainService extends Service {
             }
 
         }
-        /*Enumeration<String> keys = currentFaceFiles.keys();
-        //遍历本地人脸文件名集合,如果有新的.temp文件，重命名
-        while (keys.hasMoreElements()) {
-            String fileName = keys.nextElement();
-            String filePath = currentFaceFiles.get(fileName);
-            File file = new File(filePath);
-            if (file.exists()) {
-                String localFile = file.getAbsolutePath().substring(0, file
-                        .getAbsolutePath().length() - 5);
-//                File file2 = new File(localFile + ".mp4");
-//                Log.e("下载", "file2 " + file2.getAbsolutePath());
-                file.renameTo(new File(localFile + ".bin"));//重命名后原文件被覆盖
-//                String path = file2.getPath();
-//                Log.e("下载", "图片路径" + path);
-//                if (file.exists()) {
-//                    Log.e("下载", "response 存在");
-//                }
-//                if (file2.exists()) {
-//                    Log.e("下载", "file2 存在");
-//                }
-            }
-        }*/
     }
 
     /**
@@ -1507,6 +1494,7 @@ public class MainService extends Service {
                     @Override
                     public void onError(Call call, Exception e, int id) {
                         Log.e(TAG, "onError 获取广告视频接口 getGuangGao  Exception=" + e.toString());
+                        adInfoStatus = 0;//重置广告视频下载状态
                     }
 
                     @Override
@@ -1566,6 +1554,7 @@ public class MainService extends Service {
                 });
             } catch (JSONException e) {
                 e.printStackTrace();
+                adInfoStatus = 0;//重置广告视频下载状态
             }
         }
     }
@@ -1720,13 +1709,20 @@ public class MainService extends Service {
                         if ("0".equals(code)) {
                             String result = JsonUtil.getResult(response);
                             String tonggao = JsonUtil.getFieldValue(result, "guanggao");//服务器字段命名错误
-
                             Log.e(TAG, "设置通告notice" + tonggao);
                             //通知主线程，显示通知
                             sendMessageToMainAcitivity(MSG_GET_NOTICE, tonggao);
                             //调用更新通知接口
                             syncCallBack("4", version);
                             noticesStatus = 0;//修改状态，等待下次（新）数据
+                        } else if ("5".equals(code)) {
+                            String tonggao = "[]";
+                            Log.e(TAG, "设置通告notice " + tonggao);
+                            //通知主线程，显示通知
+                            sendMessageToMainAcitivity(MSG_GET_NOTICE, tonggao);
+                            //调用更新通知接口
+                            syncCallBack("4", version);
+                            noticesStatus = 0;//等待下载数据
                         } else {
                             noticesStatus = 0;//等待下载数据
                         }
@@ -2105,61 +2101,6 @@ public class MainService extends Service {
     }
 
     /**
-     * 登录接口
-     *
-     * @return
-     * @throws JSONException
-     */
-    protected void getClientInfo() {
-        try {
-            String url = API.DEVICE_LOGIN;
-            JSONObject data = new JSONObject();
-            // TODO: 2018/5/16 参数之后要改
-            data.put("mac", mac);
-            data.put("key", key);
-            data.put("version", "1.0");
-
-            OkHttpUtils.postString().url(url).content(data.toString()).mediaType(MediaType.parse("application/json; "
-                    + "charset=utf-8")).tag(url).build().execute(new StringCallback() {
-                @Override
-                public void onError(Call call, Exception e, int id) {
-                    Log.e(TAG, "e " + e.toString());
-                    getClientInfo();
-                }
-
-                @Override
-                public void onResponse(String response, int id) {
-                    Log.e("wh response", response);
-                    Log.i(TAG, response);
-                    if (null != response) {
-                        String code = JsonUtil.getFieldValue(response, "code");
-                        if ("0".equals(code)) {
-                            String result1 = JsonUtil.getResult(response);
-                            DoorBean doorBean = JsonUtil.parseJsonToBean(result1, DoorBean.class);
-                            httpServerToken = doorBean.getToken();
-                            Log.e(TAG, doorBean.toString());
-                            //保存返回数据，通知主线程继续下一步逻辑
-                            Message message = mHandler.obtainMessage();
-                            message.what = MSG_LOGIN;
-                            message.obj = doorBean.getXdoor();
-                            mHandler.sendMessage(message);
-                        } else {
-                            getClientInfo();
-                        }
-                    } else {
-                        //服务器异常或没有网络
-                        HttpApi.e("getClientInfo()->服务器无响应");
-                        getClientInfo();
-                    }
-
-                }
-            });
-        } catch (Exception e) {
-            HttpApi.e("登录接口返回参数getClientInfo()->服务器数据解析异常");
-        }
-    }
-
-    /**
      * 登录成功后
      *
      * @param msg
@@ -2469,6 +2410,7 @@ public class MainService extends Service {
 //            if (!rejectUserList.contains(from)) {
 //                rejectUserList.add(from);
 //            }
+            Log.v("MainService", "reject call，取消其他呼叫");
         } else if (content.startsWith("{")) {
             LogDoor logDoor = JsonUtil.parseJsonToBean(content, LogDoor.class);
             cancelOtherMembers(from);
@@ -2551,7 +2493,6 @@ public class MainService extends Service {
 //        });
 //    }
 
-
     /**
      * 上传开门日志
      * 开门方式:1卡2手机3人脸4邀请码5离线密码6临时密码
@@ -2566,6 +2507,7 @@ public class MainService extends Service {
         String json = JsonUtil.parseBeanToJson(logListBean);
         Log.e(TAG, "开门日志上传 参数" + json);
 
+        Log.e("wh", "httpServerToken " + httpServerToken);
         OkHttpUtils.postString().url(url).content(json).mediaType(MediaType.parse("application/json;" + "" + "" + " "
                 + "charset=utf-8")).addHeader("Authorization", httpServerToken).tag(this).build().execute(new StringCallback() {
             @Override
@@ -3117,37 +3059,6 @@ public class MainService extends Service {
     /****************************虹软相关*********************************************/
 
     /**
-     * 人脸录入前初始化虹软相关类
-     */
-    private void initFaceEngine() {
-        //在这里初始化人脸检测和识别相关类，之后抽取方法
-        //人脸检测初始化引擎，设置检测角度、范围，数量。创建对象后，必须先于其他成员函数调用
-        err_afd = engine_afd.AFD_FSDK_InitialFaceEngine(arc_appid, fd_key, AFD_FSDKEngine.AFD_OPF_0_HIGHER_EXT, 16, 5);
-
-        //人脸识别初始化引擎，设置检测角度、范围，数量。创建对象后，必须先于其他成员函数调用
-        err_afr = engine_afr.AFR_FSDK_InitialEngine(arc_appid, fr_key);
-
-
-        if (err_afd.getCode() != AFD_FSDKError.MOK) {//FD初始化失败
-            Log.e(TAG, "FD初始化失败，错误码：" + err_afd.getCode());
-        } else if (err_afr.getCode() != AFD_FSDKError.MOK) {
-            Log.e(TAG, "FR初始化失败，错误码：" + err_afr.getCode());
-        } else {
-            err_afd = engine_afd.AFD_FSDK_GetVersion(version_afd);
-            err_afr = engine_afr.AFR_FSDK_GetVersion(version_afr);
-            Log.d(TAG, "AFD_FSDK_GetVersion =" + version_afd.toString() + ", " + err_afd.getCode());
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    for (FaceUrlBean urlBean : faceUrlList) {
-//                        downLoadFace(urlBean);
-                    }
-                }
-            }).start();
-        }
-    }
-
-    /**
      * 下载人脸照片
      *
      * @param urlBean
@@ -3155,134 +3066,30 @@ public class MainService extends Service {
      */
     private void downLoadFace(FaceUrlBean urlBean) {
         Log.e("wh", "开始下载照片" + urlBean.toString());
-        String url = urlBean.getLianUrl();
+        String url = urlBean.getLianBinUrl();
 
 //        String absolutePath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator +
 //                DeviceConfig.LOCAL_FACE_PATH;
-        String absolutePath = Environment.getExternalStorageDirectory() + File.separator + DeviceConfig.LOCAL_FACE_PATH;
-        int lastIndex = url.lastIndexOf("/");
-        String fileName = url.substring(lastIndex + 1);//文件名，带.bin后缀
-
-        try {
-            Response execute = OkHttpUtils.get().url(url).tag(this).build().execute();
-            if (null != execute) {
-                Log.e("下载", "成功 开始保存文件" + absolutePath + " " + fileName);
-                File file = FileUtil.saveFile(execute, 0, absolutePath, fileName);
-                if (null != file && file.exists()) {
-                    currentFaceFiles.put(fileName, file.getPath());//将文件名和本地路径塞入集合(currentFaceList可以操作就不用这个集合)
-                    urlBean.setFileName(fileName);
-                    urlBean.setPath(file.getPath());//文件名带后缀的话不用存路径（已知文件夹）
-                    currentFaceList.add(urlBean);//将下载成功的文件塞入集合
+        if (!TextUtils.isEmpty(url)) {
+            String absolutePath = Environment.getExternalStorageDirectory() + File.separator + DeviceConfig
+                    .LOCAL_FACE_PATH;
+            int lastIndex = url.lastIndexOf("/");
+            String fileName = url.substring(lastIndex + 1);//文件名，带.bin后缀
+            try {
+                Response execute = OkHttpUtils.get().url(url).tag(this).build().execute();
+                if (null != execute) {
+                    Log.e("下载", "成功 开始保存文件" + absolutePath + " " + fileName);
+                    File file = FileUtil.saveFile(execute, 0, absolutePath, fileName);
+                    if (null != file && file.exists()) {
+//                    currentFaceFiles.put(fileName, file.getPath());//将文件名和本地路径塞入集合(currentFaceList可以操作就不用这个集合)
+                        urlBean.setFileName(fileName);
+                        urlBean.setPath(file.getPath());//文件名带后缀的话不用存路径（已知文件夹）
+                        currentFaceList.add(urlBean);//将下载成功的文件塞入集合
+                    }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-//        boolean result = false;//此张照片是否录入的标识
-//        try {
-////            String file = "/app/download/face/20180421121538";
-//            String file = urlBean.getZhaopian();
-//            int lastIndex = file.lastIndexOf("/");
-//            String fileName = file.substring(lastIndex + 1);
-//            Log.e("wh", "fileName " + fileName);
-//            //根据文件名返回本地路径
-//            String localFile = HttpUtils.getLocalFile(fileName);
-//            if (localFile == null) {
-//                localFile = HttpUtils.downloadFile(file);//如果本地没有对应文件,则下载文件至本地
-//                if (localFile != null) {
-//                    if (localFile.endsWith(".temp")) {
-//                        localFile = localFile.substring(0, localFile.length() - 5);
-//                    }
-//                    Log.e("wh", "fileName " + fileName + " localFile " + localFile);
-//                    File file1 = new File(localFile + ".temp");
-//                    if (file1.exists()) {
-//                        File file2 = new File(localFile + ".jpg");
-//                        Log.e("wh", "file2 " + file2.getPath());
-//                        file1.renameTo(file2);//重命名,去掉.temp
-//                        String path = file2.getPath();
-//                        Log.e("wh", "图片路径" + path);
-//                        if (file1 != null) {
-//                            // TODO: 2018/5/15 这里捕捉人脸信息并录入
-//                            result = getFaceInfo(file2.getPath());
-//                            Log.e("wh", "录入结果" + result);
-//                            //无论录入是否成功，删除照片
-//                            if (file1.exists()) {
-//                                file1.delete();
-//                                Log.e("wh", "file1存在");
-//                            }
-//                            if (file2.exists()) {
-//                                file2.delete();
-//                                Log.e("wh", "file2存在");
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    File file1 = new File(localFile + ".temp");
-//                    File file2 = new File(localFile + ".jpg");
-//                    if (file1.exists()) {
-//                        file1.delete();
-//                        Log.e("wh", "file1存在1");
-//                    }
-//                    if (file2.exists()) {
-//                        file2.delete();
-//                        Log.e("wh", "file2存在1");
-//                    }
-//                }
-//            } else {
-//                //文件已存在，不重复下载
-//            }
-//        } catch (Exception e) {
-//        }
-//        return result;
-    }
-
-    private boolean getFaceInfo(String mFilePath) {
-
-        Bitmap mBitmap = BitmapUtils.decodeImage(mFilePath);
-
-        byte[] data = new byte[mBitmap.getWidth() * mBitmap.getHeight() * 3 / 2];
-        ImageConverter convert = new ImageConverter();
-        convert.initial(mBitmap.getWidth(), mBitmap.getHeight(), ImageConverter.CP_PAF_NV21);
-        if (convert.convert(mBitmap, data)) {
-            Log.d(TAG, "convert ok!");
-        }
-        convert.destroy();
-
-        //这个函数功能为检测输入的图像中存在的人脸,data 输入的图像数据,width 图像宽度,height 图像高度,format 图像格式,List<AFD_FSDKFace>
-        // list 检测到的人脸会放到到该列表里
-        err_afd = engine_afd.AFD_FSDK_StillImageFaceDetection(data, mBitmap.getWidth(), mBitmap.getHeight(),
-                AFD_FSDKEngine.CP_PAF_NV21, result_afd);
-        Log.d(TAG, "AFD_FSDK_StillImageFaceDetection =" + err_afd.getCode() + "<" + result_afd.size());
-
-        if (!result_afd.isEmpty() && result_afd.size() != 0) {//人脸数据结果不为空
-
-            //检测输入图像中的人脸特征信息，输出结果保存在 AFR_FSDKFace feature
-            err_afr = engine_afr.AFR_FSDK_ExtractFRFeature(data, mBitmap.getWidth(), mBitmap.getHeight(),
-                    AFR_FSDKEngine.CP_PAF_NV21, new Rect(result_afd.get(0).getRect()), result_afd.get(0).getDegree(),
-                    result_afr);
-            Log.d("com.arcsoft", "Face=" + result_afr.getFeatureData()[0] + "," + result_afr.getFeatureData()[1] + "," +
-                    "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + ""
-                    + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "result_afr" +
-                    result_afr.toString() + "" + "  " + "" + result_afr.getFeatureData()[2] + "," + err_afr.getCode());
-            if (err_afr.getCode() == err_afr.MOK) {//人脸特征检测成功
-                mAFR_FSDKFace = result_afr.clone();
-                // TODO: 2018/5/15 保存mAFR_FSDKFace人脸信息，操作数据库
-                if (true) {//保存成功
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                //人脸特征无法检测
-                Log.e(TAG, "人脸特征无法检测");
-                return true;
-            }
-
-        } else {
-            //没有人脸数据
-            Log.e(TAG, "没有人脸数据");
-            return true;
         }
     }
 
@@ -3340,7 +3147,6 @@ public class MainService extends Service {
     /****************************生命周期end*********************************************/
 
     /****************************卡相关start************************/
-
 
     /**
      * 检测卡信息是否合法

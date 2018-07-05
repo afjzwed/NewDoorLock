@@ -262,6 +262,9 @@ public class PhotographActivity2 extends AppCompatActivity implements Camera.Pic
     public Camera setupCamera() {
         // TODO Auto-generated method stub
         mCamera = Camera.open();//打开硬件摄像头，这里导包得时候一定要注意是android.hardware.Camera
+        if (null==mCamera) {
+            mCamera =  Camera.open(0);
+        }
         try {
             Camera.Parameters parameters = mCamera.getParameters();
 //            parameters.setPreviewSize(640, 480);
