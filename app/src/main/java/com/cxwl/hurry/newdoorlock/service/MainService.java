@@ -253,7 +253,6 @@ public class MainService extends Service {
         mThreadPoolExecutor = new ThreadPoolExecutor(3, 5, 1, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
     }
 
-
     /**
      * 统计广告视频信息接口
      */
@@ -392,8 +391,6 @@ public class MainService extends Service {
                 }
             }
         };*/
-
-
     }
 
     /**
@@ -762,7 +759,6 @@ public class MainService extends Service {
         sendMessageToMainAcitivity(MSG_PASSWORD_CHECK, result);
     }
 
-
     private void onCheckLixianPassword(Boolean result) {
         if (result != null) {
             if (result) {
@@ -866,7 +862,7 @@ public class MainService extends Service {
                                     if (Long.parseLong(banbenBean.getLian()) > lianVision) {
                                         Log.i(TAG, "心跳中有人脸信息更新");
                                         if (faceStatus == 0) {//判断是否正在下载
-                                            getFaceUrlInfo(Long.parseLong(banbenBean.getLian()));
+                                       getFaceUrlInfo(Long.parseLong(banbenBean.getLian()));
                                         }
                                     }
                                 }
@@ -877,7 +873,7 @@ public class MainService extends Service {
                                             (banbenBean.getTupian()));
                                     if (Long.parseLong(banbenBean.getTupian()) > guanggaoVision) {
                                         Log.i(TAG, "心跳中有广告图片信息更新");
-                                        getTupian(Long.parseLong(banbenBean.getTupian()));
+                                           getTupian(Long.parseLong(banbenBean.getTupian()));
                                     }
                                 }
                                 if (StringUtils.isNoEmpty(banbenBean.getGuanggao())) {
@@ -887,7 +883,7 @@ public class MainService extends Service {
                                             .parseLong(banbenBean.getGuanggao()));
                                     if (Long.parseLong(banbenBean.getGuanggao()) > guanggaoVadioVision) {
                                         Log.i(TAG, "心跳中有广告视频信息更新");
-                                        getGuanggao(Long.parseLong(banbenBean.getGuanggao()));
+                                      getGuanggao(Long.parseLong(banbenBean.getGuanggao()));
                                     }
                                 }
                                 //// TODO: 2018/5/17 拿app版本信息 去掉点
@@ -937,9 +933,7 @@ public class MainService extends Service {
                                     Log.i(TAG, "存在" + imgFiles.size() + "张离线照片");
                                     sendMessageToMainAcitivity(MSG_UPLOAD_LIXIAN_IMG, imgFiles);
                                 }
-                                //// TODO: 2018/6/13  上传离线统计日志
-                                lixianTongji();
-
+                                lixianTongji();//上传离线统计日志
                             }
                         } else {
                             //服务器异常或没有网络
@@ -1090,7 +1084,6 @@ public class MainService extends Service {
 
                 }
             });
-
         } catch (Exception e) {
             HttpApi.e("connectReportInfo()->服务器数据解析异常");
             e.printStackTrace();
@@ -1239,7 +1232,6 @@ public class MainService extends Service {
         try {
             //开始获取人脸信息
             String url = API.CALLALL_FACES;
-
             JSONObject data = new JSONObject();
             data.put("mac", mac);
             Log.e(TAG, "人脸URL mac " + mac + " url " + url);
@@ -1622,7 +1614,6 @@ public class MainService extends Service {
         }
     }
 
-
     protected void downloadAdvertisementItemFiles(GuangGaoBean item) {
 
         String type = item.getLeixing();
@@ -1733,14 +1724,12 @@ public class MainService extends Service {
                     }
                 }
             });
-
         } catch (Exception e) {
             noticesStatus = 0;//等待下载数据
             HttpApi.e("通告信息 getClientInfo()->服务器数据解析异常");
             e.printStackTrace();
         }
     }
-
 
     /**
      * 获取门禁卡信息接口
@@ -1867,7 +1856,17 @@ public class MainService extends Service {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
+    /**
+     * 重置广告，图片，通知版本为0，下次登录时重新加载
+     */
+    private void saveVisionInfo() {
+//        SPUtil.put(MainService.this, Constant.SP_VISION_KA, 0L);//卡版本不应该清除
+        SPUtil.put(MainService.this, Constant.SP_VISION_GUANGGAO, 0L);
+        SPUtil.put(MainService.this, Constant.SP_VISION_GUANGGAO_VIDEO, 0L);
+        SPUtil.put(MainService.this, Constant.SP_VISION_TONGGAO, 0L);
+//        ^(?!.*(WifiStateMachine|FrameHelper|hwcomposer|okhttp|wh)).*$
     }
 
     /**
@@ -1886,19 +1885,6 @@ public class MainService extends Service {
     }
 
     /**
-     * 重置广告，图片，通知版本为0，下次登录时重新加载
-     */
-    private void saveVisionInfo() {
-//// TODO: 2018/5/28 清除版本 暂时先把卡版本也清除
-        SPUtil.put(MainService.this, Constant.SP_VISION_KA, 0L);
-        SPUtil.put(MainService.this, Constant.SP_VISION_GUANGGAO, 0L);
-        SPUtil.put(MainService.this, Constant.SP_VISION_GUANGGAO_VIDEO, 0L);
-        SPUtil.put(MainService.this, Constant.SP_VISION_TONGGAO, 0L);
-
-//        Log.e(TAG, "广告，图片，通知版本" + SPUtil.get(MainService.this, Constant.SP_VISION_GUANGGAO, 0f));
-    }
-
-    /**
      * 比对心跳接口当前版本信息
      *
      * @param connectReportBean
@@ -1914,11 +1900,6 @@ public class MainService extends Service {
     }
 
     protected void init() {
-
-//        initAexUtil(); //安卓工控设备控制器初始化
-        Log.i("MainService", "init AEX");
-        // TODO: 2018/5/8  initSqlUtil();  初始化卡相关数据库工具类
-        Log.i("MainService", "init SQL");
         initCheckTopActivity();//检查最上层界面
 
         //xiaozd add
@@ -2089,11 +2070,13 @@ public class MainService extends Service {
                     }
                 } else {
 //                    服务器异常或没有网络
-                    HttpApi.e("getClientInfo()->服务器无响应");
+                    HttpApi.e("getClientInfo()->response为空");
                 }
+            } else {
+                HttpApi.e("getClientInfo()->服务器未响应");
             }
         } catch (Exception e) {
-            HttpApi.e("getClientInfo()->服务器数据解析异常");
+            HttpApi.e("getClientInfo()->服务器异常或没有网络");
             e.printStackTrace();
         }
         Log.e("这里", "" + resultValue);
@@ -2451,47 +2434,6 @@ public class MainService extends Service {
             stopTimeoutCheckThread();
         }
     }
-
-//    private void test() {
-//        String url = API.LOG;
-//        JSONObject data = new JSONObject();
-//        try {
-//            data.put("mac", "44:2c:05:e6:9c:c5");
-//            data.put("phone", "454");
-//            data.put("ka_id", "");
-//            data.put("kaimenfangshi", "1");
-//            data.put("kaimenjietu", "");
-//            data.put("kaimenshijian", System.currentTimeMillis());
-//            data.put("uuid", "");
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//        LogDoor logDoor = JsonUtil.parseJsonToBean(data.toString(), LogDoor.class);
-//        List<LogDoor> door = new ArrayList<>();
-//        door.add(logDoor);
-//        LogListBean logListBean = new LogListBean();
-//        logListBean.setMac("44:2c:05:e6:9c:c5");
-//        logListBean.setXdoorOneOpenDtos(door);
-//        String s = JsonUtil.parseBeanToJson(logListBean);
-//        Log.e(TAG, "test" + JsonUtil.parseBeanToJson(logListBean));
-//        OkHttpUtils.postString().url(url).content(s).mediaType(MediaType.parse
-// ("application/json;" + " " +
-//                "charset=utf-8")).addHeader("Authorization", httpServerToken).tag(this).build()
-// .execute(new
-// StringCallback() {
-//
-//
-//            @Override
-//            public void onError(Call call, Exception e, int id) {
-//                Log.e(TAG, e.toString());
-//            }
-//
-//            @Override
-//            public void onResponse(String response, int id) {
-//                Log.e(TAG, response);
-//            }
-//        });
-//    }
 
     /**
      * 上传开门日志
@@ -3142,7 +3084,6 @@ public class MainService extends Service {
     public IBinder onBind(Intent intent) {
         return serviceMessage.getBinder();
     }
-
 
     /****************************生命周期end*********************************************/
 

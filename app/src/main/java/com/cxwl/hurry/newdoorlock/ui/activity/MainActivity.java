@@ -299,6 +299,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+//        ^(?!.*(WifiStateMachine|FrameHelper|hwcomposer|okhttp|wh|MainActivity|AdvertiseHandler|MainService|art|DB)).*$
+
         Window window = getWindow();
         //全屏设置，隐藏窗口所有装饰
         window.clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);//清除FLAG
@@ -728,7 +730,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         break;
                     case MSG_INVALID_CARD:
                         //无效房卡
-                        Utils.DisplayToast(MainActivity.this, "无效房卡");
+                        Utils.DisplayToast(MainActivity.this, "无效卡号");
                         break;
                     case MSG_LOADLOCAL_DATA://离线模式
                         //加载本地数据显示到界面
@@ -1020,11 +1022,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             isPlayingList.clear();
             //有开始播放的视频
             for (int i = 0; i < videoList.size(); i++) {
-                if (!TextUtils.isEmpty(videoList.get(i).getShixiao_shijian())&&!TextUtils.isEmpty(videoList.get(i).getKaishi_shijian())) {
+                if (!TextUtils.isEmpty(videoList.get(i).getShixiao_shijian()) && !TextUtils.isEmpty(videoList.get(i)
+                        .getKaishi_shijian())) {
                     if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getShixiao_shijian())) > System
                             .currentTimeMillis()) {//过期时间大于当前时间
                         Log.e(TAG, "设置通告 有数据");
-                        if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getKaishi_shijian())) < System
+                        if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getKaishi_shijian())) <
+                                System
                                 .currentTimeMillis()) {//开始时间小于当前时间，可以显示
                             isPlayingList.add(videoList.get(i));
                         }
@@ -1682,31 +1686,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             blockNo = blockNo.substring(0, 11);
         }
         setDialValue(blockNo);
-        // TODO: 2018/5/4 这个判断交给确认键去做,暂时注释
-//        if (DeviceConfig.DEVICE_TYPE.equals("C")) {
-//            if (blockNo.length() == DeviceConfig.BLOCK_LENGTH) {
-//                startDialing(blockNo);
-//            }
-//        } else {
-//            if (blockNo.length() == DeviceConfig.UNIT_NO_LENGTH) {
-//                startDialing(blockNo);
-//            }
-//        }
-
-
-//         TODO: 2018/5/3 暂时注释 测试呼叫手机号
-//        if (DeviceConfig.DEVICE_TYPE.equals("C")) {
-//            if (blockNo.length() == DeviceConfig.BLOCK_LENGTH) {
-//                startDialing(blockNo);
-//            }
-//        } else {
-//            if (blockNo.equals("0101") || blockNo.equals("9999")) {
-//                startDialing(blockNo);
-//            } else if (blockNo.length() == 11) {
-//                startDialing(blockNo);
-//            }
-//        }
-
     }
 
     /**
@@ -1745,10 +1724,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             guestPassword = guestPassword.substring(0, 6);
         }
         setTempkeyValue(guestPassword);
-        // TODO: 2018/5/4 这个判断交给确认键去做,暂时注释
-//        if (guestPassword.length() == 6) {
-//            checkPassword();
-//        }
     }
 
     /**
@@ -2113,22 +2088,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                     Log.e(TAG, "file七牛储存地址：" + imgUrl);
                                                     Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
 
-                                                    uploadManager.put(file.getPath(), imgUrl,StringUtils.getQiniuToken(), new
+                                                    uploadManager.put(file.getPath(), imgUrl, StringUtils
+                                                            .getQiniuToken(), new
                                                             UpCompletionHandler() {
-                                                        @Override
-                                                        public void complete(String key, ResponseInfo info,
-                                                                             JSONObject response) {
-                                                            if (info.isOK()) {
-                                                                Log.e(TAG, "手机一键开门七牛上传图片成功 +图片地址" + imgUrl + "删除本地图片");
-                                                                file.delete();
+                                                                @Override
+                                                                public void complete(String key, ResponseInfo info,
+                                                                                     JSONObject response) {
+                                                                    if (info.isOK()) {
+                                                                        Log.e(TAG, "手机一键开门七牛上传图片成功 +图片地址" + imgUrl +
+                                                                                "删除本地图片");
+                                                                        file.delete();
 
-                                                            } else {
-                                                                Log.e(TAG, "手机一键开门七牛上传图片失败 保存照片信息到数据库");
-                                                                DbUtils.getInstans().insertOneImg(imgFile);
-                                                            }
-                                                            Log.e(TAG, "七牛info" + info.toString());
-                                                        }
-                                                    }, null);
+                                                                    } else {
+                                                                        Log.e(TAG, "手机一键开门七牛上传图片失败 保存照片信息到数据库");
+                                                                        DbUtils.getInstans().insertOneImg(imgFile);
+                                                                    }
+                                                                    Log.e(TAG, "七牛info" + info.toString());
+                                                                }
+                                                            }, null);
                                                 }
                                             }.start();
                                         }
@@ -2196,7 +2173,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     continue;
                                 }
                                 final String curUrl = imgFile.getImg_uploadurl();
-                                uploadManager.put(imgFile.getImg_localurl(), curUrl, StringUtils.getQiniuToken(), new UpCompletionHandler() {
+                                uploadManager.put(imgFile.getImg_localurl(), curUrl, StringUtils.getQiniuToken(), new
+                                        UpCompletionHandler() {
                                     @Override
                                     public void complete(String key, ResponseInfo info, JSONObject res) {
                                         curUploadImgIndex++;
@@ -2235,7 +2213,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }).start();
                 }
             });
-
         }
     }
 
@@ -2313,31 +2290,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                 Log.e(TAG, "file七牛储存地址：" + curUrl);
                                                 Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
 
-                                                uploadManager.put(file.getPath(), curUrl, StringUtils.getQiniuToken(), new
+                                                uploadManager.put(file.getPath(), curUrl, StringUtils.getQiniuToken()
+                                                        , new
                                                         UpCompletionHandler() {
-                                                    @Override
-                                                    public void complete(String key, ResponseInfo info, JSONObject
-                                                            response) {
-                                                        if (info.isOK()) {
-                                                            Log.e(TAG, "七牛上传图片成功 删除本地图片");
-                                                            if (file != null) {
-                                                                file.delete();
+                                                            @Override
+                                                            public void complete(String key, ResponseInfo info,
+                                                                                 JSONObject
+                                                                    response) {
+                                                                if (info.isOK()) {
+                                                                    Log.e(TAG, "七牛上传图片成功 删除本地图片");
+                                                                    if (file != null) {
+                                                                        file.delete();
+                                                                    }
+                                                                } else {
+                                                                    Log.e(TAG, "七牛上传图片失败 保存照片信息到数据库");
+                                                                    DbUtils.getInstans().insertOneImg(imgFile);
+                                                                }
+                                                                if (checkTakePictureAvailable(uuid) && info.isOK() &&
+                                                                        isCall) {
+                                                                    Log.i(TAG, "开始发送图片到手机显示照片");
+                                                                    callback.afterTakePickture(thisValue, curUrl,
+                                                                            isCall, uuid);
+                                                                } else {
+                                                                    Log.v("MainActivity", "上传照片成功不发送到手机,但已取消");
+                                                                }
+                                                                clearImageUuidAvaible(uuid);
+                                                                Log.v(TAG, "正常清除" + uuid);
+                                                                Log.e(TAG, "七牛info" + info.toString());
                                                             }
-                                                        } else {
-                                                            Log.e(TAG, "七牛上传图片失败 保存照片信息到数据库");
-                                                            DbUtils.getInstans().insertOneImg(imgFile);
-                                                        }
-                                                        if (checkTakePictureAvailable(uuid) && info.isOK() && isCall) {
-                                                            Log.i(TAG, "开始发送图片到手机显示照片");
-                                                            callback.afterTakePickture(thisValue, curUrl, isCall, uuid);
-                                                        } else {
-                                                            Log.v("MainActivity", "上传照片成功不发送到手机,但已取消");
-                                                        }
-                                                        clearImageUuidAvaible(uuid);
-                                                        Log.v(TAG, "正常清除" + uuid);
-                                                        Log.e(TAG, "七牛info" + info.toString());
-                                                    }
-                                                }, null);
+                                                        }, null);
                                             }
                                         }.start();
                                     }
@@ -3085,17 +3066,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        Log.e(TAG, "相机" + "setupCamera");
 
         try {//这里其实不用捕捉错误
-                mCamera = Camera.open();
+            mCamera = Camera.open();
             if (mCamera == null) {
                 mCamera = Camera.open(0);
             }
             Camera.Parameters parameters = mCamera.getParameters();
-//            parameters.setPreviewSize(640, 480);//设置尺寸
-            parameters.setPreviewFormat(ImageFormat.NV21);//指定图像的格式
-            // (NV21：是一种YUV420SP格式，紧跟Y平面的是VU交替的平面)
-
+            if (null != parameters) {
+                parameters.setPreviewSize(640, 480);//设置尺寸
+                mCamera.setParameters(parameters);
+            }
+            Camera.Parameters parameters1 = mCamera.getParameters();
+            if (null != parameters1) {
+                parameters1.setPreviewFormat(ImageFormat.NV21);//指定图像的格式
+                // (NV21：是一种YUV420SP格式，紧跟Y平面的是VU交替的平面)
+                mCamera.setParameters(parameters1);
+            }
 //            for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
-//                LogDoor.v(TAG, "SIZE:" + size.width + "x" + size.height);
+//                Log.v(TAG, "SIZE:" + size.width + "x" + size.height);
 //            }
 //            for (Integer format : parameters.getSupportedPreviewFormats()) {
 //                LogDoor.v(TAG, "FORMAT:" + format);
@@ -3115,7 +3102,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //parmeters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
             //parameters.setSceneMode(Camera.Parameters.SCENE_MODE_AUTO);
             //parameters.setColorEffect(Camera.Parameters.EFFECT_NONE);
-            mCamera.setParameters(parameters);
         } catch (Exception e) {
             e.printStackTrace();
 //            Log.v(TAG, "setupCamera-->" + e.getMessage());
@@ -3303,23 +3289,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (DeviceConfig.PRINTSCREEN_STATE == 2) {
                 //将byte数组转成bitmap再转成图片文件
                 byte[] data = picData;
-                Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
-                Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
-                File file = null;
-                if (null != bitmap) {
-                    file = BitmapUtils.saveBitmap(MainActivity.this, bitmap);//本地截图文件地址
+                if (data != null && data.length > 0) {
+                    Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
+                    Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
+                    File file = null;
+                    if (null != bitmap) {
+                        file = BitmapUtils.saveBitmap(MainActivity.this, bitmap);//本地截图文件地址
+                    }
+                    if (null != file && !TextUtils.isEmpty(file.getPath())) {
+                        uploadToQiNiu(file, 1);//这里做上传到七牛的操作，不返回图片URL
+                    } else {
+                        faceOpenUrl = "";
+                    }
+                    DeviceConfig.PRINTSCREEN_STATE = 0;//图片处理完成,重置状态
+                    sendMainMessager(MSG_CARD_OPENLOCK, faceOpenUrl);
+                    file = null;
+                    bitmap = null;
+                    bmp = null;
+                    data = null;
                 }
-                if (null != file && !TextUtils.isEmpty(file.getPath())) {
-                    uploadToQiNiu(file, 1);//这里做上传到七牛的操作，不返回图片URL
-                } else {
-                    faceOpenUrl = "";
-                }
-                DeviceConfig.PRINTSCREEN_STATE = 0;//图片处理完成,重置状态
-                sendMainMessager(MSG_CARD_OPENLOCK, faceOpenUrl);
-                file = null;
-                bitmap = null;
-                bmp = null;
-                data = null;
             }
 
             if (DeviceConfig.PRINTSCREEN_STATE == 0) {//开启截图、上传图片、开门、上传日志流程
@@ -3347,7 +3335,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             //比较两份人脸特征信息的匹配度(result 脸部特征信息对象,face 脸部特征信息对象,score 匹配度对象)
 //                        Log.e("人脸识别 比较值 ", "result " + result.toString() + " face " + face.toString());
                             error = engine.AFR_FSDK_FacePairMatching(result, face, score);
-                        Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
+                            Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
                             if (max < score.getScore()) {
                                 max = score.getScore();//匹配度赋值
                                 name = fr.mName;
@@ -3358,7 +3346,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     }
 
-                Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
+                    Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
                     if (max > 0.68f) {//匹配度的值高于设定值,发出消息,开门
                         if (null != name && !cardRecord.checkLastCardNew(name)) {//判断距离上次刷脸时间是否超过10秒
                             //fr success.
@@ -3368,26 +3356,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             DeviceConfig.PRINTSCREEN_STATE = 1;//开启截图、上传图片、开门、上传日志流程
                             //将byte数组转成bitmap再转成图片文件
                             byte[] data = mImageNV21;
-                            Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
-                            Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
-                            File file = null;
-                            if (null != bmp) {
-                                file = BitmapUtils.saveBitmap(MainActivity.this, bitmap);//本地截图文件地址
+                            if (data != null && data.length > 0) {
+                                Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
+                                Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
+                                File file = null;
+                                if (null != bmp) {
+                                    file = BitmapUtils.saveBitmap(MainActivity.this, bitmap);//本地截图文件地址
+                                }
+                                String[] parameters = new String[2];
+                                parameters[0] = name;
+                                if (null != file && !TextUtils.isEmpty(file.getPath())) {
+                                    uploadToQiNiu(file, 3);//这里做上传到七牛的操作，不返回图片URL
+                                    parameters[1] = faceOpenUrl;
+                                } else {
+                                    parameters[1] = "";
+                                }
+                                sendMainMessager(MSG_FACE_OPENLOCK, parameters);
+                                DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
+                                file = null;
+                                bitmap = null;
+                                bmp = null;
+                                data = null;
                             }
-                            String[] parameters = new String[2];
-                            parameters[0] = name;
-                            if (null != file && !TextUtils.isEmpty(file.getPath())) {
-                                uploadToQiNiu(file, 3);//这里做上传到七牛的操作，不返回图片URL
-                                parameters[1] = faceOpenUrl;
-                            } else {
-                                parameters[1] = "";
-                            }
-                            sendMainMessager(MSG_FACE_OPENLOCK, parameters);
-                            DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
-                            file = null;
-                            bitmap = null;
-                            bmp = null;
-                            data = null;
 //                        }
                         }
                     }
