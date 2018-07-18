@@ -3,8 +3,6 @@ package com.cxwl.hurry.newdoorlock.service;
 import android.util.Log;
 
 import com.cxwl.hurry.newdoorlock.callback.AccountCallback;
-import com.cxwl.hurry.newdoorlock.db.Lian;
-import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.hurray.plugins.rkctrl;
 import com.hurray.plugins.serialport;
 
@@ -125,40 +123,16 @@ public class DoorLock {
 
     /**
      * 控制继电器的方法 返回－1 说明操作节点失败
+     *
      * @return
      */
     public int openLock() {
         int i = m_rkctrl.exec_io_cmd(19, 0);// 参数cmd:1 打开 0 关闭
         return i;
     }
+
     public int closeLock() {
         int i = m_rkctrl.exec_io_cmd(19, 1);// 参数cmd:1 打开 0 关闭
         return i;
     }
-/*    public class MyHandler extends Handler {
-        public MyHandler() {
-        }
-
-        public MyHandler(Looper L) {
-            super(L);
-        }
-
-        // 子类必须重写此方法,接受数据
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            String strData = "";
-            // 此处可以更新UI
-            switch (msg.what) {
-                case 1:
-                    strData = msg.getData().getString("data");
-                    Log.v(TAG, strData);
-
-//                    accountCallback.onAccountReceived(msg.getData().getString("data"));
-
-                    break;
-            }
-        }
-    }*/
-
 }

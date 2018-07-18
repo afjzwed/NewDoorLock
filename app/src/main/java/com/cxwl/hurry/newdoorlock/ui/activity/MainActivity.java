@@ -5,6 +5,7 @@ import android.app.ActionBar;
 import android.app.Dialog;
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
@@ -39,6 +40,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -135,7 +137,9 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_NO_ONLIN
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_SERVER_ERROR;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_TIMEOUT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CANCEL_CALL;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CARD_INCOME;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CARD_OPENLOCK;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CHECK_PASSWORD;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_DELETE_FACE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_DISCONNECT_VIEDO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_FACE_DETECT_CHECK;
@@ -161,8 +165,11 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_DISCONNECT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_NEWCALL;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_ONVIDEO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_REGISTER;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_START_DIAL;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_START_DIAL_PICTURE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_PIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_VEDIO;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPDATE_NETWORKSTATE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LIXIAN_IMG;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.ONVIDEO_MODE;
@@ -247,8 +254,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Thread passwordTimeoutThread = null;//访客密码线程
     private String guestPassword = "";//访客输入的密码值
 
-    private DbUtils mDbUtils;//数据库操作
-
     private int mWidth, mHeight;//屏幕宽高
     private CameraSurfaceView mSurfaceView;//用于人脸识别（单独使用则渲染直接走系统流程，配合CameraGLSurfaceView
     // 这个渲染显示的控件来用的的话，。CameraGLSurfaceView 这个类里使用了GLRender
@@ -300,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
 
 //        ^(?!.*(WifiStateMachine|FrameHelper|hwcomposer|okhttp|wh|MainActivity|AdvertiseHandler|MainService|art|DB)).*$
+//        ^(?!.*(WifiStateMachine|FrameHelper|okhttp|wh|MainActivity|MainService|DB)).*$
 
         Window window = getWindow();
         //全屏设置，隐藏窗口所有装饰
@@ -553,7 +559,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         doorLock = new DoorLock(this);
 
         if (null != doorLock) {
-            int result = DoorLock.getInstance().closeLock();
+            int result = DoorLock.getInstance().closeLock();//先关门
         }
         //nfc系统默认有效
    /*     nfcReader = new NfcReader(this);
@@ -582,13 +588,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         autoCameraSurfaceView = (SurfaceView) findViewById(R.id.autoCameraSurfaceview);
         autoCameraHolder = autoCameraSurfaceView.getHolder();
         autoCameraHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-    }
-
-    /**
-     * 初始化数据库
-     */
-    private void initDB() {
-        mDbUtils = DbUtils.getInstans();
     }
 
     /**
@@ -1026,7 +1025,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .getKaishi_shijian())) {
                     if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getShixiao_shijian())) > System
                             .currentTimeMillis()) {//过期时间大于当前时间
-                        Log.e(TAG, "设置通告 有数据");
+                        Log.e(TAG, "设置视频 有数据");
                         if (Long.parseLong(StringUtils.transferDateToLong(videoList.get(i).getKaishi_shijian())) <
                                 System
                                 .currentTimeMillis()) {//开始时间小于当前时间，可以显示
@@ -1284,7 +1283,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     } else {//当前没网，之前有网
                         enableReaderMode(); //打开读卡
                     }
-                    sendMainMessager(MainService.MSG_UPDATE_NETWORKSTATE, s == 1 ? true : false);
+                    sendMainMessager(MSG_UPDATE_NETWORKSTATE, s == 1 ? true : false);
                     netWorkFlag = s;
                     mHandler.post(new Runnable() {
                         @Override
@@ -1645,7 +1644,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /*********************************密码房号等输入状态相关start*******************************************/
     private void callInput(int key) {
-        if ("C".equals(DeviceConfig.DEVICE_TYPE)) {
+        /*if ("C".equals(DeviceConfig.DEVICE_TYPE)) {
             if (blockId == 0) {
                 if (blockNo.length() < DeviceConfig.BLOCK_LENGTH) {
                     blockNo = blockNo + key;
@@ -1672,7 +1671,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         } else {
             unitNoInput(key);
-        }
+        }*/
     }
 
     /**
@@ -2497,7 +2496,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String[] parameters = new String[3];
             if (isCall) {
                 setDialValue1("呼叫" + thisValue + "，取消请按返回键");
-                message.what = MainService.MSG_START_DIAL;
+                message.what = MSG_START_DIAL;
                 if (DeviceConfig.DEVICE_TYPE.equals("C")) {
                     parameters[0] = thisValue;
                 } else {
@@ -2506,7 +2505,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else {
                 tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
                 setTempkeyValue("准备验证密码" + thisValue + "...");
-                message.what = MainService.MSG_CHECK_PASSWORD;
+                message.what = MSG_CHECK_PASSWORD;
                 parameters[0] = thisValue;
             }
             parameters[1] = fileUrl;
@@ -2535,7 +2534,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         Message message = Message.obtain();
         if (isCall) {
-            message.what = MainService.MSG_START_DIAL_PICTURE;
+            message.what = MSG_START_DIAL_PICTURE;
         } else {
             // message.what = MainService.MSG_CHECK_PASSWORD_PICTURE;
         }
@@ -3068,7 +3067,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {//这里其实不用捕捉错误
             mCamera = Camera.open();
             if (mCamera == null) {
+//                Log.e(TAG, "相机 ID为0");
                 mCamera = Camera.open(0);
+            }
+            if (mCamera == null) {
+//                Log.e(TAG, "相机 ID为1");
+                mCamera = Camera.open(1);
             }
             Camera.Parameters parameters = mCamera.getParameters();
             if (null != parameters) {
@@ -3085,14 +3089,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                Log.v(TAG, "SIZE:" + size.width + "x" + size.height);
 //            }
 //            for (Integer format : parameters.getSupportedPreviewFormats()) {
-//                LogDoor.v(TAG, "FORMAT:" + format);
+//                Log.v(TAG, "FORMAT:" + format);
 //            }
 //
 //            List<int[]> fps = parameters.getSupportedPreviewFpsRange();
 //            for (int[] count : fps) {
-//                LogDoor.d(TAG, "T:");
+//                Log.d(TAG, "T:");
 //                for (int data : count) {
-//                    LogDoor.d(TAG, "V=" + data);
+//                    Log.d(TAG, "V=" + data);
 //                }
 //            }
             //parameters.setPreviewFpsRange(15000, 30000);
@@ -3111,7 +3115,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mWidth = mCamera.getParameters().getPreviewSize().width;
             mHeight = mCamera.getParameters().getPreviewSize().height;
             mCamera.autoFocus(null);
-//            Log.v(TAG, "SIZE:" + mWidth + "x" + mHeight);//800x600 与设置值一样
+//            Log.v(TAG, "SIZE:" + mWidth + "x" + mHeight);//与设置值一样
         }
         return mCamera;
     }
@@ -3327,7 +3331,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     //遍历本地信息表
                     for (FaceRegist fr : mResgist) {
-//                    Log.v("人脸识别", "loop:" + mResgist.size() + "/" + fr.mFaceList.size());
+                    Log.v("人脸识别", "loop:" + mResgist.size() + "/" + fr.mFaceList.size());
                         if (fr.mName.length() > 11) {
                             continue;
                         }
@@ -3377,11 +3381,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 bitmap = null;
                                 bmp = null;
                                 data = null;
+                                name = null;
                             }
 //                        }
                         }
                     }
-                    name = null;
                     mImageNV21 = null;
                 }
             }
@@ -3557,7 +3561,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.e(TAG, "onAccountReceived 卡信息 account " + account + " cardId " + cardId);
         if (!nfcFlag) {//非录卡状态（卡信息用于开门）
             Message message = Message.obtain();
-            message.what = MainService.MSG_CARD_INCOME;
+            message.what = MSG_CARD_INCOME;
             message.obj = account;
             try {
                 serviceMessage.send(message);
@@ -3573,4 +3577,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * 关闭软键盘
+     */
+    private void hintKbTwo() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm.isActive() && getCurrentFocus() != null) {
+            if (getCurrentFocus().getWindowToken() != null) {
+                imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+        }
+    }
 }

@@ -18,8 +18,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
-import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.SERVER_URL;
-
 /**
  * Created by cts on 17/12/25.
  */
@@ -56,7 +54,6 @@ public class HttpApi {
             Log.e(t, m);
         }
     }
-
 
     private static HttpApi api;
     private static OkHttpClient client;
@@ -161,6 +158,4 @@ public class HttpApi {
         }
         return builder.build();
     }
-
-
 }
