@@ -54,6 +54,7 @@
         <!--所有activity的属性都未补全-->
         <activity
             android:name=".ui.activity.MainActivity"
+            android:windowSoftInputMode="stateHidden"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -66,7 +67,6 @@
         <activity android:name=".face.FaceRegisterActivity"/>
 
         <activity android:name=".face.PhotographActivity2"/>
-
 
         <service android:name=".service.MainService"/>
 

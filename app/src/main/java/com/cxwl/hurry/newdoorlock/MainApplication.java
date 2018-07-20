@@ -31,7 +31,7 @@ public class MainApplication extends Application {
     public void onCreate() {
         application = this;
 
-        // TODO: 2018/5/14 这个不用了，人脸识别的数据存本地数据库
+
         ArcsoftManager.getInstance().initArcsoft(this);//虹软人脸识别初始化
 
         super.onCreate();
@@ -46,16 +46,15 @@ public class MainApplication extends Application {
         OkHttpUtils.initClient(okHttpClient);
         //初始化腾讯buggly
         CrashReport.initCrashReport(this, "4e8a21b88b", true);
-    }
 
-    //        Intent intent = new Intent();
+//        Intent intent = new Intent();
 //        // 参数1：包名，参数2：程序入口的activity
 //        intent.setClassName("com.cxwl.hurry.newdoorlock", "com.cxwl.hurry.newdoorlock.ui.activity.MainActivity");
 //        restartIntent = PendingIntent.getActivity(getApplicationContext(), 0,
 //                intent, Intent.FLAG_ACTIVITY_NEW_TASK);
 //        Thread.setDefaultUncaughtExceptionHandler(restartHandler); // 程序崩溃时触发线程
-//    }
-//
+    }
+
 //    public Thread.UncaughtExceptionHandler restartHandler = new Thread.UncaughtExceptionHandler() {
 //        @Override
 //        public void uncaughtException(Thread thread, Throwable ex) {
@@ -65,6 +64,7 @@ public class MainApplication extends Application {
 //            android.os.Process.killProcess(android.os.Process.myPid()); // 自定义方法，关闭当前打开的所有avtivity
 //        }
 //    };
+
     static DaoSession mDaoSessin;
 
     public static DaoSession getGreenDaoSession() {
@@ -79,5 +79,4 @@ public class MainApplication extends Application {
     public static MainApplication getApplication() {
         return application;
     }
-
 }

@@ -177,7 +177,7 @@
                 android:layout_marginLeft="40dp"
                 android:layout_toRightOf="@+id/tv_lock"
                 android:gravity="center_vertical"
-                android:lines="1"
+                android:singleLine="true"
                 android:text="请输入房屋编号"
                 android:textColor="#ffffff"
                 android:textSize="30dp"

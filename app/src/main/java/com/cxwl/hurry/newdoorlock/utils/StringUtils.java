@@ -38,6 +38,7 @@ public class StringUtils {
         }
         return true;
     }
+
     // 两次点击按钮之间的点击间隔不能少于1000毫秒
     private static final int MIN_CLICK_DELAY_TIME = 4000;
     private static long lastClickTime;
@@ -53,28 +54,21 @@ public class StringUtils {
     }
 
     /**
-
      * 把毫秒转化成日期
-
+     *
      * @param dateFormat(日期格式，例如：MM/ dd/yyyy HH:mm:ss)
-
      * @param millSec(毫秒数)
-
      * @return
-
      */
-
     public static String transferLongToDate(String dateFormat, Long millSec) {
-
         SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
-
         Date date = new Date(millSec);
-
         return sdf.format(date);
     }
 
     /**
      * 日期转毫秒
+     *
      * @param dateFormat
      * @return
      */
@@ -91,22 +85,24 @@ public class StringUtils {
         }
         return timeStamp;
     }
-    public static String getQiniuToken(){
+
+    public static String getQiniuToken() {
         String qiniuak = "qf_oVTYRDM-06tTN7r2nAL8j0dE5JYSxyb4KWRW7";
         String qiniusk = "OxZU9VOb7wWK1-HkPXvEexuwCJ0rVpK33M-UkfmV";
         String qiniubcname = "shequwenjian";
-        Auth auth = Auth.create(qiniuak,qiniusk);
+        Auth auth = Auth.create(qiniuak, qiniusk);
         String s = auth.uploadToken(qiniubcname);
-        Log.i("token",s);
+        Log.i("token", s);
         return s;
     }
 
-    public static String getQnToken(){
-        String token="";
+    public static String getQnToken() {
+        String token = "";
         // 1 构造上传策略
         JSONObject _json = new JSONObject();
         long _dataline = System.currentTimeMillis() / 1000 + 3600;
-        try { _json.put("deadline", _dataline);// 有效时间为一个小时
+        try {
+            _json.put("deadline", _dataline);// 有效时间为一个小时
 
             _json.put("scope", "kymobile");
         } catch (JSONException e) {
@@ -125,6 +121,7 @@ public class StringUtils {
                 + _encodedPutPolicy;
         return _uploadToken;
     }
+
     public static byte[] HmacSHA1Encrypt(String encryptText, String encryptKey)
             throws Exception {
         byte[] data = encryptKey.getBytes();
