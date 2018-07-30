@@ -27,14 +27,14 @@ public class DialogUtil {
         Window mWindow = dialog.getWindow();
         WindowManager.LayoutParams lp = mWindow.getAttributes();
         if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {//横屏
-            lp.height = getScreenHeight(context) * 1/2;
+            lp.height = getScreenHeight(context) * 1 / 2;
         } else {
-            lp.width = getScreenWidth(context)* 1/2;
+            lp.width = getScreenWidth(context) * 1 / 2;
         }
         mWindow.setGravity(Gravity.CENTER);
         //mWindow.setWindowAnimations(R.style.dialogAnim);
         mWindow.setAttributes(lp);
-        dialog.show();
+//        dialog.show();
         return dialog;
     }
 

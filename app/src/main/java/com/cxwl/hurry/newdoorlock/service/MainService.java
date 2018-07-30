@@ -42,6 +42,7 @@ import com.cxwl.hurry.newdoorlock.http.API;
 import com.cxwl.hurry.newdoorlock.ui.activity.MainActivity;
 import com.cxwl.hurry.newdoorlock.utils.Ajax;
 import com.cxwl.hurry.newdoorlock.utils.CardRecord;
+import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.cxwl.hurry.newdoorlock.utils.FileUtil;
 import com.cxwl.hurry.newdoorlock.utils.HttpApi;
@@ -534,6 +535,8 @@ public class MainService extends Service {
                         List<LogDoor> list = new ArrayList<>();
                         list.add(data);
                         createAccessLog(list);
+                        DLLog.e("人脸识别", "日志上传，准备开门");
+                        DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
                         openLock(3);
                         break;
                     }
