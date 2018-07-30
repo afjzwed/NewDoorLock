@@ -8,8 +8,8 @@ android {
         applicationId "com.cxwl.hurry.newdoorlock"
         minSdkVersion 19
         targetSdkVersion 26
-        versionCode 14
-        versionName "1.1.4"
+        versionCode 15
+        versionName "1.1.5"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         renderscriptTargetApi 19
