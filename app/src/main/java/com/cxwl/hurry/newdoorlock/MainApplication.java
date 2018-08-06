@@ -27,10 +27,11 @@ public class MainApplication extends Application {
     private static MainApplication application;
     PendingIntent restartIntent;
 
+//    private RefWatcher refWatcher;
+
     @Override
     public void onCreate() {
         application = this;
-
 
         ArcsoftManager.getInstance().initArcsoft(this);//虹软人脸识别初始化
 
@@ -47,23 +48,25 @@ public class MainApplication extends Application {
         //初始化腾讯buggly
         CrashReport.initCrashReport(this, "4e8a21b88b", true);
 
-//        Intent intent = new Intent();
-//        // 参数1：包名，参数2：程序入口的activity
-//        intent.setClassName("com.cxwl.hurry.newdoorlock", "com.cxwl.hurry.newdoorlock.ui.activity.MainActivity");
-//        restartIntent = PendingIntent.getActivity(getApplicationContext(), 0,
-//                intent, Intent.FLAG_ACTIVITY_NEW_TASK);
-//        Thread.setDefaultUncaughtExceptionHandler(restartHandler); // 程序崩溃时触发线程
+//        refWatcher= setupLeakCanary();
+
+        Intent intent = new Intent();
+        // 参数1：包名，参数2：程序入口的activity
+        intent.setClassName("com.cxwl.hurry.newdoorlock", "com.cxwl.hurry.newdoorlock.ui.activity.MainActivity");
+        restartIntent = PendingIntent.getActivity(getApplicationContext(), 0,
+                intent, Intent.FLAG_ACTIVITY_NEW_TASK);
+        Thread.setDefaultUncaughtExceptionHandler(restartHandler); // 程序崩溃时触发线程
     }
 
-//    public Thread.UncaughtExceptionHandler restartHandler = new Thread.UncaughtExceptionHandler() {
-//        @Override
-//        public void uncaughtException(Thread thread, Throwable ex) {
-//            AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//            mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000,
-//                    restartIntent); // 1秒钟后重启应用
-//            android.os.Process.killProcess(android.os.Process.myPid()); // 自定义方法，关闭当前打开的所有avtivity
-//        }
-//    };
+    public Thread.UncaughtExceptionHandler restartHandler = new Thread.UncaughtExceptionHandler() {
+        @Override
+        public void uncaughtException(Thread thread, Throwable ex) {
+            AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000,
+                    restartIntent); // 1秒钟后重启应用
+            android.os.Process.killProcess(android.os.Process.myPid()); // 自定义方法，关闭当前打开的所有avtivity
+        }
+    };
 
     static DaoSession mDaoSessin;
 
@@ -79,4 +82,16 @@ public class MainApplication extends Application {
     public static MainApplication getApplication() {
         return application;
     }
+
+//    private RefWatcher setupLeakCanary() {
+//        if (LeakCanary.isInAnalyzerProcess(this)) {
+//            return RefWatcher.DISABLED;
+//        }
+//        return LeakCanary.install(this);
+//    }
+//
+//    public static RefWatcher getRefWatcher(Context context) {
+//        MainApplication leakApplication = (MainApplication) context.getApplicationContext();
+//        return leakApplication.refWatcher;
+//    }
 }

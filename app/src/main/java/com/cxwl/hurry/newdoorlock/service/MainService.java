@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -23,6 +24,7 @@ import com.arcsoft.facerecognition.AFR_FSDKFace;
 import com.cxwl.hurry.newdoorlock.Bean.BanbenBean;
 import com.cxwl.hurry.newdoorlock.Bean.DeviceBean;
 import com.cxwl.hurry.newdoorlock.Bean.NewDoorBean;
+import com.cxwl.hurry.newdoorlock.MainApplication;
 import com.cxwl.hurry.newdoorlock.config.Constant;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
 import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
@@ -30,7 +32,6 @@ import com.cxwl.hurry.newdoorlock.db.ImgFile;
 import com.cxwl.hurry.newdoorlock.db.Ka;
 import com.cxwl.hurry.newdoorlock.db.LogDoor;
 import com.cxwl.hurry.newdoorlock.entity.ConnectReportBean;
-import com.cxwl.hurry.newdoorlock.entity.DoorBean;
 import com.cxwl.hurry.newdoorlock.entity.FaceUrlBean;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.LogListBean;
@@ -40,7 +41,6 @@ import com.cxwl.hurry.newdoorlock.entity.YeZhuBean;
 import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
 import com.cxwl.hurry.newdoorlock.http.API;
 import com.cxwl.hurry.newdoorlock.ui.activity.MainActivity;
-import com.cxwl.hurry.newdoorlock.utils.Ajax;
 import com.cxwl.hurry.newdoorlock.utils.CardRecord;
 import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
@@ -71,11 +71,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -135,6 +137,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_LOGIN;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_LOGIN_AFTER;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_LOGIN_FAILED;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_PASSWORD_CHECK;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RESTART_VIDEO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_DISCONNECT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_NEWCALL;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_RTC_ONVIDEO;
@@ -147,6 +150,8 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPDATE_NETWORKSTATE
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LIXIAN_IMG;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_OPENLOCK;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC1;
+import static com.cxwl.hurry.newdoorlock.config.Constant.RESTART_PHONE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_ID;
 import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_KEY;
 import static com.cxwl.hurry.newdoorlock.config.Constant.SP_LIXIAN_MIMA;
@@ -243,6 +248,7 @@ public class MainService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.i(TAG, "service启动");
+//        MainApplication.getRefWatcher(this).watch(this);
         audioManager = (AudioManager) getSystemService(Service.AUDIO_SERVICE);
         initHandler();
         // TODO: 2018/5/14 放在MainActivity中  initDB();
@@ -585,7 +591,7 @@ public class MainService extends Service {
                             List<LogDoor> list = new ArrayList<>();
                             list.add(mLogDoor);
                             createAccessLog(list);
-                            mLogDoor= null;
+                            mLogDoor = null;
                         }
                         break;
                     }
@@ -923,6 +929,20 @@ public class MainService extends Service {
                                 }
 
                                 lixianTongji();//上传离线统计日志
+
+                                Calendar calendar = Calendar.getInstance();
+                                int hour = calendar.get(Calendar.HOUR_OF_DAY);
+//                                Log.e(TAG, "当前小时 " + hour + " " + SDFJ);
+                                if (hour == 3) {
+                                    RESTART_PHONE = true;
+                                } else if (hour == 4) {//每晚凌晨4点时进行一次媒体流的重启
+                                    if (RESTART_PHONE == true) {
+                                        sendMessageToMainAcitivity(MSG_RESTART_VIDEO, imgFiles);
+                                    }
+                                }
+                                calendar = null;
+
+                                clearMemory();
                             }
                         } else {
                             //服务器异常或没有网络
@@ -935,6 +955,83 @@ public class MainService extends Service {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    private void clearMemory() {
+        //To change body of implemented methods use File | Settings | File Templates.
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> infoList = am.getRunningAppProcesses();
+        List<ActivityManager.RunningServiceInfo> serviceInfos = am.getRunningServices(100);
+
+        Method method = null;
+        try {
+            method = Class.forName("android.app.ActivityManager").getMethod("forceStopPackage", String.class);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        long beforeMem = getAvailMemory(getApplication());
+        Log.d("进程", "-----------before memory info : " + beforeMem);
+//        string = string + " " + beforeMem+"\r\n";
+//        tvShow.setText(string);
+        int count = 0;
+        if (infoList != null) {
+            for (int i = 0; i < infoList.size(); ++i) {
+                ActivityManager.RunningAppProcessInfo appProcessInfo = infoList.get(i);
+                Log.d("进程", "process name : " + appProcessInfo.processName);
+                //importance 该进程的重要程度  分为几个级别，数值越低就越重要。
+                Log.d("进程", "importance : " + appProcessInfo.importance);
+//                string = string + " process name : " + appProcessInfo.processName + " 等级 : " + appProcessInfo
+//                        .importance+"\r\n";
+
+                // 一般数值大于RunningAppProcessInfo.IMPORTANCE_SERVICE的进程都长时间没用或者空进程了
+                // 一般数值大于RunningAppProcessInfo.IMPORTANCE_VISIBLE的进程都是非可见进程，也就是在后台运行着
+                if (appProcessInfo.importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE) {
+                    String[] pkgList = appProcessInfo.pkgList;
+                    for (int j = 0; j < pkgList.length; ++j) {//pkgList 得到该进程下运行的包名
+                        Log.d("进程", "It will be killed, package name : " + pkgList[j]);
+//                        string = string + " killed: " + pkgList[j]+"\r\n";
+                        if ("com.cxwl.hurry.doorlock".equals(pkgList[j])) {
+
+                        } else {
+                            if (null != method) {
+                                try {
+                                    method.invoke(am, pkgList[j]);
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
+                                } catch (InvocationTargetException e) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                am.killBackgroundProcesses(pkgList[j]);
+                            }
+                        }
+                        count++;
+                    }
+                }
+            }
+        }
+//        tvShow.setText(string);
+        long afterMem = getAvailMemory(getApplication());
+        Log.d("进程", "----------- after memory info : " + afterMem);
+        DLLog.e("进程","-----------before memory info : " + beforeMem+" ----------- after memory info : "+ afterMem);
+//        Toast.makeText(MainActivity.this, "clear " + count + " process, "
+//                + (afterMem - beforeMem) + "M", Toast.LENGTH_LONG).show();
+    }
+
+    //获取可用内存大小
+    private long getAvailMemory(Context context) {
+        // 获取android当前可用内存大小
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        am.getMemoryInfo(mi);
+        //mi.availMem; 当前系统的可用内存
+        //return Formatter.formatFileSize(context, mi.availMem);// 将获取的内存大小规格化
+        Log.d("进程", "可用内存---->>>" + mi.availMem / (1024 * 1024));
+//        tvShow1.setText("可用内存---->>>" + mi.availMem / (1024 * 1024));
+        return mi.availMem / (1024 * 1024);
     }
 
     /**
@@ -1081,7 +1178,6 @@ public class MainService extends Service {
                         lastVersionStatus = "L";//等待下次心跳重新获取URL
 
                     }
-
                 }
             });
         } catch (Exception e) {
@@ -2404,7 +2500,7 @@ public class MainService extends Service {
             Log.e(TAG, "进行开门操作 开门开门");
 
             //分为手机开门和视屏开门 1和2 进行区分 上传日志统一传2；
-            if (logDoor.getKaimenfangshi() == 1) {
+            /*if (logDoor.getKaimenfangshi() == 1) {
                 logDoor.setKaimenfangshi(2);
                 //一键开门拍照
                 if (StringUtils.isFastClick()) {
@@ -2431,7 +2527,30 @@ public class MainService extends Service {
                 Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
                 list.add(logDoor);
                 createAccessLog(list);//上传日志
+            }*/
+
+            openLock(2);
+            //分为手机开门和视屏开门 1和2 进行区分 上传日志统一传2；
+            if (logDoor.getKaimenfangshi() == 1) {
+                logDoor.setKaimenfangshi(2);
+                //一键开门拍照
+                if (StringUtils.isFastClick()) {
+                    String imgurl = "door/img/" + System.currentTimeMillis() + ".jpg";
+                    sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC, imgurl);
+                    logDoor.setKaimenjietu(imgurl);
+                }
+            } else {
+                sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC1, null);
             }
+            logDoor.setState(1);
+            List<LogDoor> list = new ArrayList<>();
+            //拼接图片地址
+            logDoor.setKaimenjietu(logDoor.getKaimenjietu());
+            logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
+            Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
+            list.add(logDoor);
+            //上传日志
+            createAccessLog(list);
         } else if (content.startsWith("refuse call")) { //拒绝接听
 //            if (!rejectUserList.contains(from)) {
 //                rejectUserList.add(from);

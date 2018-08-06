@@ -31,6 +31,8 @@ public class Constant {
     public static final int MSG_DELETE_FACE = 11109;//删除人脸信息
 
     public static final int MSG_FACE_OPENLOCK = 40000;//人脸开门
+
+    public static final float FACE_MAX = 0.63f;
     /********************虹软相关*********************/
 
     /********************天翼RTC相关******************/
@@ -105,10 +107,13 @@ public class Constant {
     public static final int MSG_ADVERTISE_REFRESH = 10013;//刷新广告
     public static final int MSG_ADVERTISE_REFRESH_PIC = 10014;//刷新广告图片
     public static final int MSG_YIJIANKAIMEN_TAKEPIC = 10098;//手机一键开门拍照片
+    public static final int MSG_YIJIANKAIMEN_TAKEPIC1 = 10099;//手机开门拍照片
     public static final int MSG_UPLOAD_LIXIAN_IMG = 100001;//上传离线img
 
     public static final int MSG_CHECK_PASSWORD = 20006;//检查密码
     public static final int MSG_UPDATE_NETWORKSTATE = 20028;//网络状态改变
 
-
+    public static final int MSG_RESTART_VIDEO1 = 11110;//手机的重启
+    public static final int MSG_RESTART_VIDEO = 100002;//手机的重启
+    public static  boolean RESTART_PHONE = false;
 }
