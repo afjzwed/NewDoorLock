@@ -9,6 +9,7 @@ import android.content.Intent;
 import com.cxwl.hurry.newdoorlock.db.DaoMaster;
 import com.cxwl.hurry.newdoorlock.db.DaoSession;
 import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
+import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.tencent.bugly.crashreport.CrashReport;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.log.LoggerInterceptor;
@@ -61,6 +62,7 @@ public class MainApplication extends Application {
     public Thread.UncaughtExceptionHandler restartHandler = new Thread.UncaughtExceptionHandler() {
         @Override
         public void uncaughtException(Thread thread, Throwable ex) {
+            DLLog.e("崩溃重启", "错误 " + ex);
             AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000,
                     restartIntent); // 1秒钟后重启应用

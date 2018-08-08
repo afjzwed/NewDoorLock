@@ -83,6 +83,8 @@
 
         <service android:name=".service.MainService"/>
 
+        <service android:name=".service.MonitorService"/>
+
         <!--开机(更新)启动广播-->
         <receiver android:name="com.cxwl.hurry.newdoorlock.receiver.NativeAccessReceiver">
             <intent-filter>

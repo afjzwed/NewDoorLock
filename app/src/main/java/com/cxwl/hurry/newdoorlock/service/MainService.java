@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.CountDownTimer;
+import android.os.Debug;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -169,7 +170,6 @@ public class MainService extends Service {
     private static final String RTCTAG = "RTCTAG";
     public static final int MAIN_ACTIVITY_INIT = 0;
     public static final int REGISTER_ACTIVITY_DIAL = 3;
-
 
     public int callConnectState = CALL_WAITING;//视频通话链接状态  默认等待
 
@@ -541,7 +541,6 @@ public class MainService extends Service {
                         List<LogDoor> list = new ArrayList<>();
                         list.add(data);
                         createAccessLog(list);
-                        DLLog.e("人脸识别", "日志上传，准备开门");
                         DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
                         openLock(3);
                         break;
@@ -961,7 +960,7 @@ public class MainService extends Service {
         //To change body of implemented methods use File | Settings | File Templates.
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> infoList = am.getRunningAppProcesses();
-        List<ActivityManager.RunningServiceInfo> serviceInfos = am.getRunningServices(100);
+//        List<ActivityManager.RunningServiceInfo> serviceInfos = am.getRunningServices(100);
 
         Method method = null;
         try {
@@ -973,27 +972,30 @@ public class MainService extends Service {
         }
 
         long beforeMem = getAvailMemory(getApplication());
-        Log.d("进程", "-----------before memory info : " + beforeMem);
-//        string = string + " " + beforeMem+"\r\n";
-//        tvShow.setText(string);
+//        Log.d("进程", "-----------before memory info : " + beforeMem);
         int count = 0;
         if (infoList != null) {
             for (int i = 0; i < infoList.size(); ++i) {
                 ActivityManager.RunningAppProcessInfo appProcessInfo = infoList.get(i);
-                Log.d("进程", "process name : " + appProcessInfo.processName);
+
+                if ("com.cxwl.hurry.newdoorlock".equals(appProcessInfo.processName)) {
+                    int[] myMempid = new int[]{appProcessInfo.pid};
+                    Debug.MemoryInfo[] appMem = am.getProcessMemoryInfo(myMempid);
+                    int memSize = appMem[0].dalvikPrivateDirty / 1024;
+                    DLLog.w("进程", appProcessInfo.processName + ":" + memSize);
+                }
+
+//                Log.d("进程", "process name : " + appProcessInfo.processName);
                 //importance 该进程的重要程度  分为几个级别，数值越低就越重要。
-                Log.d("进程", "importance : " + appProcessInfo.importance);
-//                string = string + " process name : " + appProcessInfo.processName + " 等级 : " + appProcessInfo
-//                        .importance+"\r\n";
+//                Log.d("进程", "importance : " + appProcessInfo.importance);
 
                 // 一般数值大于RunningAppProcessInfo.IMPORTANCE_SERVICE的进程都长时间没用或者空进程了
                 // 一般数值大于RunningAppProcessInfo.IMPORTANCE_VISIBLE的进程都是非可见进程，也就是在后台运行着
                 if (appProcessInfo.importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE) {
                     String[] pkgList = appProcessInfo.pkgList;
                     for (int j = 0; j < pkgList.length; ++j) {//pkgList 得到该进程下运行的包名
-                        Log.d("进程", "It will be killed, package name : " + pkgList[j]);
-//                        string = string + " killed: " + pkgList[j]+"\r\n";
-                        if ("com.cxwl.hurry.doorlock".equals(pkgList[j])) {
+//                        Log.d("进程", "It will be killed, package name : " + pkgList[j]);
+                        if ("com.cxwl.hurry.newdoorlock".equals(pkgList[j])) {
 
                         } else {
                             if (null != method) {
@@ -1013,12 +1015,9 @@ public class MainService extends Service {
                 }
             }
         }
-//        tvShow.setText(string);
         long afterMem = getAvailMemory(getApplication());
-        Log.d("进程", "----------- after memory info : " + afterMem);
-        DLLog.e("进程","-----------before memory info : " + beforeMem+" ----------- after memory info : "+ afterMem);
-//        Toast.makeText(MainActivity.this, "clear " + count + " process, "
-//                + (afterMem - beforeMem) + "M", Toast.LENGTH_LONG).show();
+//        Log.d("进程", "----------- after memory info : " + afterMem);
+        DLLog.w("进程", "-----------before memory info : " + beforeMem + " ----------- after memory info : " + afterMem);
     }
 
     //获取可用内存大小
@@ -3117,6 +3116,9 @@ public class MainService extends Service {
         super.onDestroy();
         Log.v("MainService", "onDestroy()");
 
+        // TODO: 2018/8/8 正式版要打开这个方法
+        onReStartVideo();
+
         saveVisionInfo();
         // TODO: 2018/5/15 还有资源未释放
 
@@ -3144,7 +3146,16 @@ public class MainService extends Service {
             rtcClient.release();
             rtcClient = null;
         }
+    }
 
+    private void onReStartVideo() {
+        DLLog.e("wh", "进行设备的重启");
+//        startActivity(new Intent(this, PhotographActivity.class));
+        Intent intent1 = new Intent(Intent.ACTION_REBOOT);
+        intent1.putExtra("nowait", 1);
+        intent1.putExtra("interval", 1);
+        intent1.putExtra("window", 0);
+        sendBroadcast(intent1);
     }
 
     @Nullable
@@ -3217,7 +3228,7 @@ public class MainService extends Service {
 
     protected void openLock(int type) {
         int result = DoorLock.getInstance().openLock();
-        Log.e(TAG, "继电器节点 result " + result);
+//        Log.e(TAG, "继电器节点 result " + result);
         if (result != -1) {
             sendMessageToMainAcitivity(MSG_LOCK_OPENED, type);//开锁
             SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
