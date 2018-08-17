@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.media.AudioManager;
 import android.os.CountDownTimer;
 import android.os.Debug;
@@ -46,6 +47,7 @@ import com.cxwl.hurry.newdoorlock.utils.CardRecord;
 import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
 import com.cxwl.hurry.newdoorlock.utils.FileUtil;
+import com.cxwl.hurry.newdoorlock.utils.FileUtils;
 import com.cxwl.hurry.newdoorlock.utils.HttpApi;
 import com.cxwl.hurry.newdoorlock.utils.HttpUtils;
 import com.cxwl.hurry.newdoorlock.utils.InstallUtil;
@@ -55,6 +57,7 @@ import com.cxwl.hurry.newdoorlock.utils.SPUtil;
 import com.cxwl.hurry.newdoorlock.utils.ShellUtils;
 import com.cxwl.hurry.newdoorlock.utils.SoundPoolUtil;
 import com.cxwl.hurry.newdoorlock.utils.StringUtils;
+import com.cxwl.hurry.newdoorlock.utils.SystemUtils;
 import com.cxwl.hurry.newdoorlock.utils.ToastUtil;
 import com.google.gson.reflect.TypeToken;
 import com.zhy.http.okhttp.OkHttpUtils;
@@ -942,6 +945,16 @@ public class MainService extends Service {
                                 calendar = null;
 
                                 clearMemory();
+
+                                if (!isServiceRunning()) {
+                                    //监控程序未开启，启动监控服务,并开始监听
+                                    Intent i = new Intent();
+                                    ComponentName cn = new ComponentName(DeviceConfig.Lockaxial_Monitor_PackageName,
+                                            DeviceConfig.Lockaxial_Monitor_SERVICE);
+                                    i.setComponent(cn);
+                                    i.setPackage(MainApplication.getApplication().getPackageName());
+                                    startService(i);
+                                }
                             }
                         } else {
                             //服务器异常或没有网络
@@ -954,6 +967,21 @@ public class MainService extends Service {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean isServiceRunning() {
+        ActivityManager myManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ArrayList<ActivityManager.RunningServiceInfo> runningService = (ArrayList<ActivityManager
+                .RunningServiceInfo>) myManager
+                .getRunningServices(30);
+        for (int i = 0; i < runningService.size(); i++) {
+            Log.e("进程", "服务名 " + runningService.get(i).service.getClassName().toString() + "");
+            if (runningService.get(i).service.getClassName().toString()
+                    .equals(DeviceConfig.Lockaxial_Monitor_SERVICE)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void clearMemory() {
@@ -995,11 +1023,13 @@ public class MainService extends Service {
                     String[] pkgList = appProcessInfo.pkgList;
                     for (int j = 0; j < pkgList.length; ++j) {//pkgList 得到该进程下运行的包名
 //                        Log.d("进程", "It will be killed, package name : " + pkgList[j]);
-                        if ("com.cxwl.hurry.newdoorlock".equals(pkgList[j])) {
+                        if ("com.cxwl.hurry.doorlock".equals(pkgList[j]) || "com.cxwl.monitor".equals
+                                (pkgList[j])) {
 
                         } else {
                             if (null != method) {
                                 try {
+                                    //利用反射调用forceStopPackage来结束进程
                                     method.invoke(am, pkgList[j]);
                                 } catch (IllegalAccessException e) {
                                     e.printStackTrace();
@@ -1997,8 +2027,8 @@ public class MainService extends Service {
     }
 
     protected void init() {
-        initCheckTopActivity();//检查最上层界面
 
+        initMonitor();
         //xiaozd add
         if (netWorkstate) {
             initWhenConnected(); //开始在线版本
@@ -2008,36 +2038,92 @@ public class MainService extends Service {
     }
 
     /**
-     * 检查最上层界面
+     * 初始化监控程序
      */
-    private void initCheckTopActivity() {
-        if (activityTimer != null) {
-            activityTimer.cancel();
-            activityTimer = null;
-        }
-        if (activityTimer == null) {
-            activityTimer = new Timer();
-        }
-        activityTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (activityManager != null) {
-                    ComponentName cn = activityManager.getRunningTasks(1).get(0).topActivity;
-                    if (!cn.getPackageName().equals(MainService.this.getPackageName())) {
-                        HttpApi.i("TopActivity_", "不在当前程序");
-                        if (!isPullTime) {
-                            HttpApi.i("TopActivity_", "倒计时进入MainActivity");
-                            mHandler.postDelayed(startMain, 30 * 1000);
-                            isPullTime = true;
-                        }
-                    } else {
-                        HttpApi.i("TopActivity_", "处于当前程序");
-                        mHandler.removeCallbacks(startMain);
-                        isPullTime = false;
-                    }
+    private void initMonitor() {
+        String apkName = "";
+        try {
+            String fileNames[] = getAssets().list("apk");
+            for (String name : fileNames) {
+                if (name.indexOf("monitor") != -1 && name.indexOf(".apk") != -1) {
+                    apkName = name;
+                    HttpApi.i("找到目标文件：" + apkName);
+                    break;
                 }
             }
-        }, 500, 3000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (apkName == null || apkName.length() <= 0) { //如果assets内没有监控程序则卸载
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String cmd = "pm uninstall " + DeviceConfig.Lockaxial_Monitor_PackageName;
+                    HttpApi.i("卸载命令：" + cmd);
+                    ShellUtils.CommandResult result = InstallUtil.executeCmd(cmd);
+                    HttpApi.i("卸载结果：" + result.toString());
+                }
+            }).start();
+            return;
+        }
+        final File apkFile = new File(Environment.getExternalStorageDirectory(), DeviceConfig.SD_PATH + "/" + apkName);
+        if (!apkFile.exists()) {
+            HttpApi.i("目标文件不存在：" + apkFile.toString() + ",需要从assets拷贝");
+            //文件不存在，需要拷贝
+            FileUtils.getInstance(this).copyAssetsToSD("apk", DeviceConfig.SD_PATH).setFileOperateCallback(new FileUtils.FileOperateCallback() {
+                @Override
+                public void onSuccess() {
+                    //拷贝完成，检测版本信息
+                    HttpApi.i("文件拷贝完成，开始对比版本");
+                    checkMonitorVersion(apkFile);
+                }
+
+                @Override
+                public void onFailed(String error) {
+
+                }
+            });
+        } else {
+            //文件已经存在，检测版本信息
+            checkMonitorVersion(apkFile);
+        }
+    }
+
+    private void checkMonitorVersion(final File apkFile) {
+        if (!apkFile.exists()) {
+            return;
+        }
+        PackageInfo android_info = SystemUtils.isApplicationAvilible(this, DeviceConfig
+                .Lockaxial_Monitor_PackageName); //获取系统安装的Monitor应用信息
+        PackageInfo sd_info = SystemUtils.getApkInfo(apkFile.toString(), this); //获取最新版本
+        if (android_info != null) {
+            HttpApi.i("已经安装了监控程序，版本号：" + android_info.versionCode);
+        }
+        if (sd_info != null) {
+            HttpApi.i("本地版本号：" + sd_info.versionCode);
+        }
+        if (android_info == null || (android_info.versionCode < sd_info.versionCode)) {
+            //未安装或已安装版本小于最新版本，需要安装，安装后通过安装广播启动服务
+            HttpApi.i("未安装或有版本更新，执行安装命令");
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String cmd = "pm install -r " + apkFile.toString();
+                    HttpApi.i("安装命令：" + cmd);
+                    ShellUtils.CommandResult result = InstallUtil.executeCmd(cmd);
+                    HttpApi.i("安装结果：" + result.toString());
+                }
+            }).start();
+        } else {
+            //启动服务,并开始监听
+            HttpApi.i("监控程序已经是最新版本，启动监控服务");
+            Intent i = new Intent();
+            ComponentName cn = new ComponentName(DeviceConfig.Lockaxial_Monitor_PackageName, DeviceConfig
+                    .Lockaxial_Monitor_SERVICE);
+            i.setComponent(cn);
+            i.setPackage(MainApplication.getApplication().getPackageName());
+            startService(i);
+        }
     }
 
     /**
@@ -3122,11 +3208,6 @@ public class MainService extends Service {
         saveVisionInfo();
         // TODO: 2018/5/15 还有资源未释放
 
-        if (activityTimer != null) {
-            activityTimer.cancel();
-            activityTimer = null;
-        }
-
         if (callConnection != null) {
             callConnection.disconnect();
             callConnection = null;
@@ -3149,7 +3230,7 @@ public class MainService extends Service {
     }
 
     private void onReStartVideo() {
-        DLLog.e("wh", "进行设备的重启");
+//        DLLog.e("MainService", "进行设备的重启");
 //        startActivity(new Intent(this, PhotographActivity.class));
         Intent intent1 = new Intent(Intent.ACTION_REBOOT);
         intent1.putExtra("nowait", 1);

@@ -1,4 +1,4 @@
-package com.cxwl.hurry.newdoorlock.service;
+package com.cxwl.monitor;
 
 import android.app.ActivityManager;
 import android.app.Service;
@@ -10,8 +10,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.util.Log;
-
-import com.cxwl.hurry.newdoorlock.utils.DLLog;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -92,13 +90,13 @@ public class MonitorService extends Service {
                     isPullTime = false;
                 }
             }
-        }, 0, 1 * 1000);
+        }, 0, 2 * 1000);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        onReStartVideo();
+
         if (activityTimer != null) {
             activityTimer.cancel();
             activityTimer = null;
@@ -119,15 +117,5 @@ public class MonitorService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return START_STICKY;
-    }
-
-    private void onReStartVideo() {
-        DLLog.e("MonitorService", "进行设备的重启");
-//        startActivity(new Intent(this, PhotographActivity.class));
-        Intent intent1 = new Intent(Intent.ACTION_REBOOT);
-        intent1.putExtra("nowait", 1);
-        intent1.putExtra("interval", 1);
-        intent1.putExtra("window", 0);
-        sendBroadcast(intent1);
     }
 }

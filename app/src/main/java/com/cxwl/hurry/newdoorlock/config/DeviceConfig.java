@@ -38,6 +38,11 @@ public class DeviceConfig {
     public static final int DEVICE_KEYCODE_POUND = 30;//确认键
     public static final int DEVICE_KEYCODE_STAR = 32;//删除键
 
+    public static final String Lockaxial_Monitor_PackageName = "com.cxwl.monitor";
+    public static final String Lockaxial_Monitor_SERVICE = "com.cxwl.monitor.MonitorService";
+
+    public static final String SD_PATH = "CXWL/Monitor";
+
     /*******************************/
 
 }

@@ -962,8 +962,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(this, MainService.class);
         bindService(intent, serviceConnection, Service.BIND_AUTO_CREATE);
 
-        Intent dlIntent = new Intent(MainActivity.this, MonitorService.class);
-        startService(dlIntent);//start方式启动锁Service
+//        Intent dlIntent = new Intent(MainActivity.this, MonitorService.class);
+//        startService(dlIntent);//start方式启动锁Service
     }
 
     /**
@@ -3300,31 +3300,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 
             if (DeviceConfig.PRINTSCREEN_STATE == 2) {
-                //将byte数组转成bitmap再转成图片文件
-                byte[] data = picData.clone();
-                if (data != null && data.length > 0) {
-                    Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
-                    Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
-                    File file = null;
-                    if (null != bitmap) {
-                        file = BitmapUtils.saveBitmap(bitmap);//本地截图文件地址
+                if (null != picData) {
+                    //将byte数组转成bitmap再转成图片文件
+                    byte[] data = picData.clone();
+                    if (data != null && data.length > 0) {
+                        Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
+                        File file = null;
+                        if (null != bmp) {
+                            file = BitmapUtils.saveBitmap(bmp);//本地截图文件地址
+                        }
+                        if (null != file && !TextUtils.isEmpty(file.getPath())) {
+                            uploadToQiNiu(file, 1);//这里做上传到七牛的操作，不返回图片URL
+                        } else {
+                            faceOpenUrl = "";
+                        }
+                        DeviceConfig.PRINTSCREEN_STATE = 0;//图片处理完成,重置状态
+                        sendMainMessager(MSG_CARD_OPENLOCK, faceOpenUrl);
+                        file = null;
+                        bmp = null;
+                        data = null;
                     }
-                    if (null != file && !TextUtils.isEmpty(file.getPath())) {
-                        uploadToQiNiu(file, 1);//这里做上传到七牛的操作，不返回图片URL
-                    } else {
-                        faceOpenUrl = "";
-                    }
-                    DeviceConfig.PRINTSCREEN_STATE = 0;//图片处理完成,重置状态
-                    sendMainMessager(MSG_CARD_OPENLOCK, faceOpenUrl);
-                    file = null;
-                    bitmap = null;
-                    bmp = null;
-                    data = null;
-                } else {
-                    DeviceConfig.PRINTSCREEN_STATE = 0;//图片处理完成,重置状态
-                    data = null;
+                    picData = null;
                 }
-                picData = null;
             }
 
             // TODO: 2018/8/8 一键开门暂时不用截图，用照相
@@ -3360,34 +3357,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (mImageNV21 != null && identification) {//摄像头检测到人脸信息且处于人脸识别状态
                     DLLog.e("人脸识别", "开始");
                     DeviceConfig.PRINTSCREEN_STATE = 1;//开启截图、上传图片、开门、上传日志流程
-//                    long time = System.currentTimeMillis();
+//                        long time = System.currentTimeMillis();
                     //检测输入图像中的人脸特征信息，输出结果保存在 AFR_FSDKFace feature
                     //data 输入的图像数据,width 图像宽度,height 图像高度,format 图像格式,face 已检测到的脸框,ori 已检测到的脸角度,
                     // feature 检测到的人脸特征信息
-                    AFR_FSDKError error = engine.AFR_FSDK_ExtractFRFeature(mImageNV21, mWidth, mHeight, AFR_FSDKEngine
-                            .CP_PAF_NV21, mAFT_FSDKFace.getRect(), mAFT_FSDKFace.getDegree(), result);
-//                Log.d(TAG, "AFR_FSDK_ExtractFRFeature cost :" + (System.currentTimeMillis() - time) + "ms");
-//                Log.d(TAG, "Face=" + result.-getFeatureData()[0] + "," + result.getFeatureData()[1] + "," + result
-//                        .getFeatureData()[2] + "," + error.getCode());
+                    AFR_FSDKError error = engine.AFR_FSDK_ExtractFRFeature(mImageNV21, mWidth, mHeight,
+                            AFR_FSDKEngine.CP_PAF_NV21, mAFT_FSDKFace.getRect(), mAFT_FSDKFace.getDegree(), result);
+//                        Log.d(TAG, "AFR_FSDK_ExtractFRFeature cost :" + (System.currentTimeMillis() - time) + "ms");
+//                        Log.d(TAG, "Face=" + result.getFeatureData()[0] + "," + result.getFeatureData()[1] + "," +
+//                                result.getFeatureData()[2] + "," + error.getCode());
                     AFR_FSDKMatching score = new AFR_FSDKMatching();//这个类用来保存特征信息匹配度
                     float max = 0.0f;//匹配度的值
                     String name = null;
 
                     //遍历本地信息表
                     for (FaceRegist fr : mResgist) {
-//                        Log.v("人脸识别", "loop:" + mResgist.size() + "/" + fr.mFaceList.size());
+                        Log.v("人脸识别", "loop:" + mResgist.size() + "/" + fr.mFaceList.size());
                         if (fr.mName.length() > 11) {
                             continue;
                         }
                         for (AFR_FSDKFace face : fr.mFaceList) {
                             //比较两份人脸特征信息的匹配度(result 脸部特征信息对象,face 脸部特征信息对象,score 匹配度对象)
-//                        Log.e("人脸识别 比较值 ", "result " + result.toString() + " face " + face.toString());
+//                            Log.e("人脸识别 比较值 ", "result " + result.toString() + " face " + face.toString());
                             error = engine.AFR_FSDK_FacePairMatching(result, face, score);
-//                            Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
+                            Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
                             if (max < score.getScore()) {
                                 max = score.getScore();//匹配度赋值
                                 name = fr.mName;
-                                if (max > FACE_MAX) {//匹配度的值高于设定值,退出循环
+                                if (max > Constant.FACE_MAX) {//匹配度的值高于设定值,退出循环
                                     DLLog.e("人脸识别", "匹配度的值高于设定值 " + max);
                                     break;
                                 }
@@ -3395,20 +3392,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     }
 
-//                    Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
-                    if (max > FACE_MAX) {//匹配度的值高于设定值,发出消息,开门
+                    Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
+                    if (max > Constant.FACE_MAX) {//匹配度的值高于设定值,发出消息,开门
                         if (null != name && !cardRecord.checkLastCardNew(name)) {//判断距离上次刷脸时间是否超过10秒
                             //fr success.
-                            //final float max_score = max;
-                            //Log.v(FACE_TAG, "置信度：" + (float) ((int) (max_score * 1000)) / 1000.0);
+                            //Log.v(FACE_TAG, "置信度：" + (float) ((int) (max * 1000)) / 1000.0);
                             //将byte数组转成bitmap再转成图片文件
                             byte[] data = mImageNV21.clone();
                             if (data != null && data.length > 0) {
                                 Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
-                                Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
                                 File file = null;
                                 if (null != bmp) {
-                                    file = BitmapUtils.saveBitmap(bitmap);//本地截图文件地址
+                                    file = BitmapUtils.saveBitmap(bmp);//本地截图文件地址
                                 }
                                 String[] parameters = new String[2];
                                 parameters[0] = name;
@@ -3422,19 +3417,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
                                 sendMainMessager(MSG_FACE_OPENLOCK, parameters);
                                 file = null;
-                                bitmap = null;
                                 bmp = null;
                                 data = null;
                                 name = null;
                             }
                         }
                     }
-                    DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
                     mAFT_FSDKFace = null;
                     mImageNV21 = null;
-                } else {
-                    mAFT_FSDKFace = null;
-                    mImageNV21 = null;
+                    DeviceConfig.PRINTSCREEN_STATE = 0;//重置状态
                 }
             }
         }
