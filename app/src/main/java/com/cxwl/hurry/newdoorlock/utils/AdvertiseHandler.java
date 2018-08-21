@@ -1,5 +1,6 @@
 package com.cxwl.hurry.newdoorlock.utils;
 
+import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 
 import com.cxwl.hurry.newdoorlock.callback.AdverErrorCallBack;
 import com.cxwl.hurry.newdoorlock.callback.AdverTongJiCallBack;
+import com.cxwl.hurry.newdoorlock.config.Constant;
 import com.cxwl.hurry.newdoorlock.db.AdTongJiBean;
 import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 
@@ -81,17 +83,6 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
 
     }
 
-    /* public void init(SurfaceView videoView,ImageView imageView,LinearLayout videoPane,
-    LinearLayout imagePane){
- //    public void init(SurfaceView videoView,ImageView imageView,LinearLayout videoPane,
- LinearLayout imagePane){
- //        this.videoView=videoView;
- //        this.imageView=imageView;
- //        this.videoPane=videoPane;
- //        this.imagePane=imagePane;
- //        prepareMediaView();
- //    }
-     */
     public void init(TextView textView, SurfaceView videoView, ImageView imageView) {
         Log.d("AdvertiseHandler", "UpdateAdvertise: init");
         this.mTextView = textView;
@@ -142,12 +133,11 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         mAdverTongJiCallBack = mCallBack;
         //initScreen();
         initInterger();
-//        initMediaPlayer();
+        initMediaPlayer();
         play();
         if (isOnVideo) {
             pause(errorCallBack);
         }
-
     }
 
     private void initList(List<GuangGaoBean> rows) {
@@ -180,7 +170,6 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             GuangGaoBean item = list.get(listIndex);
             adType = item.getLeixing();
         }
-
         return adType;
     }
 
@@ -206,7 +195,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                 videoView.setVisibility(View.VISIBLE);
                 imageView.setVisibility(View.INVISIBLE);
                 mediaPlayerSource = source;
-                initMediaPlayer();// TODO: 2018/7/13  //这个初始化方法应该放在initData()中
+//                initMediaPlayer();// TODO: 2018/7/13  //这个初始化方法应该放在initData()中
                 startMediaPlay(mediaPlayerSource);
             } else {
                 Log.e("广告", "next");
@@ -312,6 +301,13 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
                 imageView.setVisibility(View.VISIBLE);
+                switch (what) {
+                    case 100:
+                        Log.d("多媒体死亡", "MEDIA_ERROR_SERVER_DIED");
+                        DLLog.d("AdvertiseHandler", "多媒体死亡 MEDIA_ERROR_SERVER_DIED");
+                        Constant.RESTART_AUDIO = true;
+                        break;
+                }
                 return false;
             }
         });
@@ -370,7 +366,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(source);
-            mediaPlayer.prepare();
+            mediaPlayer.prepareAsync();//在使用MediaPlayer准备的时候，最好使用prepareAsync()方法，而不是prepare()方法，因为前一个方法是异步准备的，不会阻碍主线程
+            // TODO: 2018/8/17 start方法暂时先不放在MediaPlayer.OnPreparedListener中
             mediaPlayer.start();
         } catch (Exception e) {
             Log.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error");
