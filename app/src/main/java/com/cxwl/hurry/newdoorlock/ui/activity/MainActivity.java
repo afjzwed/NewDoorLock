@@ -77,6 +77,7 @@ import com.cxwl.hurry.newdoorlock.entity.GuangGaoBean;
 import com.cxwl.hurry.newdoorlock.entity.NoticeBean;
 import com.cxwl.hurry.newdoorlock.entity.ResponseBean;
 import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
+import com.cxwl.hurry.newdoorlock.face.PhotographActivity;
 import com.cxwl.hurry.newdoorlock.face.PhotographActivity2;
 import com.cxwl.hurry.newdoorlock.http.API;
 import com.cxwl.hurry.newdoorlock.interfac.TakePictureCallback;
@@ -3678,13 +3679,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void onReStartVideo() {
-        DLLog.e("wh", "进行设备的重启");
-//        startActivity(new Intent(this, PhotographActivity.class));
-        Intent intent1 = new Intent(Intent.ACTION_REBOOT);
-        intent1.putExtra("nowait", 1);
-        intent1.putExtra("interval", 1);
-        intent1.putExtra("window", 0);
-        sendBroadcast(intent1);
+        if (Constant.RESTART_AUDIO) {
+            startActivity(new Intent(MainActivity.this, PhotographActivity.class));
+        } else {
+            DLLog.e("wh", "进行设备的重启");
+            Intent intent1 = new Intent(Intent.ACTION_REBOOT);
+            intent1.putExtra("nowait", 1);
+            intent1.putExtra("interval", 1);
+            intent1.putExtra("window", 0);
+            sendBroadcast(intent1);
+        }
     }
 
     /**

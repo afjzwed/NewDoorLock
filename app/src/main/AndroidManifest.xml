@@ -125,6 +125,9 @@
 
         <activity android:name=".face.PhotographActivity2"/>
 
+        <activity android:name=".face.PhotographActivity"/>
+
+
         <service android:name=".service.MainService"/>
 
         <service android:name=".service.MonitorService"/>

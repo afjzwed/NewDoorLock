@@ -939,6 +939,7 @@ public class MainService extends Service {
                                     RESTART_PHONE = true;
                                 } else if (hour == 4) {//每晚凌晨4点时进行一次媒体流的重启
                                     if (RESTART_PHONE == true) {
+                                        Constant.RESTART_AUDIO = false;
                                         sendMessageToMainAcitivity(MSG_RESTART_VIDEO, imgFiles);
                                     }
                                 }
@@ -954,6 +955,10 @@ public class MainService extends Service {
                                     i.setComponent(cn);
                                     i.setPackage(MainApplication.getApplication().getPackageName());
                                     startService(i);
+                                }
+
+                                if (Constant.RESTART_AUDIO) {
+                                    sendMessageToMainAcitivity(MSG_RESTART_VIDEO, imgFiles);
                                 }
                             }
                         } else {
