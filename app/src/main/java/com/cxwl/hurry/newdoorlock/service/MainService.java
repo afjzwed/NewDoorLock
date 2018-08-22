@@ -259,6 +259,7 @@ public class MainService extends Service {
         //testTJ();
         initThreadPool();
         initCountDownTimer();//延时5秒关门定时器初始化
+
     }
 
     private void initThreadPool() {

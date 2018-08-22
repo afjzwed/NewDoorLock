@@ -178,6 +178,7 @@ public class BitmapUtils {
             matrix.postScale(1f, 1f);
             // 向左旋转45度，参数为正则向右旋转
             matrix.postRotate(-180);
+//            matrix.postScale(-1, 1); // 镜像水平翻转
             //bmp.getWidth(), 500分别表示重绘后的位图宽高
             Bitmap dstbmp = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(),
                     matrix, true);

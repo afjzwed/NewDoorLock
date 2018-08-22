@@ -1453,7 +1453,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            int metaState = event.getMetaState();
             int keyCode = event.getKeyCode();
+            if (metaState == 65) {
+                if (keyCode == KeyEvent.KEYCODE_3) {
+                    keyCode = 66;
+                } else if (keyCode == KeyEvent.KEYCODE_8) {
+                    keyCode = 67;
+                }
+            }
             onKeyDown(keyCode);
         }
         return false;
@@ -3306,9 +3314,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     byte[] data = picData.clone();
                     if (data != null && data.length > 0) {
                         Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
+                        Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
                         File file = null;
-                        if (null != bmp) {
-                            file = BitmapUtils.saveBitmap(bmp);//本地截图文件地址
+                        if (null != bitmap) {
+                            file = BitmapUtils.saveBitmap(bitmap);//本地截图文件地址
                         }
                         if (null != file && !TextUtils.isEmpty(file.getPath())) {
                             uploadToQiNiu(file, 1);//这里做上传到七牛的操作，不返回图片URL
@@ -3318,6 +3327,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         DeviceConfig.PRINTSCREEN_STATE = 0;//图片处理完成,重置状态
                         sendMainMessager(MSG_CARD_OPENLOCK, faceOpenUrl);
                         file = null;
+                        bitmap = null;
                         bmp = null;
                         data = null;
                     }
@@ -3402,9 +3412,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             byte[] data = mImageNV21.clone();
                             if (data != null && data.length > 0) {
                                 Bitmap bmp = BitmapUtils.byteToFile(data, mWidth, mHeight);
+                                Bitmap bitmap = BitmapUtils.rotateBitmap(bmp);//旋转180度
                                 File file = null;
-                                if (null != bmp) {
-                                    file = BitmapUtils.saveBitmap(bmp);//本地截图文件地址
+                                if (null != bitmap) {
+                                    file = BitmapUtils.saveBitmap(bitmap);//本地截图文件地址
                                 }
                                 String[] parameters = new String[2];
                                 parameters[0] = name;
@@ -3418,6 +3429,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
                                 sendMainMessager(MSG_FACE_OPENLOCK, parameters);
                                 file = null;
+                                bitmap = null;
                                 bmp = null;
                                 data = null;
                                 name = null;
