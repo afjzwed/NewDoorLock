@@ -2589,7 +2589,6 @@ public class MainService extends Service {
             stopTimeoutCheckThread();
             //开门操作
             Log.e(TAG, "进行开门操作 开门开门");
-
             //分为手机开门和视屏开门 1和2 进行区分 上传日志统一传2；
             /*if (logDoor.getKaimenfangshi() == 1) {
                 logDoor.setKaimenfangshi(2);
@@ -2637,6 +2636,7 @@ public class MainService extends Service {
             List<LogDoor> list = new ArrayList<>();
             //拼接图片地址
             logDoor.setKaimenjietu(logDoor.getKaimenjietu());
+//            logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
             logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
             Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
             list.add(logDoor);
@@ -3262,7 +3262,6 @@ public class MainService extends Service {
      */
     private void onCardIncome(String card) {
         if (!this.cardRecord.checkLastCard(card)) {//判断距离上次刷卡时间是否超过2秒
-
             Log.v("MainService", "onCard====卡信息：" + card);
             DbUtils.getInstans().quaryAllKa();
             kaInfo = DbUtils.getInstans().getKaInfo(card);

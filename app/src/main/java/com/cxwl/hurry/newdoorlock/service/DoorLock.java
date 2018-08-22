@@ -67,14 +67,15 @@ public class DoorLock {
                         if (buf == null) break;
 
                         if (buf.length <= 0) break;
-
+//                        fb01 0400 0000 0000 0000 0000 0000 96ad 1089 dcaa
+//                        fb01 0400 0000 0000 0000 0000 0000 3510 9108 deaa
                         strData = byte2HexString(buf);
-//                        Log.v(TAG, str);
                         str += strData;
-                        if (str.length() > 27) {
-                            substring = str.substring(16, 24).toUpperCase();
+                        Log.v(TAG, str);
+                        if (str.length() > 38) {
+                            substring = str.substring(28, 36).toUpperCase();
                             //测试刷卡
-//                            Log.e(TAG, "卡号 " + substring);
+                            Log.e(TAG, "卡号 " + substring);
 //                            DbUtils.getInstans().deleteAllLian();
 //                             lian = new Lian();
 //                            lian.setLian_id(substring);

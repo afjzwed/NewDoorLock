@@ -723,7 +723,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 1000);
                         break;
                     case MSG_LOCK_OPENED://开锁
-
                         Log.i(TAG, "开锁");
                         onLockOpened((int) msg.obj);
                         if (weituoDialog == null) {
