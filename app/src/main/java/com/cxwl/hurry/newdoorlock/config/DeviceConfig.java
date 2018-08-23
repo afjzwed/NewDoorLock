@@ -43,6 +43,8 @@ public class DeviceConfig {
 
     public static final String SD_PATH = "CXWL/Monitor";
 
+    public static boolean isNfcFlag = false;//串口库是否打开的标识（默认失败）
+
     /*******************************/
 
 }

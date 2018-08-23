@@ -938,10 +938,11 @@ public class MainService extends Service {
 //                                Log.e(TAG, "当前小时 " + hour + " " + SDFJ);
                                 if (hour == 3) {
                                     RESTART_PHONE = true;
+                                    DLLog.delFile();//删除本地日志
                                 } else if (hour == 4) {//每晚凌晨4点时进行一次媒体流的重启
                                     if (RESTART_PHONE == true) {
                                         Constant.RESTART_AUDIO = false;
-                                        sendMessageToMainAcitivity(MSG_RESTART_VIDEO, imgFiles);
+                                        sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
                                     }
                                 }
                                 calendar = null;
@@ -959,7 +960,12 @@ public class MainService extends Service {
                                 }
 
                                 if (Constant.RESTART_AUDIO) {
-                                    sendMessageToMainAcitivity(MSG_RESTART_VIDEO, imgFiles);
+                                    sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
+                                }
+
+                                if (!DeviceConfig.isNfcFlag) {//如果串口库没有开启，在心跳中开启
+                                    DLLog.d("串口库","串口库在心跳中打开");
+                                    DoorLock.getInstance().initSerial();
                                 }
                             }
                         } else {
@@ -990,6 +996,9 @@ public class MainService extends Service {
         return false;
     }
 
+    /**
+     * 清理内存（可申请最大内存为192M）
+     */
     private void clearMemory() {
         //To change body of implemented methods use File | Settings | File Templates.
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -1016,6 +1025,9 @@ public class MainService extends Service {
                     int[] myMempid = new int[]{appProcessInfo.pid};
                     Debug.MemoryInfo[] appMem = am.getProcessMemoryInfo(myMempid);
                     int memSize = appMem[0].dalvikPrivateDirty / 1024;
+                    if (memSize > 180) {//内存占用超过180M就重启
+                        onReStartVideo();
+                    }
                     DLLog.w("进程", appProcessInfo.processName + ":" + memSize);
                 }
 
@@ -1028,9 +1040,8 @@ public class MainService extends Service {
                 if (appProcessInfo.importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE) {
                     String[] pkgList = appProcessInfo.pkgList;
                     for (int j = 0; j < pkgList.length; ++j) {//pkgList 得到该进程下运行的包名
-//                        Log.d("进程", "It will be killed, package name : " + pkgList[j]);
-                        if ("com.cxwl.hurry.doorlock".equals(pkgList[j]) || "com.cxwl.monitor".equals
-                                (pkgList[j])) {
+                        Log.d("进程", "It will be killed, package name : " + pkgList[j]);
+                        if ("com.cxwl.hurry.doorlock".equals(pkgList[j]) || "com.cxwl.monitor".equals(pkgList[j])) {
 
                         } else {
                             if (null != method) {
@@ -2300,32 +2311,6 @@ public class MainService extends Service {
         } catch (RemoteException e) {
             e.printStackTrace();
         }
-
-        // TODO: 2018/6/3 注释
-        /*XdoorBean result = (XdoorBean) msg.obj;
-        if ("0".equals(result.getType())) {//大门
-            DeviceConfig.DEVICE_TYPE = "C";
-            lockName = "大门";
-        } else if ("1".equals(result.getType())) {//单元门
-            DeviceConfig.DEVICE_TYPE = "B";
-            blockId = Integer.parseInt(result.getLoudong_id());
-            lockId = Integer.parseInt(result.getDanyuan_id());
-            lockName = blockId + "栋" + lockId + "单元";
-        }
-        communityId = result.getXiangmu_id();
-        //目前服务器返回为空
-        communityName = result.getXiangmu_name() == null ? "欣社区" : result.getXiangmu_name();
-
-        // 保存消息  需要操作
-        saveInfoIntoLocal(communityId, blockId, lockId, communityName, lockName);
-        Message message = Message.obtain();
-        message.what = MSG_LOGIN_AFTER;
-        message.obj = result;
-        try {
-            mainMessage.send(message);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }*/
     }
 
     protected void loadInfoFromLocal() {
@@ -3237,7 +3222,6 @@ public class MainService extends Service {
 
     private void onReStartVideo() {
 //        DLLog.e("MainService", "进行设备的重启");
-//        startActivity(new Intent(this, PhotographActivity.class));
         Intent intent1 = new Intent(Intent.ACTION_REBOOT);
         intent1.putExtra("nowait", 1);
         intent1.putExtra("interval", 1);

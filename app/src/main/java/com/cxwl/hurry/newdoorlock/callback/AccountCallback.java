@@ -6,5 +6,7 @@ package com.cxwl.hurry.newdoorlock.callback;
  */
 
 public interface AccountCallback {
-    public void onAccountReceived(String account);
+     void onAccountReceived(String account);
+
+//    void onOpenReadSerial();
 }

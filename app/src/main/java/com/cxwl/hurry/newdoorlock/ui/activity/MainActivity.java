@@ -2891,12 +2891,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                        } catch (RemoteException e) {
 //                            e.printStackTrace();
 //                        }
+//                        DoorLock.getInstance().initSerial();
+                        DLLog.delFile();//删除本地日志
                         break;
                     case R.id.action_settings3://上传日志
                         Log.e(TAG, "menu 上传日志");
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
+                                //测试奔溃重启
                                 showMacText.setVisibility(View.VISIBLE);
                                 showMacText.setText("sdfsdf");
                             }
@@ -3365,7 +3368,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             if (DeviceConfig.PRINTSCREEN_STATE == 0) {//开启截图、上传图片、开门、上传日志流程
                 if (mImageNV21 != null && identification) {//摄像头检测到人脸信息且处于人脸识别状态
-                    DLLog.e("人脸识别", "开始");
+//                    DLLog.e("人脸识别", "开始");
                     DeviceConfig.PRINTSCREEN_STATE = 1;//开启截图、上传图片、开门、上传日志流程
 //                        long time = System.currentTimeMillis();
                     //检测输入图像中的人脸特征信息，输出结果保存在 AFR_FSDKFace feature
@@ -3382,7 +3385,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     //遍历本地信息表
                     for (FaceRegist fr : mResgist) {
-                        Log.v("人脸识别", "loop:" + mResgist.size() + "/" + fr.mFaceList.size());
+//                        Log.v("人脸识别", "loop:" + mResgist.size() + "/" + fr.mFaceList.size());
                         if (fr.mName.length() > 11) {
                             continue;
                         }
@@ -3390,19 +3393,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             //比较两份人脸特征信息的匹配度(result 脸部特征信息对象,face 脸部特征信息对象,score 匹配度对象)
 //                            Log.e("人脸识别 比较值 ", "result " + result.toString() + " face " + face.toString());
                             error = engine.AFR_FSDK_FacePairMatching(result, face, score);
-                            Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
+//                            Log.d("人脸识别", "Score:" + score.getScore() + " error " + error.getCode());
                             if (max < score.getScore()) {
                                 max = score.getScore();//匹配度赋值
                                 name = fr.mName;
                                 if (max > Constant.FACE_MAX) {//匹配度的值高于设定值,退出循环
-                                    DLLog.e("人脸识别", "匹配度的值高于设定值 " + max);
+//                                    DLLog.e("人脸识别", "匹配度的值高于设定值 " + max);
                                     break;
                                 }
                             }
                         }
                     }
 
-                    Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
+//                    Log.v("人脸识别", "fit Score:" + max + ", NAME:" + name);
                     if (max > Constant.FACE_MAX) {//匹配度的值高于设定值,发出消息,开门
                         if (null != name && !cardRecord.checkLastCardNew(name)) {//判断距离上次刷脸时间是否超过10秒
                             //fr success.
@@ -3424,7 +3427,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 } else {
                                     parameters[1] = "";
                                 }
-                                DLLog.e("人脸识别", "发出消息 " + name);
+//                                DLLog.e("人脸识别", "发出消息 " + name);
                                 DeviceConfig.PRINTSCREEN_STATE = 0;//人脸开门图片处理完成（异步处理）,重置状态
                                 sendMainMessager(MSG_FACE_OPENLOCK, parameters);
                                 file = null;
@@ -3663,7 +3666,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /****************************生命周期end*********************************************/
-
     @Override
     public void onAccountReceived(String acc) {
         String account = StringUtils.reverseNum(acc);
@@ -3688,6 +3690,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            handler.sendMessage(message);
         }
     }
+
+//    @Override
+//    public void onOpenReadSerial() {
+////            DoorLock.getInstance().initSerial();
+//    }
 
     private void onReStartVideo() {
         if (Constant.RESTART_AUDIO) {

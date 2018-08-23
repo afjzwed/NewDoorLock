@@ -22,7 +22,7 @@ public class DLLog {
     private static Boolean LOG_SWITCH = true; // 日志文件总开关
     private static Boolean LOG_WRITE_TO_FILE = true; // 日志写入文件开关
 
-    private static int SDCARD_LOG_FILE_SAVE_DAYS = 10; // sd卡中日志文件的最多保存天数
+    private static int SDCARD_LOG_FILE_SAVE_DAYS = 15; // sd卡中日志文件的最多保存天数
 
     private static String LOGFILENAME = ".txt"; // 本类输出的日志文件名称
     private static String LOG_PATH_SDCARD_DIR = Environment.getExternalStorageDirectory() + "/"+"LIUDELI/"; // 日志文件在sdcard中的路径

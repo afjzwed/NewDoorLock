@@ -12,6 +12,7 @@ import android.widget.ImageView;
 
 import com.cxwl.hurry.newdoorlock.R;
 import com.cxwl.hurry.newdoorlock.config.Constant;
+import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.guo.android_extend.widget.CameraFrameData;
 import com.guo.android_extend.widget.CameraGLSurfaceView;
 import com.guo.android_extend.widget.CameraSurfaceView;
@@ -43,6 +44,7 @@ public class PhotographActivity extends AppCompatActivity implements CameraSurfa
         mCaptureButton.setOnClickListener(this);
 
         Constant.RESTART_AUDIO = false;
+        DLLog.d("AdvertiseHandler", "多媒体重启了");
 
         new Thread(new Runnable() {
             @Override

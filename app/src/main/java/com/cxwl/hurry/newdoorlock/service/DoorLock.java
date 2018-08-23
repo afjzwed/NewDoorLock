@@ -3,6 +3,7 @@ package com.cxwl.hurry.newdoorlock.service;
 import android.util.Log;
 
 import com.cxwl.hurry.newdoorlock.callback.AccountCallback;
+import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
 import com.hurray.plugins.rkctrl;
 import com.hurray.plugins.serialport;
 
@@ -18,7 +19,6 @@ public class DoorLock {
     private rkctrl m_rkctrl = new rkctrl();//昊瑞门禁服务类
     private String arg = "/dev/ttyS1,9600,N,1,8";
     private Thread pthread = null;
-    private boolean isNfcFlag = false;//串口库是否打开的标识（默认失败）
     private int iRead = 0;//串口库返回值(默认0)
 
 //    private MyHandler myHandler = new MyHandler();
@@ -38,15 +38,16 @@ public class DoorLock {
         initSerial();
     }
 
-    private void initSerial() {
+    public void initSerial() {
         iRead = m_serial.open(arg);
         if (iRead > 0) {
-            isNfcFlag = true;
-            Log.i(TAG, "打开串口成功 isNfcFlag " + isNfcFlag);
+            DeviceConfig.isNfcFlag = true;
+            Log.i(TAG, "打开串口成功 isNfcFlag " + DeviceConfig.isNfcFlag);
             runReadSerial(iRead);
         } else {
-            isNfcFlag = false;
-            Log.i(TAG, "打开串口失败 isNfcFlag " + isNfcFlag);
+            DeviceConfig.isNfcFlag = false;
+            Log.i(TAG, "打开串口失败 isNfcFlag " + DeviceConfig.isNfcFlag);
+//            accountCallback.onOpenReadSerial();
         }
     }
 
@@ -57,7 +58,7 @@ public class DoorLock {
     public void runReadSerial(final int fd) {
         Runnable run = new Runnable() {
             public void run() {
-                while (isNfcFlag) {
+                while (DeviceConfig.isNfcFlag) {
                     int r = m_serial.select(fd, 1, 0);
                     if (r == 1) {
                         //测试 普通读串口数据
@@ -112,14 +113,15 @@ public class DoorLock {
 
     public void onThreadEnd() {
         Log.e(TAG, "监听串口线程结束");
+        DeviceConfig.isNfcFlag = false;
     }
 
     public boolean getIsNfcFlag() {
-        return isNfcFlag;
+        return DeviceConfig.isNfcFlag;
     }
 
     public void setIsNfcFlag(boolean b) {
-        isNfcFlag = b;
+        DeviceConfig.isNfcFlag = b;
     }
 
     /**
