@@ -2,7 +2,6 @@ package com.cxwl.hurry.newdoorlock.ui.activity;
 
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
-import android.app.ActivityManager;
 import android.app.Dialog;
 import android.app.Service;
 import android.content.ComponentName;
@@ -21,7 +20,6 @@ import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.Debug;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -83,7 +81,6 @@ import com.cxwl.hurry.newdoorlock.http.API;
 import com.cxwl.hurry.newdoorlock.interfac.TakePictureCallback;
 import com.cxwl.hurry.newdoorlock.service.DoorLock;
 import com.cxwl.hurry.newdoorlock.service.MainService;
-import com.cxwl.hurry.newdoorlock.service.MonitorService;
 import com.cxwl.hurry.newdoorlock.utils.AdvertiseHandler;
 import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
 import com.cxwl.hurry.newdoorlock.utils.CardRecord;
@@ -121,8 +118,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -139,7 +134,6 @@ import okhttp3.Call;
 import static com.cxwl.hurry.newdoorlock.config.Constant.CALLING_MODE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.CALL_MODE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.ERROR_MODE;
-import static com.cxwl.hurry.newdoorlock.config.Constant.FACE_MAX;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_ADVERTISE_REFRESH;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_ADVERTISE_REFRESH_PIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_ERROR;
@@ -183,7 +177,6 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_PIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_VEDIO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPDATE_NETWORKSTATE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LIXIAN_IMG;
-import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_OPENLOCK;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC1;
 import static com.cxwl.hurry.newdoorlock.config.Constant.ONVIDEO_MODE;
@@ -2475,6 +2468,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
+        if (blockNo.equals(("9991")) || blockNo.equals("99999991")) {
+            onReStartVideo();
+            return;
+        }
+
         //呼叫前，确认摄像头不被占用 虹软
         if (faceHandler != null) {
             faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_PAUSE, 0);
@@ -2951,7 +2949,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mSurfaceView = (CameraSurfaceView) findViewById(R.id.surfaceView);
         mSurfaceView.setOnCameraListener(this);
 
-
 //        mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 0);
         mSurfaceView.setupGLSurafceView(mGLSurfaceView, true, true, 180);
 // mCameraMirror=true:Y轴镜像  180:旋转180度
@@ -3124,8 +3121,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //parameters.setSceneMode(Camera.Parameters.SCENE_MODE_AUTO);
             //parameters.setColorEffect(Camera.Parameters.EFFECT_NONE);
         } catch (Exception e) {
-            e.printStackTrace();
 //            Log.v(TAG, "setupCamera-->" + e.getMessage());
+            DLLog.e("摄像头", "setupCamera-->" + e.getMessage());
+            e.printStackTrace();
+//            onReStartVideo();
         }
 
         if (mCamera != null) {
@@ -3629,19 +3628,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         Log.i(TAG, "onDestroy");
 
-        unbindService(serviceConnection);
-        disableReaderMode();
-        if (netTimer != null) {
-            netTimer.cancel();
-            netTimer = null;
+        try {
+            disableReaderMode();
+            unbindService(serviceConnection);
+            if (netTimer != null) {
+                netTimer.cancel();
+                netTimer = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            onReStartVideo();
         }
+//        mSurfaceView.setVisibility(View.GONE);
+//        mGLSurfaceView.setVisibility(View.GONE);//这两个控件不用隐藏
 
-        mSurfaceView.setVisibility(View.GONE);
-        mGLSurfaceView.setVisibility(View.GONE);
         identification = false;
-        if (mFRAbsLoop != null) {
+        if (null != mFRAbsLoop) {
             mFRAbsLoop.shutdown();
         }
+        AFT_FSDKError err = engine.AFT_FSDK_UninitialFaceEngine();
 
         if (doorLock != null) {
             doorLock.setIsNfcFlag(false);
@@ -3652,7 +3657,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             as.removeAll();
         }
 
-        AFT_FSDKError err = engine.AFT_FSDK_UninitialFaceEngine();
 
         if (faceHandler != null) {
             faceHandler.removeCallbacksAndMessages(null);
@@ -3660,7 +3664,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         OkHttpUtils.getInstance().cancelTag(MainService.class);//取消网络请求
 
-        // TODO: 2018/5/15 还有资源未释放，之后再查
+//        onReStartVideo();
 
         super.onDestroy();
     }

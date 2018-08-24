@@ -938,10 +938,10 @@ public class MainService extends Service {
 //                                Log.e(TAG, "当前小时 " + hour + " " + SDFJ);
                                 if (hour == 3) {
                                     RESTART_PHONE = true;
-                                    DLLog.delFile();//删除本地日志
                                 } else if (hour == 4) {//每晚凌晨4点时进行一次媒体流的重启
                                     if (RESTART_PHONE == true) {
                                         Constant.RESTART_AUDIO = false;
+                                        DLLog.delFile();//删除本地日志
                                         sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
                                     }
                                 }
@@ -964,7 +964,7 @@ public class MainService extends Service {
                                 }
 
                                 if (!DeviceConfig.isNfcFlag) {//如果串口库没有开启，在心跳中开启
-                                    DLLog.d("串口库","串口库在心跳中打开");
+                                    DLLog.d("串口库", "串口库在心跳中打开");
                                     DoorLock.getInstance().initSerial();
                                 }
                             }
@@ -1064,7 +1064,7 @@ public class MainService extends Service {
         }
         long afterMem = getAvailMemory(getApplication());
 //        Log.d("进程", "----------- after memory info : " + afterMem);
-        DLLog.w("进程", "-----------before memory info : " + beforeMem + " ----------- after memory info : " + afterMem);
+//        DLLog.w("进程", "-----------before memory info : " + beforeMem + " ----------- after memory info : " + afterMem);
     }
 
     //获取可用内存大小
@@ -1130,7 +1130,6 @@ public class MainService extends Service {
                     }
                 }
             });
-
         }
     }
 
@@ -2477,7 +2476,6 @@ public class MainService extends Service {
             }
         }
 
-
         private void onNoNetWork() {
             Log.v("MainService", "onNoNetWork");
             //断网销毁
@@ -2487,7 +2485,6 @@ public class MainService extends Service {
                 sendMessageToMainAcitivity(MSG_RTC_DISCONNECT, "");
             }
         }
-
 
         @Override
         public void onSendIm(int i) {

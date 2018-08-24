@@ -367,9 +367,6 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(source);
             mediaPlayer.prepareAsync();//在使用MediaPlayer准备的时候，最好使用prepareAsync()方法，而不是prepare()方法，因为前一个方法是异步准备的，不会阻碍主线程
-            // TODO: 2018/8/17 start方法暂时先不放在MediaPlayer.OnPreparedListener中
-//            mediaPlayer.start();
-
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mediaPlayer) {

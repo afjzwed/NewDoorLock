@@ -23,6 +23,7 @@ import com.arcsoft.facetracking.AFT_FSDKFace;
 import com.arcsoft.facetracking.AFT_FSDKVersion;
 import com.cxwl.hurry.newdoorlock.R;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
+import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.guo.android_extend.widget.CameraFrameData;
 import com.guo.android_extend.widget.CameraGLSurfaceView;
 import com.guo.android_extend.widget.CameraSurfaceView;
@@ -271,20 +272,20 @@ public class PhotographActivity2 extends AppCompatActivity implements Camera.Pic
             parameters.setPreviewSize(640, 480);
             parameters.setPreviewFormat(ImageFormat.NV21);
 
-            for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
-                Log.v("人脸识别", "SIZE:" + size.width + "x" + size.height);
-            }
-            for (Integer format : parameters.getSupportedPreviewFormats()) {
-                Log.v("人脸识别", "FORMAT:" + format);
-            }
-
-            List<int[]> fps = parameters.getSupportedPreviewFpsRange();
-            for (int[] count : fps) {
-                Log.d(TAG, "T:");
-                for (int data : count) {
-                    Log.d(TAG, "V=" + data);
-                }
-            }
+//            for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
+//                Log.v("人脸识别", "SIZE:" + size.width + "x" + size.height);
+//            }
+//            for (Integer format : parameters.getSupportedPreviewFormats()) {
+//                Log.v("人脸识别", "FORMAT:" + format);
+//            }
+//
+//            List<int[]> fps = parameters.getSupportedPreviewFpsRange();
+//            for (int[] count : fps) {
+//                Log.d(TAG, "T:");
+//                for (int data : count) {
+//                    Log.d(TAG, "V=" + data);
+//                }
+//            }
             //parameters.setPreviewFpsRange(15000, 30000);
             //parameters.setExposureCompensation(parameters.getMaxExposureCompensation());
             //parameters.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_AUTO);
@@ -300,6 +301,12 @@ public class PhotographActivity2 extends AppCompatActivity implements Camera.Pic
             int height = mCamera.getParameters().getPreviewSize().height;
             Log.v("人脸识别", "setupCamera-->SIZE:" + width + "x" + height);
         } catch (Exception e) {
+            DLLog.e("wh", "进行设备的重启");
+            Intent intent1 = new Intent(Intent.ACTION_REBOOT);
+            intent1.putExtra("nowait", 1);
+            intent1.putExtra("interval", 1);
+            intent1.putExtra("window", 0);
+            sendBroadcast(intent1);
             e.printStackTrace();
             Log.v("人脸识别", "setupCamera-->" + e.getMessage());
         }
