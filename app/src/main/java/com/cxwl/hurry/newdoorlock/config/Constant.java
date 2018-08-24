@@ -16,6 +16,7 @@ public class Constant {
     // (Gender) Key :
 
     //    public static final String PIC_PREFIX = "arcsoft_";//虹软人脸照片文件夹名
+    // TODO: 2018/8/24 几乎所有的人脸识别对比消息发送都可以改成工控的handler.sendEmptyMessage(START_FACE_CHECK);试试
     public static final int MSG_FACE_DETECT_CONTRAST = 11100;//人脸识别对比
     public static final int MSG_FACE_DETECT_INPUT = 11101;//人脸识别录入
     public static final int MSG_FACE_DETECT_PAUSE = 11102;//人脸识别暂停
@@ -36,8 +37,8 @@ public class Constant {
     /********************虹软相关*********************/
 
     /********************天翼RTC相关******************/
-    public static final String RTC_APP_ID = "71012";
-    public static final String RTC_APP_KEY = "71007b1c-6b75-4d6f-85aa-40c1f3b842ef";
+    public static final String RTC_APP_ID = "72321";
+    public static final String RTC_APP_KEY = "9c4cd049-579d-431f-ba4b-5eb81edac064";
 
     public static final int MSG_RTC_NEWCALL = 10000;//收到新的来电
     public static final int MSG_RTC_ONVIDEO = 10001;//视频通话连接

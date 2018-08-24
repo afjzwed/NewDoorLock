@@ -2571,35 +2571,6 @@ public class MainService extends Service {
             stopTimeoutCheckThread();
             //开门操作
             Log.e(TAG, "进行开门操作 开门开门");
-            //分为手机开门和视屏开门 1和2 进行区分 上传日志统一传2；
-            /*if (logDoor.getKaimenfangshi() == 1) {
-                logDoor.setKaimenfangshi(2);
-                //一键开门拍照
-                if (StringUtils.isFastClick()) {
-                    //开始截图
-                    if (DeviceConfig.PRINTSCREEN_STATE == 0) {
-                        DeviceConfig.PRINTSCREEN_STATE = 3;
-                        Log.e(TAG, "一键开门，开始截图" + DeviceConfig.PRINTSCREEN_STATE);
-                        mLogDoor = logDoor;
-                        openLock(2);
-                    }
-                    //以下为调用摄像头拍照
-//                    String imgurl = "door/img/" + System.currentTimeMillis() + ".jpg";
-//                    sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC, imgurl);
-//                    logDoor.setKaimenjietu(imgurl);
-                }
-            } else {
-                openLock(2);
-                logDoor.setState(1);
-                List<LogDoor> list = new ArrayList<>();
-                //拼接图片地址
-                logDoor.setKaimenjietu(logDoor.getKaimenjietu());
-                logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System
-                        .currentTimeMillis()));
-                Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
-                list.add(logDoor);
-                createAccessLog(list);//上传日志
-            }*/
 
             openLock(2);
             //分为手机开门和视屏开门 1和2 进行区分 上传日志统一传2；
