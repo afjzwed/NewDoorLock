@@ -1,6 +1,7 @@
 package com.cxwl.hurry.newdoorlock.utils;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -133,7 +134,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         mAdverTongJiCallBack = mCallBack;
         //initScreen();
         initInterger();
-        initMediaPlayer();
+//        initMediaPlayer();
         play();
         if (isOnVideo) {
             pause(errorCallBack);
@@ -195,7 +196,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                 videoView.setVisibility(View.VISIBLE);
                 imageView.setVisibility(View.INVISIBLE);
                 mediaPlayerSource = source;
-//                initMediaPlayer();// TODO: 2018/7/13  //这个初始化方法应该放在initData()中
+                initMediaPlayer();// TODO: 2018/7/13  //这个初始化方法应该放在initData()中
                 startMediaPlay(mediaPlayerSource);
             } else {
                 Log.e("广告", "next");
@@ -300,12 +301,17 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
-                imageView.setVisibility(View.VISIBLE);
+                Log.d("AdvertiseHandler", "多媒体报错" + what + " extra " + extra);
+                DLLog.d("AdvertiseHandler", "多媒体死亡 " + what + " extra " + extra);
+//                imageView.setVisibility(View.VISIBLE);
                 switch (what) {
                     case 100:
-                        Log.d("多媒体死亡", "MEDIA_ERROR_SERVER_DIED");
                         DLLog.d("AdvertiseHandler", "多媒体死亡 MEDIA_ERROR_SERVER_DIED");
                         Constant.RESTART_AUDIO = true;
+//                        Constant.RESTART_PHONE_OR_AUDIO = 2;
+                        break;
+                    default:
+                        Constant.RESTART_PHONE_OR_AUDIO = 1;
                         break;
                 }
                 return false;
@@ -366,14 +372,18 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(source);
-            mediaPlayer.prepareAsync();//在使用MediaPlayer准备的时候，最好使用prepareAsync()方法，而不是prepare()方法，因为前一个方法是异步准备的，不会阻碍主线程
-            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mediaPlayer) {
-                    mediaPlayer.start();
-                }
-            });
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+//            mediaPlayer.prepareAsync();//在使用MediaPlayer准备的时候，最好使用prepareAsync()方法，而不是prepare()方法，因为前一个方法是异步准备的，不会阻碍主线程
+//            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+//                @Override
+//                public void onPrepared(MediaPlayer mediaPlayer) {
+//                    mediaPlayer.start();
+//                }
+//            });
         } catch (Exception e) {
+            DLLog.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error " + e.getMessage());
+            Constant.RESTART_PHONE_OR_AUDIO = 1;
             Log.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error");
         }
     }

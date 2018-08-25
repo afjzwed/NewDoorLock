@@ -963,6 +963,10 @@ public class MainService extends Service {
                                     sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
                                 }
 
+                                if (Constant.RESTART_PHONE_OR_AUDIO == 1) {
+                                    onReStartVideo();
+                                }
+
                                 if (!DeviceConfig.isNfcFlag) {//如果串口库没有开启，在心跳中开启
                                     DLLog.d("串口库", "串口库在心跳中打开");
                                     DoorLock.getInstance().initSerial();
@@ -1014,7 +1018,7 @@ public class MainService extends Service {
             e.printStackTrace();
         }
 
-        long beforeMem = getAvailMemory(getApplication());
+//        long beforeMem = getAvailMemory(getApplication());
 //        Log.d("进程", "-----------before memory info : " + beforeMem);
         int count = 0;
         if (infoList != null) {
@@ -1062,7 +1066,7 @@ public class MainService extends Service {
                 }
             }
         }
-        long afterMem = getAvailMemory(getApplication());
+//        long afterMem = getAvailMemory(getApplication());
 //        Log.d("进程", "----------- after memory info : " + afterMem);
 //        DLLog.w("进程", "-----------before memory info : " + beforeMem + " ----------- after memory info : " + afterMem);
     }

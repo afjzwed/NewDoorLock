@@ -16,7 +16,7 @@ public class Constant {
     // (Gender) Key :
 
     //    public static final String PIC_PREFIX = "arcsoft_";//虹软人脸照片文件夹名
-    // TODO: 2018/8/24 几乎所有的人脸识别对比消息发送都可以改成工控的handler.sendEmptyMessage(START_FACE_CHECK);试试
+    // TODO: 2018/8/24 几乎所有的人脸识别对比消息发送都可以改成工控的handler.sendEmptyMessage(START_FACE_CHECK);试试可能解决摄像头占用问题
     public static final int MSG_FACE_DETECT_CONTRAST = 11100;//人脸识别对比
     public static final int MSG_FACE_DETECT_INPUT = 11101;//人脸识别录入
     public static final int MSG_FACE_DETECT_PAUSE = 11102;//人脸识别暂停
@@ -118,4 +118,6 @@ public class Constant {
     public static final int MSG_RESTART_VIDEO = 100002;//手机的重启
     public static boolean RESTART_PHONE = false;
     public static boolean RESTART_AUDIO = false;//媒体流重启
+
+    public static int RESTART_PHONE_OR_AUDIO = 0;//0正常 1重启设备 2重启媒体
 }

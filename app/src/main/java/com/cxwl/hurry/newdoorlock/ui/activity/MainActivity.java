@@ -660,7 +660,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         onLoginAfter(msg);
                         break;
                     case MSG_LOGIN_FAILED:
-                        //登陆成功后 设置信息 初始化rtc等
+                        //登陆失败
                         showMacaddress((String) msg.obj);
                         break;
                     case MSG_RTC_ONVIDEO:
@@ -2889,8 +2889,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                        } catch (RemoteException e) {
 //                            e.printStackTrace();
 //                        }
+
 //                        DoorLock.getInstance().initSerial();
-                        DLLog.delFile();//删除本地日志
+
+//                        DLLog.delFile();//删除本地日志
+
+//                        Constant.RESTART_PHONE_OR_AUDIO = 1;
                         break;
                     case R.id.action_settings3://上传日志
                         Log.e(TAG, "menu 上传日志");
@@ -2975,12 +2979,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                        idOperation =true;
                         break;
                     case MSG_FACE_DETECT_INPUT://人脸识别录入(拿到网络图片后发出人脸识别暂停，然后发出录入消息)
-                        Log.e(TAG, "人脸" + "识别录入");
-                        // TODO: 2018/5/11  这里要传入整个网络图片的所有地址过来给faceDetectInput方法使用
+                        Log.e(TAG, "人脸识别录入");
                         faceDetectInput();
                         break;
                     case MSG_FACE_DETECT_CONTRAST://人脸识别对比
-                        Log.e(TAG, "人脸" + "识别对比");
+                        Log.e(TAG, "人脸识别对比");
                         identification = true;
                         if (mFRAbsLoop != null) {
                             mFRAbsLoop.resumeThread();
@@ -2991,7 +2994,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         break;
                     case MSG_FACE_DETECT_PAUSE://人脸识别暂停
-                        Log.e(TAG, "人脸" + "识别暂停" + "开始照相");
+                        Log.e(TAG, "人脸识别暂停开始照相");
                         identification = false;
                         if (mFRAbsLoop != null) {
                             mFRAbsLoop.pauseThread();
@@ -3078,27 +3081,57 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public Camera setupCamera() {
 //        Log.e(TAG, "相机" + "setupCamera");
 
-        try {//这里其实不用捕捉错误
-            mCamera = Camera.open();
-            if (mCamera == null) {
-//                Log.e(TAG, "相机 ID为0");
+        try {
+            try {
                 mCamera = Camera.open(0);
+//                Log.e(TAG, "相机 ID为0");
+            } catch (Exception e) {
+                mCamera = null;
             }
-//            if (mCamera == null) {
-////                Log.e(TAG, "相机 ID为1");
-//                mCamera = Camera.open(1);
-//            }
-            Camera.Parameters parameters = mCamera.getParameters();
-            if (null != parameters) {
-                parameters.setPreviewSize(640, 480);//设置尺寸
-                mCamera.setParameters(parameters);
+
+            if (mCamera == null) {
+                try {
+                    mCamera = Camera.open();
+                } catch (Exception e) {
+                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
+                    Constant.RESTART_PHONE_OR_AUDIO = 1;
+                    e.printStackTrace();
+                }
             }
-            Camera.Parameters parameters1 = mCamera.getParameters();
-            if (null != parameters1) {
-                parameters1.setPreviewFormat(ImageFormat.NV21);//指定图像的格式
-                // (NV21：是一种YUV420SP格式，紧跟Y平面的是VU交替的平面)
-                mCamera.setParameters(parameters1);
+
+            if (null != mCamera) {
+                try {
+                    Camera.Parameters parameters = mCamera.getParameters();
+                    if (null != parameters) {
+                        parameters.setPreviewSize(640, 480);//设置尺寸
+                        mCamera.setParameters(parameters);
+                    }
+                } catch (Exception e) {
+                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
+                    Constant.RESTART_PHONE_OR_AUDIO = 1;
+                    e.printStackTrace();
+                }
             }
+
+            if (null != mCamera) {
+                try {
+                    Camera.Parameters parameters1 = mCamera.getParameters();
+                    if (null != parameters1) {
+                        parameters1.setPreviewFormat(ImageFormat.NV21);//指定图像的格式
+                        // (NV21：是一种YUV420SP格式，紧跟Y平面的是VU交替的平面)
+                        mCamera.setParameters(parameters1);
+                    }
+                } catch (Exception e) {
+                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
+                    Constant.RESTART_PHONE_OR_AUDIO = 1;
+                    e.printStackTrace();
+                }
+            }
+
+            if (null == mCamera) {
+                Constant.RESTART_PHONE_OR_AUDIO = 1;
+            }
+
 //            for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
 //                Log.v(TAG, "SIZE:" + size.width + "x" + size.height);
 //            }
@@ -3122,9 +3155,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //parameters.setColorEffect(Camera.Parameters.EFFECT_NONE);
         } catch (Exception e) {
 //            Log.v(TAG, "setupCamera-->" + e.getMessage());
-            DLLog.e("摄像头", "setupCamera-->" + e.getMessage());
-            e.printStackTrace();
+            DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
 //            onReStartVideo();
+            Constant.RESTART_PHONE_OR_AUDIO = 1;
+            e.printStackTrace();
         }
 
         if (mCamera != null) {
@@ -3238,6 +3272,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void faceDetectInput() {
         startActivity(new Intent(this, PhotographActivity2.class));
+//        startActivity(new Intent(MainActivity.this, PhotographActivity.class));
 //        sendMainMessager(MSG_FACE_DOWNLOAD, null);
     }
 
@@ -3636,17 +3671,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 netTimer = null;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            DLLog.e("设备重启 ", "MainActivity-->onDestroy " + e.toString());
             onReStartVideo();
+            e.printStackTrace();
         }
 //        mSurfaceView.setVisibility(View.GONE);
 //        mGLSurfaceView.setVisibility(View.GONE);//这两个控件不用隐藏
 
-        identification = false;
-        if (null != mFRAbsLoop) {
-            mFRAbsLoop.shutdown();
+        try {
+            identification = false;
+            if (null != mFRAbsLoop) {
+                mFRAbsLoop.shutdown();
+            }
+            AFT_FSDKError err = engine.AFT_FSDK_UninitialFaceEngine();
+        } catch (Exception e) {
+            DLLog.e("设备重启 ", "MainActivity-->onDestroy " + e.toString());
+            onReStartVideo();
+            e.printStackTrace();
         }
-        AFT_FSDKError err = engine.AFT_FSDK_UninitialFaceEngine();
+
 
         if (doorLock != null) {
             doorLock.setIsNfcFlag(false);
