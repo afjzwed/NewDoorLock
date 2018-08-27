@@ -177,6 +177,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_PIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_VEDIO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPDATE_NETWORKSTATE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LIXIAN_IMG;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LOG;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC1;
 import static com.cxwl.hurry.newdoorlock.config.Constant.ONVIDEO_MODE;
@@ -222,7 +223,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Handler handler;
     private Messenger mainMessage;
     private Messenger serviceMessage;//Service端的Messenger
-    private String mac;//Mac地址
     private boolean isFlag = true;//录卡时楼栋编号焦点监听的标识
 //    private NfcReader nfcReader;//用于nfc卡扫描
 
@@ -553,7 +553,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     protected void initVoiceVolume(AudioManager audioManager, int type, int value) {
         int thisValue = audioManager.getStreamMaxVolume(type);//得到最大音量
-        thisValue = thisValue * value / 20;//具体音量值
+        thisValue = thisValue * value / 30;//具体音量值
         audioManager.setStreamVolume(type, thisValue, AudioManager.FLAG_PLAY_SOUND);//调整音量时播放声音
     }
 
@@ -794,7 +794,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     case MSG_UPLOAD_LIXIAN_IMG:
                         uploadImgs((List<ImgFile>) msg.obj);
                         break;
-                    case MSG_RESTART_VIDEO:
+                    case MSG_RESTART_VIDEO://重启手机或媒体流
                         if (currentStatus == CALL_MODE || currentStatus == PASSWORD_MODE) {
                             if (faceHandler != null) {
                                 RESTART_PHONE = false;
@@ -806,6 +806,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     case MSG_YIJIANKAIMEN_TAKEPIC1:
                         if (faceHandler != null) {
                             faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 1000);
+                        }
+                        break;
+                    case MSG_UPLOAD_LOG://上传日志
+                        if (currentStatus == CALL_MODE || currentStatus == PASSWORD_MODE) {
+                            if (faceHandler != null) {
+                                Constant.UPLOAD_LOG = false;
+                                File file = DLLog.upLoadFile();
+                                if (null != file) {
+                                    uploadLogToQiNiu(file);
+//                                    Log.e("上传日志七牛", "有日志" + file.getPath() + " " + file.getAbsolutePath());
+                                } else {
+                                    DLLog.d("上传日志七牛","没有日志");
+//                                    Log.e("上传日志七牛", "没有日志");
+                                }
+                            }
                         }
                         break;
                     default:
@@ -2470,6 +2485,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (blockNo.equals(("9991")) || blockNo.equals("99999991")) {
             onReStartVideo();
+//            Constant.UPLOAD_LOG = true;
             return;
         }
 
@@ -2895,6 +2911,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                        DLLog.delFile();//删除本地日志
 
 //                        Constant.RESTART_PHONE_OR_AUDIO = 1;
+
+//                        Constant.RESTART_PHONE_STRAIGHT =true;
                         break;
                     case R.id.action_settings3://上传日志
                         Log.e(TAG, "menu 上传日志");
@@ -3093,8 +3111,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     mCamera = Camera.open();
                 } catch (Exception e) {
-                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
                     Constant.RESTART_PHONE_OR_AUDIO = 1;
+//                    Constant.RESTART_PHONE_STRAIGHT =true;
+                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -3107,8 +3126,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mCamera.setParameters(parameters);
                     }
                 } catch (Exception e) {
-                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
                     Constant.RESTART_PHONE_OR_AUDIO = 1;
+//                    Constant.RESTART_PHONE_STRAIGHT =true;
+                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -3122,14 +3142,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mCamera.setParameters(parameters1);
                     }
                 } catch (Exception e) {
-                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
                     Constant.RESTART_PHONE_OR_AUDIO = 1;
+//                    Constant.RESTART_PHONE_STRAIGHT =true;
+                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
                     e.printStackTrace();
                 }
             }
 
             if (null == mCamera) {
                 Constant.RESTART_PHONE_OR_AUDIO = 1;
+//                Constant.RESTART_PHONE_STRAIGHT =true;
             }
 
 //            for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
@@ -3155,9 +3177,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //parameters.setColorEffect(Camera.Parameters.EFFECT_NONE);
         } catch (Exception e) {
 //            Log.v(TAG, "setupCamera-->" + e.getMessage());
+            Constant.RESTART_PHONE_OR_AUDIO = 1;
+//            Constant.RESTART_PHONE_STRAIGHT =true;
             DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
 //            onReStartVideo();
-            Constant.RESTART_PHONE_OR_AUDIO = 1;
             e.printStackTrace();
         }
 
@@ -3586,6 +3609,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 } else {
                                     Log.e(TAG, "七牛上传图片失败");
                                     DbUtils.getInstans().insertOneImg(imgFile);//获取token失败，图片存在本地
+                                }
+                                Log.e(TAG, "七牛info" + info.toString());
+                            }
+                        }, null);
+                    }
+                }.start();
+            }
+        });
+    }
+
+    /**
+     * 上传本地日志到七牛
+     *
+     * @param file
+     */
+    private void uploadLogToQiNiu(final File file) {
+        final String url = "door/log/" + MacUtils.getMac() + "_" + System.currentTimeMillis() + ".txt";
+        OkHttpUtils.post().url(API.QINIU_IMG).build().execute(new StringCallback() {//七牛token值不固定，每次请求使用
+            @Override
+            public void onError(Call call, Exception e, int id) {
+                Log.i(TAG, "获取七牛token失败 e" + e.toString());
+            }
+
+            @Override
+            public void onResponse(final String response, int id) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        String token = JsonUtil.getFieldValue(response, "data");
+//                        Log.i(TAG, "获取七牛token成功 开始上传照片  token" + token);
+//                        Log.e(TAG, "file七牛储存地址：" + url);
+//                        Log.e(TAG, "file本地地址：" + file.getPath() + "file大小" + file.length());
+                        uploadManager.put(file.getPath(), url, token, new UpCompletionHandler() {
+                            @Override
+                            public void complete(String key, ResponseInfo info, JSONObject response) {
+                                if (info.isOK()) {
+                                    Log.e(TAG, "七牛上传日志成功");
+                                } else {
+                                    Log.e(TAG, "七牛上传日志失败");
                                 }
                                 Log.e(TAG, "七牛info" + info.toString());
                             }

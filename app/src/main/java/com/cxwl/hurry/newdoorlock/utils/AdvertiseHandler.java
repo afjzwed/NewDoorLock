@@ -1,7 +1,5 @@
 package com.cxwl.hurry.newdoorlock.utils;
 
-import android.content.Context;
-import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -73,6 +71,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                         handlerStart((AdverErrorCallBack) msg.obj);
                     } else {
                         Log.i("xiao_", "检测到SurfaceView未被创建，延时200ms");
+                        DLLog.e("AdvertiseHandler", "检测到SurfaceView未被创建，延时200ms");
                         sendHandlerMessage(0x01, msg.obj, 200);
                     }
                     break;
@@ -199,10 +198,14 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                 initMediaPlayer();// TODO: 2018/7/13  //这个初始化方法应该放在initData()中
                 startMediaPlay(mediaPlayerSource);
             } else {
+                Constant.RESTART_PHONE_OR_AUDIO = 1;
+                DLLog.e("AdvertiseHandler", "source为null");
                 Log.e("广告", "next");
-                //  next();
+//                next();
             }
         } catch (Exception e) {
+            Constant.RESTART_PHONE_OR_AUDIO = 1;
+            DLLog.e("AdvertiseHandler", "playVideo error " + e.getMessage() + "  err " + e.toString());
         }
     }
 
@@ -231,6 +234,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                     try {
                         sleep(imagePeroid); //等待指定的一个并行时间
                     } catch (InterruptedException e) {
+                        Constant.RESTART_PHONE_OR_AUDIO = 1;
+                        DLLog.e("AdvertiseHandler", "------>end image display thread<-------" + e.getMessage() + "  err " + e.toString());
                     }
                     if (isWorking) {
                         nextImage(item);
@@ -271,6 +276,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         try {
             dialMessenger.send(message);
         } catch (RemoteException e) {
+            Constant.RESTART_PHONE_OR_AUDIO = 1;
+            DLLog.e("AdvertiseHandler", "------>sendDialMessenger<-------" + e.getMessage() + "  err " + e.toString());
             e.printStackTrace();
         }
     }
@@ -304,14 +311,14 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                 Log.d("AdvertiseHandler", "多媒体报错" + what + " extra " + extra);
                 DLLog.d("AdvertiseHandler", "多媒体死亡 " + what + " extra " + extra);
 //                imageView.setVisibility(View.VISIBLE);
+                if (what != 100) {
+                    Constant.RESTART_PHONE_OR_AUDIO = 1;
+                }
                 switch (what) {
                     case 100:
                         DLLog.d("AdvertiseHandler", "多媒体死亡 MEDIA_ERROR_SERVER_DIED");
                         Constant.RESTART_AUDIO = true;
 //                        Constant.RESTART_PHONE_OR_AUDIO = 2;
-                        break;
-                    default:
-                        Constant.RESTART_PHONE_OR_AUDIO = 1;
                         break;
                 }
                 return false;
@@ -353,11 +360,11 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                 Log.e("AdvertiseHandler", "当前视频已经失效 继续播放重第一个开始" + list.size());
             } else {
                 list.remove(list.get(listIndex));
+                DLLog.e("AdvertiseHandler", "当前视频已经失效 停止播放");
                 onDestroy();
                 Log.e("AdvertiseHandler", "当前视频已经失效 停止播放" + list.size());
                 return;
             }
-
         }
         next();
     }
@@ -372,18 +379,18 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(source);
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-//            mediaPlayer.prepareAsync();//在使用MediaPlayer准备的时候，最好使用prepareAsync()方法，而不是prepare()方法，因为前一个方法是异步准备的，不会阻碍主线程
-//            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-//                @Override
-//                public void onPrepared(MediaPlayer mediaPlayer) {
-//                    mediaPlayer.start();
-//                }
-//            });
+//            mediaPlayer.prepare();
+//            mediaPlayer.start();
+            mediaPlayer.prepareAsync();//在使用MediaPlayer准备的时候，最好使用prepareAsync()方法，而不是prepare()方法，因为前一个方法是异步准备的，不会阻碍主线程
+            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mediaPlayer) {
+                    mediaPlayer.start();
+                }
+            });
         } catch (Exception e) {
-            DLLog.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error " + e.getMessage());
             Constant.RESTART_PHONE_OR_AUDIO = 1;
+            DLLog.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error " + e.getMessage());
             Log.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error");
         }
     }
@@ -395,6 +402,9 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             voicePlayer.prepare();
             voicePlayer.start();
         } catch (Exception e) {
+            Constant.RESTART_PHONE_OR_AUDIO = 1;
+            DLLog.e("AdvertiseHandler", "startVoicePlay error " + e.toString() + " message " + e
+                    .getMessage());
             e.printStackTrace();
         }
     }
@@ -418,6 +428,9 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             }
         } catch (IllegalStateException e) {
             Log.d("AdvertiseHandler", "UpdateAdvertise: onDestroy error=" + e.toString());
+            Constant.RESTART_PHONE_OR_AUDIO = 1;
+            DLLog.e("AdvertiseHandler", "UpdateAdvertise: onDestroy error " + e.toString() + " message " + e
+                    .getMessage());
         } finally {
             Log.e("AdvertiseHandler", "显示背景图");
             if (videoView != null && imageView != null) {
@@ -496,6 +509,9 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                 voicePlayer.start();
             }
         } catch (Exception e) {
+            Constant.RESTART_PHONE_OR_AUDIO = 1;
+            DLLog.e("AdvertiseHandler", "UpdateAdvertise: handlerStart error " + e.toString() + " message " + e
+                    .getMessage());
             e.printStackTrace();
             Log.d("AdvertiseHandler", "UpdateAdvertise: start error");
             errorCallBack.ErrorAdver();
@@ -515,6 +531,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                 voicePlayer.pause();
             }
         } catch (IllegalStateException e) {
+            Constant.RESTART_PHONE_OR_AUDIO = 1;
+            DLLog.e("AdvertiseHandler", "pause error " + e.toString() + " message " + e.getMessage());
             errorCallBack.ErrorAdver();
         }
     }

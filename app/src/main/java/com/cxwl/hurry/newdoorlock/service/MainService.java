@@ -152,6 +152,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_PIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_VEDIO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPDATE_NETWORKSTATE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LIXIAN_IMG;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LOG;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_OPENLOCK;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC1;
@@ -936,9 +937,16 @@ public class MainService extends Service {
                                 Calendar calendar = Calendar.getInstance();
                                 int hour = calendar.get(Calendar.HOUR_OF_DAY);
 //                                Log.e(TAG, "当前小时 " + hour + " " + SDFJ);
+                                if (hour == 1) {
+                                    Constant.UPLOAD_LOG = true;
+                                } else if (hour == 2) {//每晚凌晨2点时进行一次日志上传
+                                    if (Constant.UPLOAD_LOG == true) {
+                                        sendMessageToMainAcitivity(MSG_UPLOAD_LOG, null);
+                                    }
+                                }
                                 if (hour == 3) {
                                     RESTART_PHONE = true;
-                                } else if (hour == 4) {//每晚凌晨4点时进行一次媒体流的重启
+                                } else if (hour == 4) {//每晚凌晨4点时进行一次设备的重启
                                     if (RESTART_PHONE == true) {
                                         Constant.RESTART_AUDIO = false;
                                         DLLog.delFile();//删除本地日志
@@ -964,6 +972,7 @@ public class MainService extends Service {
                                 }
 
                                 if (Constant.RESTART_PHONE_OR_AUDIO == 1) {
+//                                    Constant.RESTART_PHONE_OR_AUDIO = 0;
                                     onReStartVideo();
                                 }
 
@@ -1068,7 +1077,8 @@ public class MainService extends Service {
         }
 //        long afterMem = getAvailMemory(getApplication());
 //        Log.d("进程", "----------- after memory info : " + afterMem);
-//        DLLog.w("进程", "-----------before memory info : " + beforeMem + " ----------- after memory info : " + afterMem);
+//        DLLog.w("进程", "-----------before memory info : " + beforeMem + " ----------- after memory info : " +
+// afterMem);
     }
 
     //获取可用内存大小
@@ -2192,18 +2202,6 @@ public class MainService extends Service {
         } else {
             key = mac.replace(":", "");
             Log.i(TAG, "初始化mac=" + mac + "key=" + key);
-            //// TODO: 2018/5/16 mac测试写死
-//            mac = "44:2c:05:e6:9c:c5";
-//            key = "442c05e69cc5";
-            //获取设备编号 用mainMessage发送信息给MainActivity显示
-//            Message message = Message.obtain();
-//            message.what = MainActivity.MSG_GET_MAC_ADDRESS;
-//            message.obj = mac;
-//            try {
-//                initMessenger.send(message);
-//            } catch (RemoteException e) {
-//                e.printStackTrace();
-//            }
             return true;
         }
     }
@@ -2226,8 +2224,6 @@ public class MainService extends Service {
                 }
             }
         }.start();
-
-//        getClientInfo();
     }
 
     /**
@@ -2245,7 +2241,6 @@ public class MainService extends Service {
             data.put("key", key);
             data.put("version", getVersionName());
             Log.e("登录", "mac " + mac + " key " + key + " version " + getVersionName());
-
             Response execute = OkHttpUtils.postString().url(url).content(data.toString()).mediaType(MediaType.parse
                     ("application/json; charset=utf-8")).tag(this).build().execute();
             if (null != execute) {
@@ -3193,7 +3188,7 @@ public class MainService extends Service {
     }
 
     private void onReStartVideo() {
-//        DLLog.e("MainService", "进行设备的重启");
+        DLLog.e("MainService", "进行设备的重启");
         Intent intent1 = new Intent(Intent.ACTION_REBOOT);
         intent1.putExtra("nowait", 1);
         intent1.putExtra("interval", 1);

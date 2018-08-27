@@ -116,8 +116,11 @@ public class Constant {
 
     public static final int MSG_RESTART_VIDEO1 = 11110;//手机的重启
     public static final int MSG_RESTART_VIDEO = 100002;//手机的重启
-    public static boolean RESTART_PHONE = false;
+    public static final int MSG_UPLOAD_LOG  = 100003;//日志上传
+    public static boolean RESTART_PHONE = false;//定时重启
     public static boolean RESTART_AUDIO = false;//媒体流重启
+    public static boolean UPLOAD_LOG = false;//上传日志
+//    public static boolean RESTART_PHONE_STRAIGHT = false;//直接重启
 
     public static int RESTART_PHONE_OR_AUDIO = 0;//0正常 1重启设备 2重启媒体
 }

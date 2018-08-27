@@ -157,4 +157,26 @@ public class DLLog {
                 - SDCARD_LOG_FILE_SAVE_DAYS);
         return now.getTime();
     }
+
+
+    public static File upLoadFile() {
+        String needDelFiel = logfile.format(getDateBefore1());
+        File file = new File(LOG_PATH_SDCARD_DIR, needDelFiel + LOGFILENAME);
+        if (null != file && file.exists()) {
+            return file;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 得到现在时间前的1天日期，用来得到需要删除的日志文件名
+     * */
+    private static Date getDateBefore1() {
+        Date nowtime = new Date();
+        Calendar now = Calendar.getInstance();
+        now.setTime(nowtime);
+        now.set(Calendar.DATE, now.get(Calendar.DATE));
+        return now.getTime();
+    }
 }
