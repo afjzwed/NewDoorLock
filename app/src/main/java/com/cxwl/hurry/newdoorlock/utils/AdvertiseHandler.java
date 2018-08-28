@@ -200,12 +200,13 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             } else {
                 Constant.RESTART_PHONE_OR_AUDIO = 1;
                 DLLog.e("AdvertiseHandler", "source为null");
-                Log.e("广告", "next");
+//                Log.e("广告", "next");
 //                next();
             }
         } catch (Exception e) {
             Constant.RESTART_PHONE_OR_AUDIO = 1;
             DLLog.e("AdvertiseHandler", "playVideo error " + e.getMessage() + "  err " + e.toString());
+//            Log.e("广告", "next "+e.getMessage()+" "+e.toString());
         }
     }
 
@@ -235,7 +236,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                         sleep(imagePeroid); //等待指定的一个并行时间
                     } catch (InterruptedException e) {
                         Constant.RESTART_PHONE_OR_AUDIO = 1;
-                        DLLog.e("AdvertiseHandler", "------>end image display thread<-------" + e.getMessage() + "  err " + e.toString());
+                        DLLog.e("AdvertiseHandler", "------>end image display thread<-------" + e.getMessage() + "  " +
+                                "err " + e.toString());
                     }
                     if (isWorking) {
                         nextImage(item);
@@ -381,7 +383,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             mediaPlayer.setDataSource(source);
 //            mediaPlayer.prepare();
 //            mediaPlayer.start();
-            mediaPlayer.prepareAsync();//在使用MediaPlayer准备的时候，最好使用prepareAsync()方法，而不是prepare()方法，因为前一个方法是异步准备的，不会阻碍主线程
+            mediaPlayer.prepareAsync();//在使用MediaPlayer准备的时候，最好使用prepareAsync()方法，而不是prepare()
+            // 方法，因为前一个方法是异步准备的，不会阻碍主线程，可以解决Prepare failed问题
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mediaPlayer) {
@@ -390,7 +393,8 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             });
         } catch (Exception e) {
             Constant.RESTART_PHONE_OR_AUDIO = 1;
-            DLLog.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error " + e.getMessage());
+            DLLog.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay message " + e.getMessage() + " error " + e
+                    .toString());
             Log.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error");
         }
     }

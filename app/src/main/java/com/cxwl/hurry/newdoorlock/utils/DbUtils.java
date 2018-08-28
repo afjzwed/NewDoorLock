@@ -73,7 +73,7 @@ public class DbUtils {
 //            mKaDao.insert(ka.get(i));
 //        }
         mKaDao.insertInTx(ka);//批量插入
-        android.util.Log.i(TAG, "增加所有卡信息成功");
+        Log.i(TAG, "增加所有卡信息成功");
     }
 
     /**
@@ -82,17 +82,20 @@ public class DbUtils {
     public void quaryAllKa() {
         List<Ka> list = mKaDao.queryBuilder().list();
         if (list != null) {
-            android.util.Log.i(TAG, "查询所有卡信息成功" + list.toString());
+            DLLog.d(TAG,"卡条数 " + list.size());
+            Log.i(TAG, "查询所有卡信息成功" + " 卡个数" + list.size() + "  " + list.toString());
         }
 
     }
 
     /**
-     * 更具卡id查询卡信息
+     * 根据卡id查询卡信息
      */
     public Ka getKaInfo(String ka_id) {
-        Ka unique = mKaDao.queryBuilder().where(KaDao.Properties.Ka_id.eq(ka_id)).unique();
-        if (unique != null) {
+        Log.i(TAG, "根据卡id查询卡信息开始");
+        List<Ka> list = mKaDao.queryBuilder().where(KaDao.Properties.Ka_id.eq(ka_id)).list();
+        if (null != list && list.size() > 0) {
+            Ka unique = list.get(0);
             return unique;
         }
         return null;
@@ -137,7 +140,7 @@ public class DbUtils {
     public void quaryAllLian() {
         List<Lian> list = mLianDao.queryBuilder().list();
         if (list != null) {
-            android.util.Log.i(TAG, "查询所有脸信息成功" + list.toString());
+            Log.i(TAG, "查询所有脸信息成功" + list.toString());
         }
 
     }

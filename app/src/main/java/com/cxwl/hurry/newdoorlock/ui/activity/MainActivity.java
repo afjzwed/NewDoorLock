@@ -817,7 +817,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     uploadLogToQiNiu(file);
 //                                    Log.e("上传日志七牛", "有日志" + file.getPath() + " " + file.getAbsolutePath());
                                 } else {
-                                    DLLog.d("上传日志七牛","没有日志");
+                                    DLLog.d("上传日志七牛", "没有日志");
 //                                    Log.e("上传日志七牛", "没有日志");
                                 }
                             }
@@ -2485,7 +2485,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (blockNo.equals(("9991")) || blockNo.equals("99999991")) {
             onReStartVideo();
-//            Constant.UPLOAD_LOG = true;
             return;
         }
 
@@ -3113,7 +3112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (Exception e) {
                     Constant.RESTART_PHONE_OR_AUDIO = 1;
 //                    Constant.RESTART_PHONE_STRAIGHT =true;
-                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
+                    DLLog.e("摄像头 MainActivity", "主页面 相机打开失败"+ " setupCamera-->" + e.toString());
                     e.printStackTrace();
                 }
             }
@@ -3127,8 +3126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 } catch (Exception e) {
                     Constant.RESTART_PHONE_OR_AUDIO = 1;
-//                    Constant.RESTART_PHONE_STRAIGHT =true;
-                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
+                    DLLog.e("摄像头 MainActivity", "主页面 分辨率" + " setupCamera-->"+ e.toString() );
                     e.printStackTrace();
                 }
             }
@@ -3143,15 +3141,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 } catch (Exception e) {
                     Constant.RESTART_PHONE_OR_AUDIO = 1;
-//                    Constant.RESTART_PHONE_STRAIGHT =true;
-                    DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
+                    DLLog.e("摄像头 MainActivity", "主页面 图像格式" + " setupCamera-->" + e.toString());
                     e.printStackTrace();
                 }
             }
 
             if (null == mCamera) {
                 Constant.RESTART_PHONE_OR_AUDIO = 1;
-//                Constant.RESTART_PHONE_STRAIGHT =true;
             }
 
 //            for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
@@ -3176,9 +3172,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //parameters.setSceneMode(Camera.Parameters.SCENE_MODE_AUTO);
             //parameters.setColorEffect(Camera.Parameters.EFFECT_NONE);
         } catch (Exception e) {
-//            Log.v(TAG, "setupCamera-->" + e.getMessage());
             Constant.RESTART_PHONE_OR_AUDIO = 1;
-//            Constant.RESTART_PHONE_STRAIGHT =true;
             DLLog.e("摄像头 MainActivity", "主页面 " + e.toString() + " setupCamera-->" + e.getMessage());
 //            onReStartVideo();
             e.printStackTrace();
@@ -3781,7 +3775,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //这里接收到刷卡后获得的卡ID
         cardId = account;
-        Log.e(TAG, "onAccountReceived 卡信息 account " + account + " cardId " + cardId);
+        DLLog.d(TAG,"onAccountReceived 卡信息 account " + account + " cardId " + cardId);
+//        Log.e(TAG, "onAccountReceived 卡信息 account " + account + " cardId " + cardId);
         if (!nfcFlag) {//非录卡状态（卡信息用于开门）
             Message message = Message.obtain();
             message.what = MSG_CARD_INCOME;

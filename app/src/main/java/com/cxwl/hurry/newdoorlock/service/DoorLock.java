@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.cxwl.hurry.newdoorlock.callback.AccountCallback;
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
+import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.hurray.plugins.rkctrl;
 import com.hurray.plugins.serialport;
 
@@ -60,8 +61,12 @@ public class DoorLock {
             public void run() {
                 while (DeviceConfig.isNfcFlag) {
                     int r = m_serial.select(fd, 1, 0);
+//                    Log.e(TAG, "读卡开始");
+
                     if (r == 1) {
                         //测试 普通读串口数据
+//                        Log.e(TAG, "读卡开始");
+                        DLLog.d("刷卡开门","读卡开始");
                         byte[] buf = new byte[50];
                         buf = m_serial.read(fd, 100);
 
@@ -77,6 +82,7 @@ public class DoorLock {
                             substring = str.substring(28, 36).toUpperCase();
                             //测试刷卡
                             Log.e(TAG, "卡号 " + substring);
+                            DLLog.d("刷卡开门","读卡完成"+ substring);
 //                            DbUtils.getInstans().deleteAllLian();
 //                             lian = new Lian();
 //                            lian.setLian_id(substring);
@@ -113,7 +119,7 @@ public class DoorLock {
 
     public void onThreadEnd() {
         Log.e(TAG, "监听串口线程结束");
-        DeviceConfig.isNfcFlag = false;
+//        DeviceConfig.isNfcFlag = false;
     }
 
     public boolean getIsNfcFlag() {

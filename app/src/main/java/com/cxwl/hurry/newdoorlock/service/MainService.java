@@ -1917,19 +1917,34 @@ public class MainService extends Service {
                             if ("0".equals(code)) {
                                 try {
                                     String result = JsonUtil.getResult(response);
-                                    List<Ka> kas = JsonUtil.fromJsonArray(result, Ka.class);
-                                    //保存卡信息成功
-                                    DbUtils.getInstans().addAllKa(kas);
+                                    final List<Ka> kas = JsonUtil.fromJsonArray(result, Ka.class);
+
+                                    // TODO: 2018/8/28 在子线程中循环遍历卡信息，将卡号转小写
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            for (Ka ka : kas) {
+                                                ka.setKa_id(ka.getKa_id().toLowerCase());
+                                            }
+                                            //保存卡信息成功
+                                            try {
+                                                DbUtils.getInstans().addAllKa(kas);
+                                            } catch (Exception e) {
+                                                Constant.RESTART_PHONE_OR_AUDIO = 1;
+                                                DLLog.e("数据库", "数据库插入出错 " + e.toString());
+                                            }
+                                            cardInfoStatus = 0;//修改状态，等待下次（新）数据
+                                        }
+                                    }).start();
+
                                     //查询卡信息成功
                                     //DbUtils.getInstans().quaryAllKa();
                                     syncCallBack("1", kaVison);
-                                    cardInfoStatus = 0;//修改状态，等待下次（新）数据
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                     Log.i(TAG, "onResponse 卡信息接口getCardInfo  catch" + e.toString());
                                     cardInfoStatus = 0;//修改状态，等待下次（新）数据
                                 }
-
                             } else {
                                 Log.i(TAG, "onResponse 卡信息接口getCardInfo  code" + code);
                                 cardInfoStatus = 0;//修改状态，等待下次（新）数据
@@ -2550,7 +2565,7 @@ public class MainService extends Service {
      */
     protected void onMessage(String from, String mime, String content) {
         HttpApi.i("from = " + from + "    mime = " + mime + "     content = " + content);
-        // sendMessageToMainAcitivity(MSG_RTC_MESSAGE, null);
+//         sendMessageToMainAcitivity(MSG_RTC_MESSAGE, null);
         if (content.equals("refresh card info")) {
 //            sendDialMessenger(MSG_REFRESH_DATA, "card");
 //            retrieveCardList();//获取已注册卡信息
@@ -3215,18 +3230,20 @@ public class MainService extends Service {
         if (!this.cardRecord.checkLastCard(card)) {//判断距离上次刷卡时间是否超过2秒
             Log.v("MainService", "onCard====卡信息：" + card);
             DbUtils.getInstans().quaryAllKa();
+            DLLog.d("刷卡开门", "查卡开始" + card);
             kaInfo = DbUtils.getInstans().getKaInfo(card);
+            DLLog.d("刷卡开门", "查卡成功" + card);
             if (kaInfo != null && System.currentTimeMillis() < Long.parseLong(kaInfo.getGuoqi_time())) {//判断数据库中是否有卡
                 Log.v("MainService", "onCard====当前时间：" + System.currentTimeMillis() + "卡过期时间：" + kaInfo.getGuoqi_time
                         () + "是否失效  》0表示失效" + (System.currentTimeMillis() - Long.parseLong(kaInfo.getGuoqi_time())));
-                Log.i(TAG, "刷卡开门成功" + card);
+//                Log.i(TAG, "刷卡开门成功" + card);
+                DLLog.d("刷卡开门", " 状态值 " + DeviceConfig.PRINTSCREEN_STATE);
                 //开始截图
                 if (DeviceConfig.PRINTSCREEN_STATE == 0) {
+                    DLLog.d("刷卡开门", "刷卡开门成功" + card);
                     DeviceConfig.PRINTSCREEN_STATE = 2;
-                    Log.e(TAG, "刷卡开门，开始截图" + DeviceConfig.PRINTSCREEN_STATE);
-                    openLock(1);
                 }
-                Log.e(TAG, "onCard====:" + card);
+                openLock(1);
             } else {//数据库中无此卡
                 Log.e(TAG, "数据库中不存在这个卡 刷卡开门失败" + card);
                 cardId = card;
@@ -3264,9 +3281,15 @@ public class MainService extends Service {
     }
 
     protected void openLock(int type) {
+        if (type == 1) {
+            DLLog.d("刷卡开门", "操作继电器");
+        }
         int result = DoorLock.getInstance().openLock();
-//        Log.e(TAG, "继电器节点 result " + result);
+        Log.e(TAG, "继电器节点 result " + result);
         if (result != -1) {
+            if (type == 1) {
+                DLLog.d("刷卡开门", "继电器节点操作成功");
+            }
             sendMessageToMainAcitivity(MSG_LOCK_OPENED, type);//开锁
             SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
             countDownTimer.cancel();
