@@ -393,7 +393,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             });
         } catch (Exception e) {
             Constant.RESTART_PHONE_OR_AUDIO = 1;
-            DLLog.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay message " + e.getMessage() + " error " + e
+            DLLog.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error " + e
                     .toString());
             Log.e("AdvertiseHandler", "UpdateAdvertise: startMediaPlay error");
         }
@@ -407,8 +407,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             voicePlayer.start();
         } catch (Exception e) {
             Constant.RESTART_PHONE_OR_AUDIO = 1;
-            DLLog.e("AdvertiseHandler", "startVoicePlay error " + e.toString() + " message " + e
-                    .getMessage());
+            DLLog.e("AdvertiseHandler", "startVoicePlay error " + e.toString());
             e.printStackTrace();
         }
     }
@@ -433,8 +432,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         } catch (IllegalStateException e) {
             Log.d("AdvertiseHandler", "UpdateAdvertise: onDestroy error=" + e.toString());
             Constant.RESTART_PHONE_OR_AUDIO = 1;
-            DLLog.e("AdvertiseHandler", "UpdateAdvertise: onDestroy error " + e.toString() + " message " + e
-                    .getMessage());
+            DLLog.e("AdvertiseHandler", "UpdateAdvertise: onDestroy error " + e.toString());
         } finally {
             Log.e("AdvertiseHandler", "显示背景图");
             if (videoView != null && imageView != null) {
@@ -445,7 +443,6 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
                 Log.e("AdvertiseHandler", "停止播放");
             }
         }
-
     }
 
     public void onStop() {
@@ -514,8 +511,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             }
         } catch (Exception e) {
             Constant.RESTART_PHONE_OR_AUDIO = 1;
-            DLLog.e("AdvertiseHandler", "UpdateAdvertise: handlerStart error " + e.toString() + " message " + e
-                    .getMessage());
+            DLLog.e("AdvertiseHandler", "UpdateAdvertise: handlerStart error " + e.toString());
             e.printStackTrace();
             Log.d("AdvertiseHandler", "UpdateAdvertise: start error");
             errorCallBack.ErrorAdver();

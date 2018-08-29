@@ -59,14 +59,13 @@ public class DoorLock {
     public void runReadSerial(final int fd) {
         Runnable run = new Runnable() {
             public void run() {
-                while (DeviceConfig.isNfcFlag) {
+                while (true) {
                     int r = m_serial.select(fd, 1, 0);
 //                    Log.e(TAG, "读卡开始");
-
                     if (r == 1) {
                         //测试 普通读串口数据
 //                        Log.e(TAG, "读卡开始");
-                        DLLog.d("刷卡开门","读卡开始");
+//                        DLLog.d("刷卡开门","读卡开始");
                         byte[] buf = new byte[50];
                         buf = m_serial.read(fd, 100);
 

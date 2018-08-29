@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 def buildVersionCode(){
-    return 1;
+    return 2;
 }
 
 def buildVersionName(){
@@ -24,8 +24,8 @@ android {
         applicationId "com.cxwl.monitor"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
+        versionCode buildVersionCode()
+        versionName "${buildVersionName()}"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
