@@ -104,7 +104,7 @@ public class MonitorService extends JobService {
                             isPullTime = true;
                         }
                     } else {
-//                        count = 0;
+                        count = 0;
                         showMsg("已经打开锁相门禁"+ count);
                         mHandler.removeCallbacks(startMain);
                         isPullTime = false;

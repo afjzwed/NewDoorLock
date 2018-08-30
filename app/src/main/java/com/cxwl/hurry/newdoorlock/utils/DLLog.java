@@ -196,7 +196,7 @@ public class DLLog {
     }
 
     /**
-     * 得到现在时间的日期，用来得到需要删除的日志文件名
+     * 得到现在时间的日期，用来得到需要的日志文件名
      */
     private static Date getDateBefore2() {
         Date nowtime = new Date();
