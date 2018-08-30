@@ -5,6 +5,7 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.cxwl.hurry.newdoorlock.config.DeviceConfig;
+import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.cxwl.hurry.newdoorlock.utils.SharedPreferencesUtil;
 
 import java.io.File;
@@ -50,6 +51,7 @@ public class ArcsoftManager {
             }
         } catch (IOException e) {
 //            path = application.getExternalCacheDir().getPath();
+            DLLog.e("ArcsoftManager", "e " + e.toString());
             e.printStackTrace();
         }
 

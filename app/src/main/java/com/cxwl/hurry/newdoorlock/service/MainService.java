@@ -331,7 +331,7 @@ public class MainService extends Service {
      * 离线统计信息上传
      */
     private void lixianTongji() {
-        Runnable run = new Runnable() {
+            Runnable run = new Runnable() {
             @Override
             public void run() {
                 try {
@@ -1031,7 +1031,7 @@ public class MainService extends Service {
                     int[] myMempid = new int[]{appProcessInfo.pid};
                     Debug.MemoryInfo[] appMem = am.getProcessMemoryInfo(myMempid);
                     int memSize = appMem[0].dalvikPrivateDirty / 1024;
-                    if (memSize > 120) {//内存占用超过120M就重启
+                    if (memSize > 130) {//内存占用超过130M就重启
                         onReStartVideo();
                     }
                     DLLog.w("进程", appProcessInfo.processName + ":" + memSize);
@@ -1548,8 +1548,10 @@ public class MainService extends Service {
                 result.setFeatureData(mImageNV21);
                 ArcsoftManager.getInstance().mFaceDB.addFace(faceUrlBean.getYezhuPhone(), result);
             } catch (IOException e) {
+                DLLog.e(TAG, "restartFace e " + e.toString());
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
+                DLLog.e(TAG, "restartFace e " + e.toString());
                 e.printStackTrace();
             }
         }
@@ -1614,6 +1616,7 @@ public class MainService extends Service {
                     downLoadFace(urlBean);
                 }
             } catch (IOException e) {
+                DLLog.e(TAG, "downLoadFaceList e " + e.toString());
 //            path = application.getExternalCacheDir().getPath();
                 e.printStackTrace();
             }
@@ -1680,11 +1683,13 @@ public class MainService extends Service {
                                                 syncCallBack("5", v);//同步通知
                                                 adInfoStatus = 0;//重置广告视频下载状态
                                             } catch (Exception e) {
+                                                DLLog.e(TAG, "视频广告下载出错 e " + e.toString());
                                                 e.printStackTrace();
                                             }
                                         }
                                     }).start();
                                 } catch (Exception e) {
+                                    DLLog.e(TAG, "视频广告下载出错 e " + e.toString());
                                     e.printStackTrace();
                                     adInfoStatus = 0;
                                     Log.e(TAG, "视频广告下载出错" + adInfoStatus);
@@ -1700,6 +1705,7 @@ public class MainService extends Service {
                     }
                 });
             } catch (JSONException e) {
+                DLLog.e(TAG, "视频广告下载出错 e " + e.toString());
                 e.printStackTrace();
                 adInfoStatus = 0;//重置广告视频下载状态
             }
@@ -1777,6 +1783,7 @@ public class MainService extends Service {
             try {
                 downloadAdvertisementFile(item.getNeirong());
             } catch (Exception e) {
+                DLLog.e(TAG, "downloadAdvertisementItemFiles e " + e.toString());
                 e.printStackTrace();
             }
         } else if ("2".equals(type)) {//判断类别为图片
@@ -1784,6 +1791,7 @@ public class MainService extends Service {
             try {
                 downloadAdvertisementFile(item.getNeirong());
             } catch (Exception e) {
+                DLLog.e(TAG, "downloadAdvertisementItemFiles e " + e.toString());
                 e.printStackTrace();
             }
         }
@@ -1880,6 +1888,7 @@ public class MainService extends Service {
                 }
             });
         } catch (Exception e) {
+            DLLog.e(TAG, "通告信息 getClientInfo()->服务器数据解析异常 e " + e.toString());
             noticesStatus = 0;//等待下载数据
             HttpApi.e("通告信息 getClientInfo()->服务器数据解析异常");
             e.printStackTrace();
@@ -1939,6 +1948,7 @@ public class MainService extends Service {
                                     //DbUtils.getInstans().quaryAllKa();
                                     syncCallBack("1", kaVison);
                                 } catch (Exception e) {
+                                    DLLog.e(TAG, "getCardInfo catch-> " + e.toString());
                                     e.printStackTrace();
                                     Log.i(TAG, "onResponse 卡信息接口getCardInfo  catch" + e.toString());
                                     cardInfoStatus = 0;//修改状态，等待下次（新）数据
@@ -2025,6 +2035,7 @@ public class MainService extends Service {
                 }
             });
         } catch (Exception e) {
+            DLLog.e(TAG, "syncCallBack catch-> " + e.toString());
             e.printStackTrace();
         }
     }
@@ -2096,6 +2107,7 @@ public class MainService extends Service {
                 }
             }
         } catch (Exception e) {
+            DLLog.e(TAG, "initMonitor catch-> " + e.toString());
             e.printStackTrace();
         }
         if (apkName == null || apkName.length() <= 0) { //如果assets内没有监控程序则卸载
@@ -2243,7 +2255,6 @@ public class MainService extends Service {
                         }
                     } while (!result);
                 } catch (Exception e) {
-
                     DLLog.e(TAG,"initClientInfo catch-> "+e.toString());
                 }
             }
@@ -2296,6 +2307,7 @@ public class MainService extends Service {
                 HttpApi.e("getClientInfo()->服务器未响应");
             }
         } catch (Exception e) {
+            DLLog.e(TAG, "deviceLogin catch-> " + e.toString());
             HttpApi.e("getClientInfo()->服务器异常或没有网络");
             e.printStackTrace();
         }
@@ -2331,6 +2343,7 @@ public class MainService extends Service {
         try {
             mainMessage.send(message);
         } catch (RemoteException e) {
+            DLLog.e(TAG, "onLogin catch-> " + e.toString());
             e.printStackTrace();
         }
     }
@@ -2533,6 +2546,7 @@ public class MainService extends Service {
                 callInfo = new JSONObject(connection.info());
                 acceptMember = callInfo.getString("uri");
             } catch (JSONException e) {
+                DLLog.e(TAG, "onNewCall catch-> " + e.toString());
             }
             Log.i(TAG, "收到来电 call=" + connection.info());
             if (callConnection != null) {
@@ -3001,6 +3015,7 @@ public class MainService extends Service {
                 }
             });
         } catch (Exception e) {
+            DLLog.e(TAG, "callMember catch-> " + e.toString());
             HttpApi.e("getClientInfo()->服务器数据解析异常");
             Message message = mHandler.obtainMessage();
             message.what = MSG_CALLMEMBER;
@@ -3029,6 +3044,7 @@ public class MainService extends Service {
                 try {
                     mainMessage.send(message);
                 } catch (RemoteException e) {
+                    DLLog.e(TAG, "呼叫错误 catch-> " + e.toString());
                     e.printStackTrace();
                 }
                 return;
@@ -3061,6 +3077,7 @@ public class MainService extends Service {
                 try {
                     mainMessage.send(message);
                 } catch (RemoteException e) {
+                    DLLog.e(TAG, "onCallMember catch-> " + e.toString());
                     e.printStackTrace();
                 }
             }
@@ -3104,6 +3121,7 @@ public class MainService extends Service {
                     afterTryAllMembers();
                 }
             } catch (JSONException e) {
+                DLLog.e(TAG, "sendCallMessageParall catch-> " + e.toString());
             }
         }
     }
@@ -3174,6 +3192,7 @@ public class MainService extends Service {
                     }
                 }
             } catch (IOException e) {
+                DLLog.e(TAG, "downLoadFace catch-> " + e.toString());
                 e.printStackTrace();
             }
         }
@@ -3207,6 +3226,7 @@ public class MainService extends Service {
             try {
                 sendMessageToMainAcitivity(MSG_RTC_DISCONNECT, "");
             } catch (Exception e) {
+                DLLog.e(TAG, "onDestroy catch-> " + e.toString());
                 e.printStackTrace();
             }
         }
@@ -3325,9 +3345,9 @@ public class MainService extends Service {
     private String getVersionName() {
         String verName = "";
         try {
-            verName = this.getPackageManager().
-                    getPackageInfo(this.getPackageName(), 0).versionName;
+            verName = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName;
         } catch (Exception e) {
+            DLLog.e(TAG, "getVersionName catch-> " + e.toString());
             e.printStackTrace();
         }
         return verName;

@@ -62,6 +62,22 @@ public class MonitorService extends JobService {
         }
     };
 
+    private Runnable reBoot = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                showMsg("重启设备" + count);
+                Intent intent1 = new Intent(Intent.ACTION_REBOOT);
+                intent1.putExtra("nowait", 1);
+                intent1.putExtra("interval", 1);
+                intent1.putExtra("window", 0);
+                sendBroadcast(intent1);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -80,6 +96,39 @@ public class MonitorService extends JobService {
             activityTimer = null;
         }
         activityTimer = new Timer();
+//        activityTimer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                if (activityManager == null) {
+//                    activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+//                }
+//                ComponentName cn = activityManager.getRunningTasks(1).get(0).topActivity;
+//                if (count == 20) {
+//                    showMsg("未打开锁相门禁 重启设备");
+//                    Intent intent1 = new Intent(Intent.ACTION_REBOOT);
+//                    intent1.putExtra("nowait", 1);
+//                    intent1.putExtra("interval", 1);
+//                    intent1.putExtra("window", 0);
+//                    sendBroadcast(intent1);
+//                } else {
+//                    if (!cn.getPackageName().equals(PACKAGE_NAME)) {
+//                        showMsg("未打开锁相门禁" + count);
+//                        count++;
+//                        if (!isPullTime) {
+//                            showMsg("倒计时进入锁相门禁：15s");
+//                            mHandler.postDelayed(startMain, 15 * 1000);
+//                            isPullTime = true;
+//                        }
+//                    } else {
+//                        count = 0;
+//                        showMsg("已经打开锁相门禁"+ count);
+//                        mHandler.removeCallbacks(startMain);
+//                        isPullTime = false;
+//                    }
+//                }
+//            }
+//        }, 0, 2 * 1000);
+
         activityTimer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -87,7 +136,7 @@ public class MonitorService extends JobService {
                     activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
                 }
                 ComponentName cn = activityManager.getRunningTasks(1).get(0).topActivity;
-                if (count == 20) {
+                if (count == 30) {
                     showMsg("未打开锁相门禁 重启设备");
                     Intent intent1 = new Intent(Intent.ACTION_REBOOT);
                     intent1.putExtra("nowait", 1);
@@ -99,14 +148,14 @@ public class MonitorService extends JobService {
                         showMsg("未打开锁相门禁" + count);
                         count++;
                         if (!isPullTime) {
-                            showMsg("倒计时进入锁相门禁：15s");
-                            mHandler.postDelayed(startMain, 15 * 1000);
+                            showMsg("倒计时重启：30s");
+                            mHandler.postDelayed(reBoot, 30 * 1000);
                             isPullTime = true;
                         }
                     } else {
                         count = 0;
                         showMsg("已经打开锁相门禁"+ count);
-                        mHandler.removeCallbacks(startMain);
+                        mHandler.removeCallbacks(reBoot);
                         isPullTime = false;
                     }
                 }

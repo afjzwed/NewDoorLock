@@ -2,6 +2,7 @@ package com.cxwl.hurry.newdoorlock.ui.activity;
 
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
+import android.app.ActivityManager;
 import android.app.Dialog;
 import android.app.Service;
 import android.content.ComponentName;
@@ -20,6 +21,7 @@ import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -94,6 +96,7 @@ import com.cxwl.hurry.newdoorlock.utils.JsonUtil;
 import com.cxwl.hurry.newdoorlock.utils.MacUtils;
 import com.cxwl.hurry.newdoorlock.utils.NetWorkUtils;
 import com.cxwl.hurry.newdoorlock.utils.SPUtil;
+import com.cxwl.hurry.newdoorlock.utils.SoundPoolUtil;
 import com.cxwl.hurry.newdoorlock.utils.StringUtils;
 import com.cxwl.hurry.newdoorlock.view.AutoScrollView;
 import com.google.gson.reflect.TypeToken;
@@ -335,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 //        setContentView(R.layout.activity_main);
         setContentView(R.layout.activity_new_main);
-
+        DLLog.e(TAG, "应用开启");
         // TODO: 2018/5/23
         //this.sendBroadcast(new Intent("com.android.action.hide_navigationbar"));//全屏
         initView();//初始化View
@@ -362,6 +365,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //测试自动关广告
         //  textColseAd();
         isTongGaoThreadStart = false;//每次初始化都重启一次通告更新线程
+
+//        displayBriefMemory();
 
     }
 
@@ -1020,6 +1025,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             verName = this.getPackageManager().
                     getPackageInfo(this.getPackageName(), 0).versionName;
         } catch (Exception e) {
+            DLLog.e(TAG, "getVersionName catch-> " + e.toString());
             e.printStackTrace();
         }
         return verName;
@@ -1298,24 +1304,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 1000);
             }
             sendMainMessager(MainService.REGISTER_ACTIVITY_DIAL, null);//开始心跳包
-
-//            Log.e(TAG, "登录以后");
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.e(TAG, "登录以后");
-                    File file = DLLog.upLoadFile();
-                    if (null != file) {
-                        uploadLogToQiNiu(file);
-                        Log.e("上传日志七牛", "有日志" + file.getPath() + " " + file.getAbsolutePath());
-                    } else {
-                        DLLog.d("上传日志七牛", "没有日志");
-                        Log.e("上传日志七牛", "没有日志");
-                    }
-                    DbUtils.getInstans().deleteAllTongji();
-                    DbUtils.getInstans().deleteAllLog();
-                }
-            }).start();
         }
     }
 
@@ -1496,25 +1484,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int convertKeyCode(int keyCode) {
         int value = -1;
         if ((keyCode == KeyEvent.KEYCODE_0)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 0);
+            }
             value = 0;
         } else if ((keyCode == KeyEvent.KEYCODE_1)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 1);
+            }
             value = 1;
         } else if ((keyCode == KeyEvent.KEYCODE_2)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 2);
+            }
             value = 2;
         } else if ((keyCode == KeyEvent.KEYCODE_3)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 3);
+            }
             value = 3;
         } else if ((keyCode == KeyEvent.KEYCODE_4)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 4);
+            }
             value = 4;
         } else if ((keyCode == KeyEvent.KEYCODE_5)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 5);
+            }
             value = 5;
         } else if ((keyCode == KeyEvent.KEYCODE_6)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 6);
+            }
             value = 6;
         } else if ((keyCode == KeyEvent.KEYCODE_7)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 7);
+            }
             value = 7;
         } else if ((keyCode == KeyEvent.KEYCODE_8)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 8);
+            }
             value = 8;
         } else if ((keyCode == KeyEvent.KEYCODE_9)) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 9);
+            }
             value = 9;
+        } else if (keyCode == DEVICE_KEYCODE_POUND || keyCode == DEVICE_KEYCODE_STAR) {
+            if (DeviceConfig.KEY_VOL) {
+                SoundPoolUtil.getSoundPoolUtil().loadVoice(MainActivity.this, 10);
+            }
         }
         return value;
     }
@@ -2019,6 +2041,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {
+                        DLLog.e(TAG, "takePicture catch-> " + e.toString());
                         e.printStackTrace();
                     }
                     final String thisUuid = uuid;
@@ -2045,6 +2068,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     Thread.sleep(600);
                 } catch (InterruptedException e) {
+                    DLLog.e(TAG, "takePicture1 catch-> " + e.toString());
                     e.printStackTrace();
                 }
                 mCamerarelease = false;
@@ -2457,6 +2481,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     sleep(1000);
                 } catch (Exception e) {
+                    DLLog.e(TAG, "startCancelCall catch-> " + e.toString());
                 }
                 sendMainMessager(MSG_CANCEL_CALL, "");
                 if (faceHandler != null) {
@@ -2465,6 +2490,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     sleep(1000);
                 } catch (Exception e) {
+                    DLLog.e(TAG, "startCancelCall catch-> " + e.toString());
                 }
                 toast("您已经取消拨号");
                 resetDial();
@@ -3079,20 +3105,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.v("人脸识别", "initFaceDetect-->" + 111);
-                boolean b = ArcsoftManager.getInstance().mFaceDB.loadFaces();
-                int a = 0;
-                if (b) {
-                    List<FaceRegist> mResgist = ArcsoftManager.getInstance().mFaceDB.mRegister;
-                    if (null != mResgist && mResgist.size() > 0) {
-                        for (FaceRegist regist : mResgist) {
-                            int size = regist.mFaceList.size();
-                            a = a + size;
-                        }
-                    }
-                    Log.e("人脸识别", "人脸个数 " + a);
-                    DLLog.e("人脸识别", "人脸个数 " + a);
-                }
+//                Log.v("人脸识别", "initFaceDetect-->" + 111);
+//                boolean b = ArcsoftManager.getInstance().mFaceDB.loadFaces();
+//                int a = 0;
+//                if (b) {
+//                    List<FaceRegist> mResgist = ArcsoftManager.getInstance().mFaceDB.mRegister;
+//                    if (null != mResgist && mResgist.size() > 0) {
+//                        for (FaceRegist regist : mResgist) {
+//                            int size = regist.mFaceList.size();
+//                            a = a + size;
+//                        }
+//                    }
+//                    Log.e("人脸识别", "人脸个数 " + a);
+//                    DLLog.e("人脸识别", "人脸个数 " + a);
+//                }
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -3793,6 +3819,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 serviceMessage.send(message);
             } catch (RemoteException e) {
+                DLLog.e(TAG, "onAccountReceived catch-> " + e.toString());
                 e.printStackTrace();
             }
         } else {//正在录卡状态（卡信息用于录入）
@@ -3832,5 +3859,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
             }
         }
+    }
+
+    private void displayBriefMemory() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo info = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(info);
+        Log.i(TAG, "系统剩余内存:" + (info.availMem >> 10) / 1024 + "M");
+        Log.i(TAG, "系统是否处于低内存运行：" + info.lowMemory);
+        Log.i(TAG, "当系统剩余内存低于" + (info.threshold) / 1024 + "时就看成低内存运行");
     }
 }
