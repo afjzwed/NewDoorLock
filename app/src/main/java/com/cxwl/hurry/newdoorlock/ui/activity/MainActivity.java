@@ -368,6 +368,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //        displayBriefMemory();
 
+        // TODO: 2018/9/1 在不重要的工作线程设置低于UI线程的优先级 Process.setThreadPriority(THREAD_PRIORITY_BACKGROUND);
     }
 
     //测试自动关广告
@@ -1304,6 +1305,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 1000);
             }
             sendMainMessager(MainService.REGISTER_ACTIVITY_DIAL, null);//开始心跳包
+
+//            Log.e(TAG, "登录以后");
         }
     }
 
@@ -1924,6 +1927,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 输入密码 无操作 停止自动跳转到输入房号的状态的线程
      */
     protected void stopPasswordTimeoutChecking() {
+        // TODO: 2018/9/1 此处线程终止的方法有风险，可用标志位或其他方法代替
         if (passwordTimeoutThread != null) {
             passwordTimeoutThread.interrupt();
             passwordTimeoutThread = null;
@@ -2539,6 +2543,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
+//        if (blockNo.equals(("9992")) || blockNo.equals("99999992")) {
+//            Intent intent = new Intent(Settings.ACTION_SETTINGS);//跳轉到系統設置
+//            intent.putExtra("back", true);
+//            startActivityForResult(intent, INPUT_SYSTEMSET_REQUESTCODE);
+//            return;
+//        }
+
         //呼叫前，确认摄像头不被占用 虹软
         if (faceHandler != null) {
             faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_PAUSE, 0);
@@ -2906,7 +2917,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
     /****************************点击事件相关start**************************************/
-    /****************************点击事件相关start**************************************/
 
     @Override
     public void onClick(View view) {
@@ -2968,14 +2978,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         break;
                     case R.id.action_settings3://上传日志
                         Log.e(TAG, "menu 上传日志");
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                //测试奔溃重启
-                                showMacText.setVisibility(View.VISIBLE);
-                                showMacText.setText("sdfsdf");
-                            }
-                        }).start();
+//                        new Thread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                //测试奔溃重启
+//                                showMacText.setVisibility(View.VISIBLE);
+//                                showMacText.setText("sdfsdf");
+//                            }
+//                        }).start();
                         break;
                     case R.id.action_settings7: {//重启
                         Log.e(TAG, "menu 重启");
@@ -3119,6 +3129,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                    Log.e("人脸识别", "人脸个数 " + a);
 //                    DLLog.e("人脸识别", "人脸个数 " + a);
 //                }
+                ArcsoftManager.getInstance().mFaceDB.loadFaces();
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -3810,7 +3821,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //这里接收到刷卡后获得的卡ID
         cardId = account;
-//        DLLog.d(TAG, "onAccountReceived 卡信息 account " + account + " cardId " + cardId);
 //        Log.e(TAG, "onAccountReceived 卡信息 account " + account + " cardId " + cardId);
         if (!nfcFlag) {//非录卡状态（卡信息用于开门）
             Message message = Message.obtain();

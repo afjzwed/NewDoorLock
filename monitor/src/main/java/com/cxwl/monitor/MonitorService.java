@@ -62,22 +62,6 @@ public class MonitorService extends JobService {
         }
     };
 
-    private Runnable reBoot = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                showMsg("重启设备" + count);
-                Intent intent1 = new Intent(Intent.ACTION_REBOOT);
-                intent1.putExtra("nowait", 1);
-                intent1.putExtra("interval", 1);
-                intent1.putExtra("window", 0);
-                sendBroadcast(intent1);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -96,39 +80,6 @@ public class MonitorService extends JobService {
             activityTimer = null;
         }
         activityTimer = new Timer();
-//        activityTimer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                if (activityManager == null) {
-//                    activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-//                }
-//                ComponentName cn = activityManager.getRunningTasks(1).get(0).topActivity;
-//                if (count == 20) {
-//                    showMsg("未打开锁相门禁 重启设备");
-//                    Intent intent1 = new Intent(Intent.ACTION_REBOOT);
-//                    intent1.putExtra("nowait", 1);
-//                    intent1.putExtra("interval", 1);
-//                    intent1.putExtra("window", 0);
-//                    sendBroadcast(intent1);
-//                } else {
-//                    if (!cn.getPackageName().equals(PACKAGE_NAME)) {
-//                        showMsg("未打开锁相门禁" + count);
-//                        count++;
-//                        if (!isPullTime) {
-//                            showMsg("倒计时进入锁相门禁：15s");
-//                            mHandler.postDelayed(startMain, 15 * 1000);
-//                            isPullTime = true;
-//                        }
-//                    } else {
-//                        count = 0;
-//                        showMsg("已经打开锁相门禁"+ count);
-//                        mHandler.removeCallbacks(startMain);
-//                        isPullTime = false;
-//                    }
-//                }
-//            }
-//        }, 0, 2 * 1000);
-
         activityTimer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -136,28 +87,17 @@ public class MonitorService extends JobService {
                     activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
                 }
                 ComponentName cn = activityManager.getRunningTasks(1).get(0).topActivity;
-                if (count == 30) {
-                    showMsg("未打开锁相门禁 重启设备");
-                    Intent intent1 = new Intent(Intent.ACTION_REBOOT);
-                    intent1.putExtra("nowait", 1);
-                    intent1.putExtra("interval", 1);
-                    intent1.putExtra("window", 0);
-                    sendBroadcast(intent1);
-                } else {
-                    if (!cn.getPackageName().equals(PACKAGE_NAME)) {
-                        showMsg("未打开锁相门禁" + count);
-                        count++;
-                        if (!isPullTime) {
-                            showMsg("倒计时重启：30s");
-                            mHandler.postDelayed(reBoot, 30 * 1000);
-                            isPullTime = true;
-                        }
-                    } else {
-                        count = 0;
-                        showMsg("已经打开锁相门禁"+ count);
-                        mHandler.removeCallbacks(reBoot);
-                        isPullTime = false;
+                if (!cn.getPackageName().equals(PACKAGE_NAME)) {
+                    showMsg("未打开门禁" + count);
+                    if (!isPullTime) {
+                        showMsg("倒计时进入门禁：15s");
+                        mHandler.postDelayed(startMain, 15 * 1000);
+                        isPullTime = true;
                     }
+                } else {
+                    showMsg("已经打开门禁" + count);
+                    mHandler.removeCallbacks(startMain);
+                    isPullTime = false;
                 }
             }
         }, 0, 2 * 1000);
@@ -184,9 +124,9 @@ public class MonitorService extends JobService {
 //        boolean isLocalServiceWork = isServiceWork(this, "com.example.myapplication.service.MyJobService");
         boolean isRemoteServiceWork = isServiceWork(this, "com.cxwl.monitor.MonitorService");
 //        if(!isLocalServiceWork||!isRemoteServiceWork){
-        if(!isRemoteServiceWork){
+        if (!isRemoteServiceWork) {
 //            this.startService(new Intent(this,MyJobService.class));
-            this.startService(new Intent(this,MonitorService.class));
+            this.startService(new Intent(this, MonitorService.class));
 //            Toast.makeText(this, "进程启动", Toast.LENGTH_SHORT).show();
         }
         return true;
@@ -210,11 +150,11 @@ public class MonitorService extends JobService {
     //将任务作业发送到作业调度中去
     public void scheduleJob(JobInfo t) {
         Log.i("Monitor_", "调度job");
-        JobScheduler tm =(JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        JobScheduler tm = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
         tm.schedule(t);
     }
 
-    public JobInfo getJobInfo(){
+    public JobInfo getJobInfo() {
         JobInfo.Builder builder = new JobInfo.Builder(kJobId++, new ComponentName(this, MonitorService.class));
         builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
         builder.setPersisted(true);

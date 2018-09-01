@@ -184,25 +184,4 @@ public class DLLog {
         now.set(Calendar.DATE, now.get(Calendar.DATE) - 1);
         return now.getTime();
     }
-
-    public static File upLoadFile1() {
-        String needDelFiel = logfile.format(getDateBefore2());
-        File file = new File(LOG_PATH_SDCARD_DIR, needDelFiel + LOGFILENAME);
-        if (null != file && file.exists()) {
-            return file;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * 得到现在时间的日期，用来得到需要的日志文件名
-     */
-    private static Date getDateBefore2() {
-        Date nowtime = new Date();
-        Calendar now = Calendar.getInstance();
-        now.setTime(nowtime);
-        now.set(Calendar.DATE, now.get(Calendar.DATE));
-        return now.getTime();
-    }
 }

@@ -82,7 +82,7 @@ public class DbUtils {
     public void quaryAllKa() {
         List<Ka> list = mKaDao.queryBuilder().list();
         if (list != null) {
-            DLLog.d(TAG,"卡条数 " + list.size());
+//            DLLog.d(TAG,"卡条数 " + list.size());
             Log.i(TAG, "查询所有卡信息成功" + " 卡个数" + list.size() + "  " + list.toString());
         }
 

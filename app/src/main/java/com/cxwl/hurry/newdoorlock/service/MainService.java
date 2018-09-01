@@ -331,7 +331,7 @@ public class MainService extends Service {
      * 离线统计信息上传
      */
     private void lixianTongji() {
-            Runnable run = new Runnable() {
+        Runnable run = new Runnable() {
             @Override
             public void run() {
                 try {
@@ -595,7 +595,7 @@ public class MainService extends Service {
                     }
                 } catch (InterruptedException e) {
                     Constant.RESTART_PHONE_OR_AUDIO = 1;
-                    DLLog.e(TAG,"心跳开启错误 "+e.toString());
+                    DLLog.e(TAG, "心跳开启错误 " + e.toString());
                 }
             }
         };
@@ -676,7 +676,7 @@ public class MainService extends Service {
 
         } catch (Exception e) {
             Constant.RESTART_PHONE_OR_AUDIO = 1;
-            DLLog.e(TAG,"验证密码接口 catch-> "+e.toString());
+            DLLog.e(TAG, "验证密码接口 catch-> " + e.toString());
             Message message = mHandler.obtainMessage();
             message.what = MSG_GUEST_PASSWORD_CHECK;
             mHandler.sendMessage(message);
@@ -925,7 +925,7 @@ public class MainService extends Service {
         try {
             Calendar calendar = Calendar.getInstance();
             int hour = calendar.get(Calendar.HOUR_OF_DAY);
-            Log.e(TAG, "心跳 当前小时 " + hour);
+//            Log.e(TAG, "心跳 当前小时 " + hour);
             if (hour == 1) {
                 Constant.UPLOAD_LOG = true;
             } else if (hour == 2) {//每晚凌晨2点时进行一次日志上传
@@ -933,7 +933,6 @@ public class MainService extends Service {
                     sendMessageToMainAcitivity(MSG_UPLOAD_LOG, null);
                 }
             }
-
             if (hour == 3) {
                 RESTART_PHONE = true;
             } else if (hour == 4) {//每晚凌晨4点时进行一次设备的重启
@@ -942,8 +941,6 @@ public class MainService extends Service {
                     DLLog.delFile();//删除本地日志
                     sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
                 }
-            } else {
-                Log.e(TAG, "心跳 当前小时1 ");
             }
             calendar = null;
 
@@ -1014,10 +1011,10 @@ public class MainService extends Service {
         try {
             method = Class.forName("android.app.ActivityManager").getMethod("forceStopPackage", String.class);
         } catch (NoSuchMethodException e) {
-            DLLog.e(TAG,"NoSuchMethodException catch-> "+e.toString());
+            DLLog.e(TAG, "NoSuchMethodException catch-> " + e.toString());
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            DLLog.e(TAG,"NoSuchMethodException catch-> "+e.toString());
+            DLLog.e(TAG, "NoSuchMethodException catch-> " + e.toString());
             e.printStackTrace();
         }
 
@@ -1055,10 +1052,10 @@ public class MainService extends Service {
                                     //利用反射调用forceStopPackage来结束进程
                                     method.invoke(am, pkgList[j]);
                                 } catch (IllegalAccessException e) {
-                                    DLLog.e(TAG,"IllegalAccessException catch-> "+e.toString());
+                                    DLLog.e(TAG, "IllegalAccessException catch-> " + e.toString());
                                     e.printStackTrace();
                                 } catch (InvocationTargetException e) {
-                                    DLLog.e(TAG,"IllegalAccessException catch-> "+e.toString());
+                                    DLLog.e(TAG, "IllegalAccessException catch-> " + e.toString());
                                     e.printStackTrace();
                                 }
                             } else {
@@ -1131,7 +1128,7 @@ public class MainService extends Service {
                             adpicInfoStatus = 0;
                             syncCallBack("3", v);
                         } catch (Exception e) {
-                            DLLog.e(TAG,"广告图片接口 catch-> "+e.toString());
+                            DLLog.e(TAG, "广告图片接口 catch-> " + e.toString());
                             e.printStackTrace();
                         }
 
@@ -1236,7 +1233,7 @@ public class MainService extends Service {
                 }
             });
         } catch (Exception e) {
-            DLLog.e(TAG,"getVersionInfo catch-> "+e.toString());
+            DLLog.e(TAG, "getVersionInfo catch-> " + e.toString());
             HttpApi.e("connectReportInfo()->服务器数据解析异常");
             e.printStackTrace();
             lastVersionStatus = "L";//等待下次心跳重新获取URL
@@ -1452,7 +1449,7 @@ public class MainService extends Service {
                 }
             });
         } catch (Exception e) {
-            DLLog.e(TAG,"getFaceUrlInfo catch-> "+e.toString());
+            DLLog.e(TAG, "getFaceUrlInfo catch-> " + e.toString());
             HttpApi.e("人脸URL getClientInfo()->服务器数据解析异常");
             e.printStackTrace();
             faceStatus = 0;//等待下载数据
@@ -1965,7 +1962,7 @@ public class MainService extends Service {
                     }
                 });
             } catch (Exception e) {
-                DLLog.e(TAG,"getCardInfo catch-> "+e.toString());
+                DLLog.e(TAG, "getCardInfo catch-> " + e.toString());
                 Log.e(TAG, "catch 卡信息接口getCardInfo  Exception" + e.toString());
                 e.printStackTrace();
                 cardInfoStatus = 0;//等待下载数据
@@ -2083,7 +2080,7 @@ public class MainService extends Service {
 
     protected void init() {
 
-        initMonitor();
+//        initMonitor();
         //xiaozd add
         if (netWorkstate) {
             initWhenConnected(); //开始在线版本
@@ -2197,7 +2194,7 @@ public class MainService extends Service {
             try {
                 initClientInfo();
             } catch (Exception e) {
-                DLLog.e(TAG,"initWhenConnected catch-> "+e.toString());
+                DLLog.e(TAG, "initWhenConnected catch-> " + e.toString());
                 Log.v("MainService", "onDeviceStateChanged,result=" + e.getMessage());
             }
         }
@@ -2218,7 +2215,7 @@ public class MainService extends Service {
                 //startDialActivity(false);  //xiaozd add
                 //rtcConnectTimeout();
             } catch (Exception e) {
-                DLLog.e(TAG,"initWhenOffline catch-> "+e.toString());
+                DLLog.e(TAG, "initWhenOffline catch-> " + e.toString());
                 e.printStackTrace();
                 Log.v("MainService", "onDeviceStateChanged,result=" + e.getMessage());
             }
@@ -2255,7 +2252,7 @@ public class MainService extends Service {
                         }
                     } while (!result);
                 } catch (Exception e) {
-                    DLLog.e(TAG,"initClientInfo catch-> "+e.toString());
+                    DLLog.e(TAG, "initClientInfo catch-> " + e.toString());
                 }
             }
         }.start();
@@ -2447,7 +2444,7 @@ public class MainService extends Service {
                 }
             } catch (JSONException e) {
                 // TODO Auto-generated catch block
-                DLLog.e(TAG,"onResponseGetToken 获取token失败 catch-> "+e.toString());
+                DLLog.e(TAG, "onResponseGetToken 获取token失败 catch-> " + e.toString());
                 e.printStackTrace();
                 Log.e(TAG, "获取token失败 [status:" + e.getMessage() + "]");
             }
@@ -2470,7 +2467,7 @@ public class MainService extends Service {
                 //登陆
                 Log.i(TAG, " 设置监听 deviceListener   ");
             } catch (JSONException e) {
-                DLLog.e(TAG,"登陆rtc失败 catch-> "+e.toString());
+                DLLog.e(TAG, "登陆rtc失败 catch-> " + e.toString());
                 Log.i(TAG, "登陆rtc失败   e:" + e.toString());
                 e.printStackTrace();
             }
@@ -2569,7 +2566,7 @@ public class MainService extends Service {
                 message.what = MSG_RTC_NEWCALL;
                 mainMessage.send(message);
             } catch (RemoteException e) {
-                DLLog.e(TAG,"onNewCall  catch-> "+e.toString());
+                DLLog.e(TAG, "onNewCall  catch-> " + e.toString());
                 e.printStackTrace();
             }
         }
@@ -2859,7 +2856,7 @@ public class MainService extends Service {
                         }
                     }
                 } catch (InterruptedException e) {
-                    DLLog.e(TAG,"启动是否超时线程  catch-> "+e.toString());
+                    DLLog.e(TAG, "启动是否超时线程  catch-> " + e.toString());
                 }
                 timeoutCheckThread = null;
             }
@@ -2900,7 +2897,7 @@ public class MainService extends Service {
                 Log.v("MainService", "无其他在线设备" + acceptMember);
             }
         } catch (Exception e) {
-            DLLog.e(TAG,"cancelOtherMembers  catch-> "+e.toString());
+            DLLog.e(TAG, "cancelOtherMembers  catch-> " + e.toString());
             e.printStackTrace();
             Log.v("MainService", "取消失败--" + acceptMember);
         }
@@ -2935,7 +2932,7 @@ public class MainService extends Service {
                 }
             }
         } catch (JSONException e) {
-            DLLog.e(TAG,"发送图片消息  catch-> "+e.toString());
+            DLLog.e(TAG, "发送图片消息  catch-> " + e.toString());
         }
     }
 
@@ -3082,7 +3079,7 @@ public class MainService extends Service {
                 }
             }
         } catch (Exception e) {
-            DLLog.e(TAG,"synchronized void onCallMember  catch-> "+e.toString());
+            DLLog.e(TAG, "synchronized void onCallMember  catch-> " + e.toString());
             e.printStackTrace();
         }
     }
@@ -3154,7 +3151,7 @@ public class MainService extends Service {
             try {
                 mainMessage.send(message);
             } catch (RemoteException e) {
-                DLLog.e(TAG,"sendMessageToMainAcitivity catch-> "+e.toString());
+                DLLog.e(TAG, "sendMessageToMainAcitivity catch-> " + e.toString());
                 e.printStackTrace();
             }
         }
@@ -3275,7 +3272,7 @@ public class MainService extends Service {
                 Log.v("MainService", "onCard====当前时间：" + System.currentTimeMillis() + "卡过期时间：" + kaInfo.getGuoqi_time
                         () + "是否失效  》0表示失效" + (System.currentTimeMillis() - Long.parseLong(kaInfo.getGuoqi_time())));
 //                Log.i(TAG, "刷卡开门成功" + card);
-                DLLog.d("刷卡开门", " 状态值 " + DeviceConfig.PRINTSCREEN_STATE);
+//                DLLog.d("刷卡开门", " 状态值 " + DeviceConfig.PRINTSCREEN_STATE);
                 //开始截图
                 if (DeviceConfig.PRINTSCREEN_STATE == 0) {
 //                    DLLog.d("刷卡开门", "刷卡开门成功" + card);
@@ -3319,15 +3316,12 @@ public class MainService extends Service {
     }
 
     protected void openLock(int type) {
-        if (type == 1) {
-            DLLog.d("刷卡开门", "操作继电器");
-        }
         int result = DoorLock.getInstance().openLock();
         Log.e(TAG, "继电器节点 result " + result);
         if (result != -1) {
-            if (type == 1) {
-                DLLog.d("刷卡开门", "继电器节点操作成功");
-            }
+//            if (type == 1) {
+//            }
+            DLLog.d("刷卡开门", "继电器节点操作成功" + type);
             sendMessageToMainAcitivity(MSG_LOCK_OPENED, type);//开锁
             SoundPoolUtil.getSoundPoolUtil().loadVoice(getBaseContext(), 011111);
             countDownTimer.cancel();

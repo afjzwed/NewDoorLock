@@ -95,9 +95,8 @@ public class MainApplication extends Application implements Thread.UncaughtExcep
         Intent intent = getBaseContext().getPackageManager()
                 .getLaunchIntentForPackage(getBaseContext().getPackageName());
 
-        PendingIntent restartIntent = PendingIntent.getActivity(
-                getApplicationContext(),
-                0, intent, PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent restartIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent
+                .FLAG_ONE_SHOT);
 
         // 退出程序
         AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
