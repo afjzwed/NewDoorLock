@@ -312,7 +312,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
             public boolean onError(MediaPlayer mp, int what, int extra) {
                 Log.d("AdvertiseHandler", "多媒体报错" + what + " extra " + extra);
                 DLLog.d("AdvertiseHandler", "多媒体死亡 " + what + " extra " + extra);
-//                imageView.setVisibility(View.VISIBLE);
+                imageView.setVisibility(View.VISIBLE);
                 if (what != 100) {
                     Constant.RESTART_PHONE_OR_AUDIO = 1;
                 }

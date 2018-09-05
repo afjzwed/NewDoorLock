@@ -41,6 +41,7 @@ public class DeviceConfig {
 
     public static final String Lockaxial_Monitor_PackageName = "com.cxwl.monitor";
     public static final String Lockaxial_Monitor_SERVICE = "com.cxwl.monitor.MonitorService";
+    public static final String PackageName = "com.cxwl.hurry.newdoorlock";
 
     public static final String SD_PATH = "CXWL/Monitor";
 

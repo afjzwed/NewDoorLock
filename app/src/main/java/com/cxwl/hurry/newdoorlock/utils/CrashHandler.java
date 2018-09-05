@@ -115,9 +115,9 @@ public class CrashHandler {
                         }
                         Toast.makeText(mContext, "程序异常...", Toast.LENGTH_SHORT).show();
 //                        //收集设备信息
-                        collectCrashDeviceInfo(mContext);
+//                        collectCrashDeviceInfo(mContext);
 //                        //保存错误报告文件
-                        saveCrashInfoToFile(e);
+//                        saveCrashInfoToFile(e);
 //                        //发送错误报告到服务器
 //                        sendCrashReportsToServer(mContext);
                     }
@@ -155,18 +155,18 @@ public class CrashHandler {
         String result = info.toString();
         printWriter.close();
 
-/*        SPUtils spUtils = SPUtils.getInstance(mContext);
-        params.put("userId", spUtils.getString(SPUtils.USER_ID, ""));
-        params.put("phone", spUtils.getString(SPUtils.USER_PHONE, ""));
-        params.put("loginfo", result);
-        params.put("deviceType", "设备品牌:".concat(Build.BRAND).concat("\n").
-                concat("设备型号:").concat(Build.MODEL).concat("\n").
-                concat("设备版本号:").concat(Build.ID).concat("\n").
-                concat("系统版本:").concat(Build.VERSION.RELEASE).concat("\n").
-                concat("SDK版本:").concat(String.valueOf(Build.VERSION.SDK_INT)));
-        params.put("appType", "android");
-        params.put("systemVersion", BuildConfig.VERSION_NAME);
-        Logger.e("Guke", "params:" + String.valueOf(new JSONObject(params)));*/
+//        SPUtils spUtils = SPUtils.getInstance(mContext);
+//        params.put("userId", spUtils.getString(SPUtils.USER_ID, ""));
+//        params.put("phone", spUtils.getString(SPUtils.USER_PHONE, ""));
+//        params.put("loginfo", result);
+//        params.put("deviceType", "设备品牌:".concat(Build.BRAND).concat("\n").
+//                concat("设备型号:").concat(Build.MODEL).concat("\n").
+//                concat("设备版本号:").concat(Build.ID).concat("\n").
+//                concat("系统版本:").concat(Build.VERSION.RELEASE).concat("\n").
+//                concat("SDK版本:").concat(String.valueOf(Build.VERSION.SDK_INT)));
+//        params.put("appType", "android");
+//        params.put("systemVersion", BuildConfig.VERSION_NAME);
+//        Logger.e("Guke", "params:" + String.valueOf(new JSONObject(params)));
         try {
             // TODO: 2018/8/3 需要完善尾址
 //            new NetUtils(mContext, new NetUtils.NetRequestCallBack() {

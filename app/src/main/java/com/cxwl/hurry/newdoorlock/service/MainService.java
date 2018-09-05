@@ -923,30 +923,31 @@ public class MainService extends Service {
 
 
         try {
-            Calendar calendar = Calendar.getInstance();
-            int hour = calendar.get(Calendar.HOUR_OF_DAY);
-//            Log.e(TAG, "心跳 当前小时 " + hour);
-            if (hour == 1) {
-                Constant.UPLOAD_LOG = true;
-            } else if (hour == 2) {//每晚凌晨2点时进行一次日志上传
-                if (Constant.UPLOAD_LOG == true) {
-                    sendMessageToMainAcitivity(MSG_UPLOAD_LOG, null);
-                }
-            }
-            if (hour == 3) {
-                RESTART_PHONE = true;
-            } else if (hour == 4) {//每晚凌晨4点时进行一次设备的重启
-                if (RESTART_PHONE == true) {
-                    Constant.RESTART_AUDIO = false;
-                    DLLog.delFile();//删除本地日志
-                    sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
-                }
-            }
-            calendar = null;
+//            Calendar calendar = Calendar.getInstance();
+//            int hour = calendar.get(Calendar.HOUR_OF_DAY);
+////            Log.e(TAG, "心跳 当前小时 " + hour);
+//            if (hour == 1) {
+//                Constant.UPLOAD_LOG = true;
+//            } else if (hour == 2) {//每晚凌晨2点时进行一次日志上传
+//                if (Constant.UPLOAD_LOG == true) {
+//                    sendMessageToMainAcitivity(MSG_UPLOAD_LOG, null);
+//                }
+//            }
+
+//            if (hour == 3) {
+//                RESTART_PHONE = true;
+//            } else if (hour == 4) {//每晚凌晨4点时进行一次设备的重启
+//                if (RESTART_PHONE == true) {
+//                    Constant.RESTART_AUDIO = false;
+//                    DLLog.delFile();//删除本地日志
+//                    sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
+//                }
+//            }
+//            calendar = null;
 
             clearMemory();
 
-            if (!isServiceRunning()) {
+            /*if (!isServiceRunning()) {
                 DLLog.e(TAG, "监控服务没启动");
                 Log.e(TAG, "监控服务没启动");
                 try {
@@ -961,15 +962,19 @@ public class MainService extends Service {
                     DLLog.e(TAG, "监控服务开启失败 error " + e.toString());
                     Log.e(TAG, "监控服务没启动 error " + e.toString());
                 }
-            }
+            }*/
 
-            if (Constant.RESTART_AUDIO) {//媒体流是否重启
-                sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
-            }
-
-            if (Constant.RESTART_PHONE_OR_AUDIO == 1) {//设备是否重启
-                onReStartVideo();
-            }
+//            if (Constant.RESTART_AUDIO) {//媒体流是否重启
+//                sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
+//            }
+//
+//            if (Constant.RESTART_PHONE_OR_AUDIO == 1) {//设备是否重启
+//                onReStartVideo();
+//            }
+//
+//            if (Constant.UPLOAD_LOG == true) {
+//                sendMessageToMainAcitivity(MSG_UPLOAD_LOG, null);
+//            }
 
             if (!DeviceConfig.isNfcFlag) {//如果串口库没有开启，在心跳中开启
                 Log.e("串口库", "串口库在心跳中打开");
@@ -1028,10 +1033,10 @@ public class MainService extends Service {
                     int[] myMempid = new int[]{appProcessInfo.pid};
                     Debug.MemoryInfo[] appMem = am.getProcessMemoryInfo(myMempid);
                     int memSize = appMem[0].dalvikPrivateDirty / 1024;
+                    DLLog.w("进程", appProcessInfo.processName + ":" + memSize);
                     if (memSize > 130) {//内存占用超过130M就重启
                         onReStartVideo();
                     }
-                    DLLog.w("进程", appProcessInfo.processName + ":" + memSize);
                 }
 
 //                Log.d("进程", "process name : " + appProcessInfo.processName);
@@ -1044,25 +1049,28 @@ public class MainService extends Service {
                     String[] pkgList = appProcessInfo.pkgList;
                     for (int j = 0; j < pkgList.length; ++j) {//pkgList 得到该进程下运行的包名
                         Log.d("进程", "It will be killed, package name : " + pkgList[j]);
-                        if ("com.cxwl.hurry.doorlock".equals(pkgList[j]) || "com.cxwl.monitor".equals(pkgList[j])) {
-
+                        if ("com.cxwl.hurry.newdoorlock".equals(pkgList[j]) || "com.cxwl.monitor".equals(pkgList[j])) {
+                            Log.d("进程", "不应该在后台 : " + pkgList[j]);
+                            DLLog.d("进程", "不应该在后台 : " + pkgList[j]);
                         } else {
-                            if (null != method) {
-                                try {
-                                    //利用反射调用forceStopPackage来结束进程
-                                    method.invoke(am, pkgList[j]);
-                                } catch (IllegalAccessException e) {
-                                    DLLog.e(TAG, "IllegalAccessException catch-> " + e.toString());
-                                    e.printStackTrace();
-                                } catch (InvocationTargetException e) {
-                                    DLLog.e(TAG, "IllegalAccessException catch-> " + e.toString());
-                                    e.printStackTrace();
-                                }
-                            } else {
-                                am.killBackgroundProcesses(pkgList[j]);
-                            }
+//                            DLLog.d("进程", "It will be killed, package name : " + pkgList[j]);
+//                            am.killBackgroundProcesses(pkgList[j]);
+//                            if (null != method) {
+//                                try {
+//                                    //利用反射调用forceStopPackage来结束进程
+//                                    method.invoke(am, pkgList[j]);
+//                                } catch (IllegalAccessException e) {
+//                                    DLLog.e(TAG, "IllegalAccessException catch-> " + e.toString());
+//                                    e.printStackTrace();
+//                                } catch (InvocationTargetException e) {
+//                                    DLLog.e(TAG, "IllegalAccessException catch-> " + e.toString());
+//                                    e.printStackTrace();
+//                                }
+//                            } else {
+//                                am.killBackgroundProcesses(pkgList[j]);
+//                            }
                         }
-                        count++;
+//                        count++;
                     }
                 }
             }

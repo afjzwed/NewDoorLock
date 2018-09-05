@@ -21,7 +21,6 @@ import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.Debug;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -1364,7 +1363,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             String cmd = "date -s '[_update_time]'";
                             String time = d.format(c.getTime());
                             cmd = cmd.replace("[_update_time]", time);
-                            // TODO: 2018/5/9 这里的校时要用到工控相关hwservice,暂时不注释,之后解决
+                            // TODO: 2018/5/9 这里的校时要用到工控相关hwservice,暂时不注释,之后解决要重写
                             // TODO: 2018/5/23 昊睿要重写
                             HttpApi.e("走了吗" + cmd.toString());
 //                            if (hwservice==null){
@@ -2543,12 +2542,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-//        if (blockNo.equals(("9992")) || blockNo.equals("99999992")) {
-//            Intent intent = new Intent(Settings.ACTION_SETTINGS);//跳轉到系統設置
-//            intent.putExtra("back", true);
-//            startActivityForResult(intent, INPUT_SYSTEMSET_REQUESTCODE);
-//            return;
-//        }
+        if (blockNo.equals(("9992")) || blockNo.equals("99999992")) {
+            Constant.UPLOAD_LOG = true;
+            return;
+        }
 
         //呼叫前，确认摄像头不被占用 虹软
         if (faceHandler != null) {
@@ -2916,6 +2913,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     };
+
     /****************************点击事件相关start**************************************/
 
     @Override
@@ -3253,6 +3251,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mCamera.autoFocus(null);
 //            Log.v(TAG, "SIZE:" + mWidth + "x" + mHeight);//与设置值一样
         }
+
         return mCamera;
     }
 
@@ -3316,7 +3315,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 picData = data.clone();//保存图像数据
             }
         }
-
 
         //保存人脸框数组
         Rect[] rects = new Rect[result.size()];
@@ -3460,7 +3458,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
 
-//            if (DeviceConfig.PRINTSCREEN_STATE == 0) {//开启截图、上传图片、开门、上传日志流程
+//            if (DeviceConfig.PRINTSCREEN_STATE == 0) {//开启截图、上传图片、开门、up流程
             if (mImageNV21 != null && identification) {//摄像头检测到人脸信息且处于人脸识别状态
 //                    DLLog.e("人脸识别", "开始");
 //                        long time = System.currentTimeMillis();
@@ -3879,4 +3877,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.i(TAG, "系统是否处于低内存运行：" + info.lowMemory);
         Log.i(TAG, "当系统剩余内存低于" + (info.threshold) / 1024 + "时就看成低内存运行");
     }
+
+//    @Override
+//    public void onBackPressed() {
+////        super.onBackPressed();
+//    }
 }
