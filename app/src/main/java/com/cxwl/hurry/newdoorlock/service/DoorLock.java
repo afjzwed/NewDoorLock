@@ -36,7 +36,7 @@ public class DoorLock {
             mServiceInstance = this;
         }
         this.accountCallback = accountCallback;
-//        initSerial();
+        initSerial();
     }
 
     public void initSerial() {
