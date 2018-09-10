@@ -64,13 +64,13 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 0x01:
-                    Log.i("xiao_", "检测SurfaceView是否被创建");
+                    Log.i("AdvertiseHandler", "检测SurfaceView是否被创建");
                     if (surfaceViewCreate) {
-                        Log.i("xiao_", "检测到SurfaceView已经被创建");
+                        Log.i("AdvertiseHandler", "检测到SurfaceView已经被创建");
                         mHandler.removeMessages(0x01);
                         handlerStart((AdverErrorCallBack) msg.obj);
                     } else {
-                        Log.i("xiao_", "检测到SurfaceView未被创建，延时200ms");
+                        Log.i("AdvertiseHandler", "检测到SurfaceView未被创建，延时200ms");
                         DLLog.e("AdvertiseHandler", "检测到SurfaceView未被创建，延时200ms");
                         sendHandlerMessage(0x01, msg.obj, 200);
                     }
@@ -108,7 +108,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         //创建
-        Log.i("xiao_", "SurfaceView 创建成功");
+        Log.i("AdvertiseHandler", "SurfaceView 创建成功");
         surfaceViewCreate = true;
         //必须在surface创建后才能初始化MediaPlayer,否则不会显示图像
         //startMediaPlay(mediaPlayerSource);
@@ -120,7 +120,7 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         //销毁
-        Log.i("xiao_", "SurfaceView 销毁成功");
+        Log.i("AdvertiseHandler", "SurfaceView 销毁成功");
         surfaceViewCreate = false;
     }
 
@@ -185,23 +185,44 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
 
     public void playVideo(GuangGaoBean item) {
         try {
-            Log.e("广告", item.toString());
+            Log.e("AdvertiseHandler广告", item.toString());
             String fileUrls = item.getNeirong();
-
-            String source = HttpUtils.getLocalFileFromUrl(fileUrls);
-            if (source != null) {
-                start_time = "" + System.currentTimeMillis();
-                mTextView.setVisibility(View.VISIBLE);
-                videoView.setVisibility(View.VISIBLE);
-                imageView.setVisibility(View.INVISIBLE);
-                mediaPlayerSource = source;
-                initMediaPlayer();// TODO: 2018/7/13  //这个初始化方法应该放在initData()中
-                startMediaPlay(mediaPlayerSource);
-            } else {
-                Constant.RESTART_PHONE_OR_AUDIO = 1;
-                DLLog.e("AdvertiseHandler", "source为null");
+            if ("defaultVideo".equals(fileUrls)) {
+                String source  = HttpUtils.getLocalAdv(fileUrls);
+                Log.e("AdvertiseHandler广告", "source " + source);
+                if (source != null) {
+                    Log.e("AdvertiseHandler", "开始播放 ");
+                    start_time = "" + System.currentTimeMillis();
+//                    mTextView.setVisibility(View.VISIBLE);
+                    videoView.setVisibility(View.VISIBLE);
+                    imageView.setVisibility(View.VISIBLE);
+//                    videoView.setVisibility(View.VISIBLE);
+//                    imageView.setVisibility(View.INVISIBLE);
+                    mediaPlayerSource = source;
+                    initMediaPlayer();// TODO: 2018/7/13  //这个初始化方法应该放在initData()中
+                    startMediaPlay(mediaPlayerSource);
+                } else {
+                    Constant.RESTART_PHONE_OR_AUDIO = 1;
+                    DLLog.e("AdvertiseHandler", "source为null");
 //                Log.e("广告", "next");
 //                next();
+                }
+            } else {
+                String source  = HttpUtils.getLocalFileFromUrl(fileUrls);
+                if (source != null) {
+                    start_time = "" + System.currentTimeMillis();
+//                    mTextView.setVisibility(View.VISIBLE);
+                    videoView.setVisibility(View.VISIBLE);
+                    imageView.setVisibility(View.INVISIBLE);
+                    mediaPlayerSource = source;
+                    initMediaPlayer();// TODO: 2018/7/13  //这个初始化方法应该放在initData()中
+                    startMediaPlay(mediaPlayerSource);
+                } else {
+                    Constant.RESTART_PHONE_OR_AUDIO = 1;
+                    DLLog.e("AdvertiseHandler", "source为null");
+//                Log.e("广告", "next");
+//                next();
+                }
             }
         } catch (Exception e) {
             Constant.RESTART_PHONE_OR_AUDIO = 1;
@@ -349,8 +370,12 @@ public class AdvertiseHandler implements SurfaceHolder.Callback {
         mAdTongJiBean.setEnd_time(endTime);
         mAdTongJiBean.setAd_id(list.get(listIndex).getId());
         mAdTongJiBean.setMac(MacUtils.getMac());
-        mTongJiBeanList.add(mAdTongJiBean);
-        DbUtils.getInstans().addAllTongji(mTongJiBeanList);
+        if (list.get(listIndex).getId() != -2) {
+            mTongJiBeanList.add(mAdTongJiBean);
+            DbUtils.getInstans().addAllTongji(mTongJiBeanList);
+        } else {
+
+        }
         //  mAdverTongJiCallBack.sendTj(mTongJiBeanList);
         if (Long.parseLong(StringUtils.transferDateToLong(list.get(listIndex).getShixiao_shijian())) < System
                 .currentTimeMillis()) {

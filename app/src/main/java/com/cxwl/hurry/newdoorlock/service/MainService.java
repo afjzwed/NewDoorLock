@@ -75,7 +75,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -89,7 +88,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -152,7 +150,6 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_PIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_TONGJI_VEDIO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPDATE_NETWORKSTATE;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LIXIAN_IMG;
-import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_UPLOAD_LOG;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_OPENLOCK;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_YIJIANKAIMEN_TAKEPIC1;
@@ -162,6 +159,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.RTC_APP_KEY;
 import static com.cxwl.hurry.newdoorlock.config.Constant.SP_LIXIAN_MIMA;
 import static com.cxwl.hurry.newdoorlock.config.Constant.SP_XINTIAO_TIME;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.LOCAL_APK_PATH;
+import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.isdefaultAdv;
 
 
 /**
@@ -852,6 +850,9 @@ public class MainService extends Service {
                                         Log.i(TAG, "心跳中有广告视频信息更新");
                                         getGuanggao(Long.parseLong(banbenBean.getGuanggao()));
                                     }
+                                } else {
+                                    List<GuangGaoBean> guangGaoBeen = new ArrayList<GuangGaoBean>();
+                                    sendMessageToMainAcitivity(MSG_ADVERTISE_REFRESH, guangGaoBeen);
                                 }
                                 //// TODO: 2018/5/17 拿app版本信息 去掉点
                                 if (StringUtils.isNoEmpty(deviceBean.getVersion())) {
@@ -905,6 +906,30 @@ public class MainService extends Service {
 
                                 lixianTongji();//上传离线统计日志
 
+
+                                Calendar calendar = Calendar.getInstance();
+                                int hour = calendar.get(Calendar.HOUR_OF_DAY);
+//            Log.e(TAG, "心跳 当前小时 " + hour);
+//                                if (hour == 1) {
+//                                    Constant.UPLOAD_LOG = true;
+//                                } else if (hour == 2) {//每晚凌晨2点时进行一次日志上传
+//                                    if (Constant.UPLOAD_LOG == true) {
+//                                        sendMessageToMainAcitivity(MSG_UPLOAD_LOG, null);
+//                                    }
+//                                }
+//                                if (hour == 3) {
+//                                    RESTART_PHONE = true;
+//                                } else if (hour == 4) {//每晚凌晨4点时进行一次设备的重启
+//                                    if (RESTART_PHONE == true) {
+//                                        Constant.RESTART_AUDIO = false;
+//                                        DLLog.delFile();//删除本地日志
+//                                        sendMessageToMainAcitivity(MSG_RESTART_VIDEO, null);
+//                                    }
+//                                }
+                                calendar = null;
+
+                                clearMemory();
+
                                 Log.e(TAG, "心跳结束");
                             }
                         } else {
@@ -945,7 +970,7 @@ public class MainService extends Service {
 //            }
 //            calendar = null;
 
-            clearMemory();
+//            clearMemory();
 
             /*if (!isServiceRunning()) {
                 DLLog.e(TAG, "监控服务没启动");
@@ -976,11 +1001,11 @@ public class MainService extends Service {
 //                sendMessageToMainAcitivity(MSG_UPLOAD_LOG, null);
 //            }
 
-            if (!DeviceConfig.isNfcFlag) {//如果串口库没有开启，在心跳中开启
-                Log.e("串口库", "串口库在心跳中打开");
-                DLLog.d("串口库", "串口库在心跳中打开");
-                DoorLock.getInstance().initSerial();
-            }
+//            if (!DeviceConfig.isNfcFlag) {//如果串口库没有开启，在心跳中开启
+//                Log.e("串口库", "串口库在心跳中打开");
+//                DLLog.d("串口库", "串口库在心跳中打开");
+//                DoorLock.getInstance().initSerial();
+//            }
         } catch (Exception e) {
             DLLog.e(TAG, "心跳线程中错误 " + e.toString());
             e.printStackTrace();
@@ -2089,11 +2114,55 @@ public class MainService extends Service {
     protected void init() {
 
 //        initMonitor();
+        initDefaultVideo();
+
         //xiaozd add
         if (netWorkstate) {
             initWhenConnected(); //开始在线版本
         } else {
             initWhenOffline(); //开始离线版本
+        }
+    }
+
+    private void initDefaultVideo() {
+        String advName = "";
+        try {
+            String fileNames[] = getAssets().list("apkadv");
+//            Log.e("目标文件：", "没走？"+fileNames[0]);
+            for (String name : fileNames) {
+                if (name.indexOf("defaultvideo") != -1) {
+                    advName = name;
+                    HttpApi.i("找到目标文件：" + advName);
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            DLLog.e(TAG, "initDefaultVideo catch-> " + e.toString());
+            e.printStackTrace();
+        }
+        if (advName == null || advName.length() <= 0) {
+            return;
+        }
+        File advFile = new File(Environment.getExternalStorageDirectory(), DeviceConfig.LOCAL_ADV_PATH + "/" + advName);
+        if (!advFile.exists()) {
+            HttpApi.i("目标文件不存在：" + advFile.toString() + ",需要从assets拷贝");
+            //文件不存在，需要拷贝
+            FileUtils.getInstance(this).copyAssetsToSD("apkadv", DeviceConfig.LOCAL_ADV_PATH).setFileOperateCallback(new FileUtils.FileOperateCallback() {
+                @Override
+                public void onSuccess() {
+                    //拷贝完成，检测版本信息，设置标志位
+                    HttpApi.i("文件拷贝完成，开始对比版本");
+                    isdefaultAdv = true;
+                }
+
+                @Override
+                public void onFailed(String error) {
+                    isdefaultAdv = false;
+                }
+            });
+        } else {
+            //文件已经存在，检测版本信息，设置标志位
+            isdefaultAdv = true;
         }
     }
 
@@ -2103,7 +2172,7 @@ public class MainService extends Service {
     private void initMonitor() {
         String apkName = "";
         try {
-            String fileNames[] = getAssets().list("apk");
+            String fileNames[] = getAssets().list("apkadv");
             for (String name : fileNames) {
                 if (name.indexOf("monitor") != -1 && name.indexOf(".apk") != -1) {
                     apkName = name;
@@ -2131,7 +2200,7 @@ public class MainService extends Service {
         if (!apkFile.exists()) {
             HttpApi.i("目标文件不存在：" + apkFile.toString() + ",需要从assets拷贝");
             //文件不存在，需要拷贝
-            FileUtils.getInstance(this).copyAssetsToSD("apk", DeviceConfig.SD_PATH).setFileOperateCallback(new FileUtils.FileOperateCallback() {
+            FileUtils.getInstance(this).copyAssetsToSD("apkadv", DeviceConfig.SD_PATH).setFileOperateCallback(new FileUtils.FileOperateCallback() {
                 @Override
                 public void onSuccess() {
                     //拷贝完成，检测版本信息

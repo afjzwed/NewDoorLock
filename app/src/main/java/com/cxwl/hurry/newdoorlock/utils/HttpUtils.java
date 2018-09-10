@@ -45,7 +45,7 @@ public class HttpUtils {
         int lastIndex = url.lastIndexOf("/");
         String fileName = url.substring(lastIndex + 1);
         //// TODO: 2018/5/18 //处理代点的问题
-        if (fileName.contains(".")){
+        if (fileName.contains(".")) {
             fileName = fileName.substring(0, fileName.lastIndexOf("."));
             Log.e("filename .", fileName);
         }
@@ -56,9 +56,9 @@ public class HttpUtils {
                  * 要网络连接成功，需在AndroidMainfest.xml中进行权限配置
                  * <uses-permission android:name="android.permission.INTERNET" />
                  */
-            URL urlObject=new URL(url);
-            Log.i("http","下载广告" + url);
-            HttpURLConnection conn=(HttpURLConnection)urlObject.openConnection();
+            URL urlObject = new URL(url);
+            Log.i("http", "下载广告" + url);
+            HttpURLConnection conn = (HttpURLConnection) urlObject.openConnection();
             //取得inputStream，并将流中的信息写入SDCard
 
                 /*
@@ -149,11 +149,29 @@ public class HttpUtils {
         int lastIndex = url.lastIndexOf("/");
         String fileName = url.substring(lastIndex + 1);
         //去掉后缀名
-        if (fileName.contains(".")){
+        if (fileName.contains(".")) {
             fileName = fileName.substring(0, fileName.lastIndexOf("."));
             Log.e("filename .", fileName);
         }
         return getLocalFile(fileName);
+    }
+
+
+    public static String getLocalAdv(String url) {
+        String SDCard = Environment.getExternalStorageDirectory() + "";
+        String fileString = SDCard + File.separator + DeviceConfig.LOCAL_ADV_PATH + File
+                .separator + "defaultVideo";
+        String result = null;
+        File file = new File(fileString);
+        if (file.exists()) {
+            if (file.isFile()) {
+                result = fileString;
+            }
+        }
+        if (result != null) {
+            Log.e("file", result + file.length());
+        }
+        return result;
     }
 
     public static String getLocalFile(String fileName) {
@@ -167,8 +185,9 @@ public class HttpUtils {
                 result = fileString;
             }
         }
-        if (result!=null){
-        Log.e("file", result+file.length());}
+        if (result != null) {
+            Log.e("file", result + file.length());
+        }
         return result;
     }
 

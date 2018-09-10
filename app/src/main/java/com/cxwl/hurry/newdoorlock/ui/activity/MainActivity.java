@@ -84,6 +84,7 @@ import com.cxwl.hurry.newdoorlock.service.DoorLock;
 import com.cxwl.hurry.newdoorlock.service.MainService;
 import com.cxwl.hurry.newdoorlock.utils.AdvertiseHandler;
 import com.cxwl.hurry.newdoorlock.utils.BitmapUtils;
+import com.cxwl.hurry.newdoorlock.utils.CameraHelperDex;
 import com.cxwl.hurry.newdoorlock.utils.CardRecord;
 import com.cxwl.hurry.newdoorlock.utils.DLLog;
 import com.cxwl.hurry.newdoorlock.utils.DbUtils;
@@ -192,6 +193,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.ft_key;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.DEVICE_KEYCODE_POUND;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.DEVICE_KEYCODE_STAR;
 import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.LOCAL_IMG_PATH;
+import static com.cxwl.hurry.newdoorlock.config.DeviceConfig.isdefaultAdv;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_ETHERNET;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWOKR_TYPE_MOBILE;
 import static com.cxwl.hurry.newdoorlock.utils.NetWorkUtils.NETWORK_TYPE_NONE;
@@ -202,8 +204,7 @@ import static java.lang.Thread.sleep;
  * MainActivity
  * Created by William on 2018/4/26
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, TakePictureCallback,
-        CameraSurfaceView.OnCameraListener, AccountCallback {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, TakePictureCallback, AccountCallback, CameraSurfaceView.OnCameraListener {
 
     private static String TAG = "MainActivity";
     public static final int MSG_RTC_ONVIDEO_IN = 10011;//接收到视频呼叫
@@ -277,7 +278,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private byte[] mImageNV21 = null;//人脸图像数据
     private byte[] picData = null;//刷卡时的图像数据
     private AFT_FSDKFace mAFT_FSDKFace = null;//这个类用来保存检测到的人脸信息
-    private Handler faceHandler;//人脸识别handler
+
     private boolean identification = false;//人脸识别可以开始对比的标识
     private FRAbsLoop mFRAbsLoop = null;//人脸对比线程
     private boolean hasFaceInfo = false;//是否有本地脸数据的标识
@@ -361,6 +362,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //初始化人脸相关与身份证识别
         initFaceDetectAndIDCard();
+//        initFaceDetectAndIDCard1();
         //测试自动关广告
         //  textColseAd();
         isTongGaoThreadStart = false;//每次初始化都重启一次通告更新线程
@@ -1034,8 +1036,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /*************************视频定时播放**********************/
     private List<GuangGaoBean> videoList;
     private List<GuangGaoBean> isPlayingList = new ArrayList<>();
+    private GuangGaoBean defaultVideo = null;
 
     private void startVedioThread() {
+        defaultVideo = new GuangGaoBean();
+        defaultVideo.setBiaoti("defaultVideo");
+        defaultVideo.setCelve("1");
+        defaultVideo.setId(-2);
+        defaultVideo.setKaishi_shijian("2010-06-02 10:17:00.0");
+        defaultVideo.setShixiao_shijian("2050-06-02 10:17:00.0");
+        defaultVideo.setLeixing("1");
+        defaultVideo.setNeirong("defaultVideo");
+
         if (null != videoThread) {
             videoThread.interrupt();
             videoThread = null;
@@ -1106,8 +1118,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
             }
+        } else if (null != defaultVideo && isdefaultAdv) {
+            isPlayingList.clear();
+            isPlayingList.add(defaultVideo);
+            Log.e("AdvertiseHandler广告","30秒");
+            //之前未播放 有新数据播放
+            if (isPlayingList.size() > 0 && advertiseHandler.getList().size() == 0) {
+                Log.e("AdvertiseHandler广告","之前未播放 有新数据播放");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        advertiseHandler.initData(isPlayingList, mainMessage, (currentStatus == ONVIDEO_MODE),
+                                adverErrorCallBack, adverTongJiCallBack);
+                    }
+                });
+                return;
+            }
+            if (isSaveOrUpdate(advertiseHandler.getList(), isPlayingList)) {//正在播放 有新数据更新
+                Log.e("AdvertiseHandler广告","正在播放 有新数据更新");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        advertiseHandler.initData(isPlayingList, mainMessage, (currentStatus == ONVIDEO_MODE),
+                                adverErrorCallBack, adverTongJiCallBack);
+                    }
+                });
+            }
         } else {
-            //没有开始播放的视频
+            //没有开始播放的视频 包括默认视频也没有
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -1135,6 +1173,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
+    /**
+     * 判断是否开始播放视频
+     * @return
+     */
     private boolean isVideoStart() {
         Log.e(TAG, "开始视频广告判断");
         boolean b = false;
@@ -1183,14 +1225,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void setPicInfo() {
         if (isPicStart()) {
-            if (null != picList && picList.size() > 0) {//通告列表有数据
+            if (null != picList && picList.size() > 0) {//广告图片列表有数据
 
                 currentGuangGaoBean = picList.get(picIndex);
                 picIndex++;
                 if (picIndex == picList.size()) {//循环一遍以后，重置游标
                     picIndex = 0;
                 }
-            } else {//通告列表无数据
+            } else {//广告图片列表无数据
                 // 没有图片
                 // currentNoticeBean = defaultNotice;
                 //设置图片信息
@@ -3015,6 +3057,125 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /****************************虹软相关start*********************************************/
 
+    private SurfaceView faceView;
+    private CameraHelperDex cameraHelperDex;
+    //人脸识别handler
+    private Handler faceHandler= new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            Log.v(TAG, "face" + "handleMessage-->" + msg.what + "/" + Thread.currentThread().getName());
+            switch (msg.what) {
+                case MSG_FACE_DETECT_CHECK://门开了以后identification设为false
+                    // ，发送此消息MSG_FACE_DETECT_CHECK
+                    identification = true;
+//                        idOperation =true;
+                    break;
+                case MSG_FACE_DETECT_INPUT://人脸识别录入(拿到网络图片后发出人脸识别暂停，然后发出录入消息)
+                    Log.e(TAG, "人脸识别录入");
+                    faceDetectInput();
+                    break;
+                case MSG_FACE_DETECT_CONTRAST://人脸识别对比
+                    Log.e(TAG, "人脸识别对比");
+                    identification = true;
+                    if (mFRAbsLoop != null) {
+                        Log.e(TAG, "人脸识别对比1");
+                        mFRAbsLoop.resumeThread();
+                    }
+                    if (mSurfaceView.getVisibility() != View.VISIBLE) {
+                        mGLSurfaceView.setVisibility(View.VISIBLE);
+                        mSurfaceView.setVisibility(View.VISIBLE);
+                    }
+//                    if (faceView.getVisibility() != View.VISIBLE) {
+//                        faceView.setVisibility(View.VISIBLE);
+//                    }
+                    break;
+                case MSG_FACE_DETECT_PAUSE://人脸识别暂停
+                    Log.e(TAG, "人脸识别暂停开始照相");
+                    identification = false;
+                    if (mFRAbsLoop != null) {
+                        mFRAbsLoop.pauseThread();
+                    }
+                    if (mSurfaceView.getVisibility() != View.GONE) {
+                        mGLSurfaceView.setVisibility(View.GONE);
+                        mSurfaceView.setVisibility(View.GONE);
+                    }
+//                    if (faceView.getVisibility() != View.GONE) {
+//                        faceView.setVisibility(View.GONE);
+//                    }
+                    break;
+                case MSG_RESTART_VIDEO1:
+                    onReStartVideo();
+                    break;
+                //身份证的都注释
+                case MSG_ID_CARD_DETECT_RESTART:
+//                        idOperation = true;
+//                        if (mIdCardUtil != null) {
+//                            mIdCardUtil.setReading(true);
+//                        }
+                    break;
+                case MSG_ID_CARD_DETECT_PAUSE:
+//                        idOperation = false;
+//                        if (mIdCardUtil != null) {
+//                            mIdCardUtil.setReading(false);
+//                        }
+                    break;
+                case MSG_ID_CARD_DETECT_INPUT:
+//                        inputIDCard((IDCard) msg.obj);
+                    break;
+            }
+            return false;
+        }
+    });
+
+
+    private void initFaceDetectAndIDCard1() {
+       /* faceView = (SurfaceView) findViewById(R.id.camera_faceview);
+        cameraHelperDex = new CameraHelperDex(this, faceView);
+        cameraHelperDex.addCallBack(this);
+        AFT_FSDKError err = engine.AFT_FSDK_InitialFaceEngine(arc_appid, ft_key, AFT_FSDKEngine.AFT_OPF_0_HIGHER_EXT, 16, 5);
+        err = engine.AFT_FSDK_GetVersion(version);
+//        initIDCard();
+        mFRAbsLoop = new FRAbsLoop();
+        mFRAbsLoop.start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+//                Log.v(FACE_TAG, "initFaceDetect-->" + 111);
+                ArcsoftManager.getInstance().mFaceDB.loadFaces();
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (ArcsoftManager.getInstance().mFaceDB.mRegister.isEmpty()) {
+                            return;
+                        }
+                        identification = true;
+                    }
+                });
+
+              *//*  ArcsoftManager.getInstance().mFaceDB.loadFaces();
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+//                        //在子线程给handler发送数据
+//                        faceHandler.sendEmptyMessage(2);
+                        Log.v("人脸识别", "initFaceDetect-->" + 222);
+//                        mProgressDialog.cancel();
+                        if (ArcsoftManager.getInstance().mFaceDB.mRegister.isEmpty()) {
+                            Log.v("人脸识别", "initFaceDetect-->" + 333);
+                            Utils.DisplayToast(MainActivity.this, "没有注册人脸，请先注册");
+                            hasFaceInfo = false;
+                            return;
+                        }
+                        hasFaceInfo = true;//有注册人脸
+                        identification = true;
+                        Utils.DisplayToast(MainActivity.this, "人脸数据加载完成");
+                    }
+                });*//*
+            }
+        }).start();*/
+    }
+
     /**
      * 初始化人脸相关与身份证识别
      */
@@ -3046,65 +3207,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // TODO: 2018/5/11 身份证识别暂时不要  initIDCard();
 
-        faceHandler = new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-                Log.v(TAG, "face" + "handleMessage-->" + msg.what + "/" + Thread.currentThread().getName());
-                switch (msg.what) {
-                    case MSG_FACE_DETECT_CHECK://门开了以后identification设为false
-                        // ，发送此消息MSG_FACE_DETECT_CHECK
-                        identification = true;
-//                        idOperation =true;
-                        break;
-                    case MSG_FACE_DETECT_INPUT://人脸识别录入(拿到网络图片后发出人脸识别暂停，然后发出录入消息)
-                        Log.e(TAG, "人脸识别录入");
-                        faceDetectInput();
-                        break;
-                    case MSG_FACE_DETECT_CONTRAST://人脸识别对比
-                        Log.e(TAG, "人脸识别对比");
-                        identification = true;
-                        if (mFRAbsLoop != null) {
-                            mFRAbsLoop.resumeThread();
-                        }
-                        if (mSurfaceView.getVisibility() != View.VISIBLE) {
-                            mGLSurfaceView.setVisibility(View.VISIBLE);
-                            mSurfaceView.setVisibility(View.VISIBLE);
-                        }
-                        break;
-                    case MSG_FACE_DETECT_PAUSE://人脸识别暂停
-                        Log.e(TAG, "人脸识别暂停开始照相");
-                        identification = false;
-                        if (mFRAbsLoop != null) {
-                            mFRAbsLoop.pauseThread();
-                        }
-                        if (mSurfaceView.getVisibility() != View.GONE) {
-                            mGLSurfaceView.setVisibility(View.GONE);
-                            mSurfaceView.setVisibility(View.GONE);
-                        }
-                        break;
-                    case MSG_RESTART_VIDEO1:
-                        onReStartVideo();
-                        break;
-                    //身份证的都注释
-                    case MSG_ID_CARD_DETECT_RESTART:
-//                        idOperation = true;
-//                        if (mIdCardUtil != null) {
-//                            mIdCardUtil.setReading(true);
-//                        }
-                        break;
-                    case MSG_ID_CARD_DETECT_PAUSE:
-//                        idOperation = false;
-//                        if (mIdCardUtil != null) {
-//                            mIdCardUtil.setReading(false);
-//                        }
-                        break;
-                    case MSG_ID_CARD_DETECT_INPUT:
-//                        inputIDCard((IDCard) msg.obj);
-                        break;
-                }
-                return false;
-            }
-        });
+
 
         mFRAbsLoop = new FRAbsLoop();
         mFRAbsLoop.start();
@@ -3359,6 +3462,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        startActivity(new Intent(MainActivity.this, PhotographActivity.class));
 //        sendMainMessager(MSG_FACE_DOWNLOAD, null);
     }
+
+ /*   List<AFT_FSDKFace> FSDKFaceList = new ArrayList<>();
+    @Override
+    public void onPreviewFrame(byte[] bytes) {
+        if (mImageNV21 == null) {
+            engine.AFT_FSDK_FaceFeatureDetect(bytes, cameraHelperDex.getPrivWidth(), cameraHelperDex.getPrivHeight(),
+                    AFT_FSDKEngine.CP_PAF_NV21, FSDKFaceList);
+            if (!FSDKFaceList.isEmpty()) {
+                mAFT_FSDKFace = FSDKFaceList.get(0).clone();
+                mImageNV21 = bytes.clone();
+                FSDKFaceList.clear();
+            }
+        }
+    }
+
+    @Override
+    public void onTakePic(byte[] bytes) {
+
+    }*/
 
     class FRAbsLoop extends AbsLoop {
 

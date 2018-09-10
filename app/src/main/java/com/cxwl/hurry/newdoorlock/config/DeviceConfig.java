@@ -7,7 +7,7 @@ public class DeviceConfig {
     /********residential*****/
 
     public static final String LOCAL_FILE_PATH = "adv";//广告储存位置
-    public static final String LOCAL_ADV_PATH = "adv";//广告视频储存位置
+    public static final String LOCAL_ADV_PATH = "defaultadv";//默认广告视频储存位置
     public static final String LOCAL_ADP_PATH = "adp";//广告图片储存位置
     public static final String LOCAL_FACE_PATH = "myface";//人脸图片(bin文件)储存位置(下载)
     public static final String LOCAL_APK_PATH = "myapk";//apk文件储存位置
@@ -46,6 +46,7 @@ public class DeviceConfig {
     public static final String SD_PATH = "CXWL/Monitor";
 
     public static boolean isNfcFlag = false;//串口库是否打开的标识（默认失败）
+    public static boolean isdefaultAdv = false;//是否有默认的播放视频
 
     /*******************************/
 
