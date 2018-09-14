@@ -144,6 +144,7 @@ import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_NO_ONLIN
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_SERVER_ERROR;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CALLMEMBER_TIMEOUT;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CANCEL_CALL;
+import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CANCEL_ONVIDEO;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CARD_INCOME;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CARD_OPENLOCK;
 import static com.cxwl.hurry.newdoorlock.config.Constant.MSG_CHECK_PASSWORD;
@@ -264,7 +265,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private UploadManager uploadManager;//七牛上传
 
     private Thread clockRefreshThread = null;
-    private Timer timer = new Timer();
+    private Timer facetimer = new Timer();
+    private Timer rtcTimer = new Timer();
 
     private Thread passwordTimeoutThread = null;//访客密码线程
     private String guestPassword = "";//访客输入的密码值
@@ -726,7 +728,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         break;
                     case MSG_FACE_INFO_FINISH://人脸录入完成，重新开始人脸识别
                         Log.e(TAG, "人脸91");
-                        timer.schedule(new TimerTask() {
+                        facetimer.schedule(new TimerTask() {
                             public void run() {
                                 //execute the task
                                 //删除单个人脸时处理速度可能过快，导致先人脸识别再人脸暂停，所以用定时器控制1秒后再人脸识别，保证在人脸暂停后
@@ -823,9 +825,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         break;
                     case MSG_YIJIANKAIMEN_TAKEPIC1:
-//                        if (faceHandler != null) {
-//                            faceHandler.sendEmptyMessageDelayed(MSG_FACE_DETECT_CONTRAST, 1000);
-//                        }
                         handler.sendEmptyMessage(START_FACE_CHECK);
                         break;
                     case MSG_UPLOAD_LOG://上传日志
@@ -863,10 +862,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             handler.sendEmptyMessageDelayed(START_FACE_CHECK, 200);
                         }
                         break;
+                    case MSG_CANCEL_ONVIDEO:
+                        Log.e(TAG, "定时挂断");
+                        sendMainMessager(MSG_DISCONNECT_VIEDO, "");
+                        break;
                     default:
                         break;
                 }
-
             }
         };
         mainMessage = new Messenger(handler);
@@ -1658,7 +1660,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             int key = convertKeyCode(keyCode);
             Log.i(TAG, "按键key=" + key + "模式currentStatus" + currentStatus);
             if (currentStatus == CALL_MODE || currentStatus == PASSWORD_MODE) {//处于呼叫模式或密码模式
-                // TODO: 2018/5/4 这里的判断得改成输入框是否有值,有值确认键走呼叫或密码,没值走切换模式
                 tv_input_text.setFilters(new InputFilter[]{new InputFilter.LengthFilter(11)});
                 str = tv_input_text.getText().toString();
                 if (keyCode == DEVICE_KEYCODE_POUND) {//确认键
@@ -2022,6 +2023,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //启动广告
         advertiseHandler.start(adverErrorCallBack);
 
+        handler.removeMessages(MSG_CANCEL_ONVIDEO);
+
         videoLayout.setVisibility(View.INVISIBLE);
         setVideoSurfaceVisibility(View.INVISIBLE);
     }
@@ -2034,7 +2037,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void onRtcVideoOn() {
-        setDialValue1("正在和" + blockNo + "视频通话");
+        setDialValue1("正在和" + blockNo + "视频通话，挂断请按取消");
         initVideoViews();
         Log.e(TAG, "开始创建remoteView");
         if (mCamerarelease) {
@@ -2053,6 +2056,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             MainService.callConnection.buildVideo(remoteView);//此处接听过快的会导致崩溃
         }
+        // TODO: 2018/9/14 这里做一个1分钟的定时器，到时间后调用disconnectCallingConnection（）挂断通话
+        Log.e(TAG, "开始定时挂断");
+        handler.sendEmptyMessageDelayed(MSG_CANCEL_ONVIDEO, 1000 * 60);
     }
 
     /**

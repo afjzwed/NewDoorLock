@@ -208,7 +208,6 @@ public class MainService extends Service {
     public static int blockId = 0;//楼栋ID
     public static String communityName = "";//社区名字
     public static String lockName = "";//锁的名字
-    public int inputBlockId = 0;//这个也是楼栋ID，好像可以用来代表社区大门
     public static int lockId = 0;//锁ID
     public String imageUrl = null;//对应呼叫访客图片地址
     public String imageUuid = null;//图片对应的uuid
@@ -235,15 +234,7 @@ public class MainService extends Service {
     private String mac_id; //心跳接口传
     private ActivityManager activityManager;//Activity管理类
     private boolean isPullTime = false;
-    private Timer activityTimer = null;
-    private Runnable startMain = new Runnable() {
-        @Override
-        public void run() {
-            Intent i = new Intent(MainService.this, MainActivity.class);
-            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            MainService.this.startActivity(i);
-        }
-    };
+
     private ThreadPoolExecutor mThreadPoolExecutor;
 
     @Override
@@ -253,9 +244,9 @@ public class MainService extends Service {
 //        MainApplication.getRefWatcher(this).watch(this);
         audioManager = (AudioManager) getSystemService(Service.AUDIO_SERVICE);
         initHandler();
-        // TODO: 2018/5/14 放在MainActivity中  initDB();
+
         initMacKey();
-        //testTJ();
+
         initThreadPool();
         initCountDownTimer();//延时5秒关门定时器初始化
 
@@ -2688,7 +2679,6 @@ public class MainService extends Service {
             Log.e(TAG, "进行开门操作 开门开门");
 
 
-
             //如果点击过快不允许开门，不拍照片不上传日志
             if (StringUtils.isFastClick()) {
                 openLock(2);
@@ -2902,7 +2892,6 @@ public class MainService extends Service {
             rtcClient.enableSpeaker(audioManager, true);
             Log.i(TAG, "onVideo 接通视频通话,并默认为免提");
             sendMessageToMainAcitivity(MSG_RTC_ONVIDEO, "");
-
         }
 
         @Override
