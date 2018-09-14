@@ -11,7 +11,6 @@ import com.cxwl.hurry.newdoorlock.db.DaoMaster;
 import com.cxwl.hurry.newdoorlock.db.DaoSession;
 import com.cxwl.hurry.newdoorlock.face.ArcsoftManager;
 import com.cxwl.hurry.newdoorlock.utils.DLLog;
-import com.squareup.leakcanary.LeakCanary;
 import com.tencent.bugly.crashreport.CrashReport;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.log.LoggerInterceptor;
@@ -42,7 +41,7 @@ public class MainApplication extends Application {
 
         super.onCreate();
 
-        Thread.setDefaultUncaughtExceptionHandler(restartHandler); // 程序崩溃时触发线程
+//        Thread.setDefaultUncaughtExceptionHandler(restartHandler); // 程序崩溃时触发线程
 
         //初始化腾讯buggly
         CrashReport.initCrashReport(this, "4e8a21b88b", true);
@@ -63,7 +62,7 @@ public class MainApplication extends Application {
 //            // You should not init your app in this process.
 //            return;
 //        }
-        LeakCanary.install(this);
+//        LeakCanary.install(this);
     }
 
     public Thread.UncaughtExceptionHandler restartHandler = new Thread.UncaughtExceptionHandler() {

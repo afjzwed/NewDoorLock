@@ -26,7 +26,7 @@ public class DeviceConfig {
     public static int VOLUME_STREAM_VOICE_CALL = 5;//通话音量
     public static int VOLUME_STREAM_RING = 5;//铃声音量
     public static int VOLUME_STREAM_SYSTEM = 5;//系统音量
-    public static boolean KEY_VOL = true;//按键音是否开启
+    public static boolean KEY_VOL = false;//按键音是否开启
 
     public static int MOBILE_NO_LENGTH = 11;//手机号长度
     public static int UNIT_NO_LENGTH = 4;//房屋号长度

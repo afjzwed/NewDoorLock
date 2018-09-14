@@ -16,7 +16,6 @@ public class Constant {
     // (Gender) Key :
 
     //    public static final String PIC_PREFIX = "arcsoft_";//虹软人脸照片文件夹名
-    // TODO: 2018/8/24 几乎所有的人脸识别对比消息发送都可以改成工控的handler.sendEmptyMessage(START_FACE_CHECK);试试可能解决摄像头占用问题
     public static final int MSG_FACE_DETECT_CONTRAST = 11100;//人脸识别对比
     public static final int MSG_FACE_DETECT_INPUT = 11101;//人脸识别录入
     public static final int MSG_FACE_DETECT_PAUSE = 11102;//人脸识别暂停
@@ -32,6 +31,8 @@ public class Constant {
     public static final int MSG_DELETE_FACE = 11109;//删除人脸信息
 
     public static final int MSG_FACE_OPENLOCK = 40000;//人脸开门
+
+    public static final int START_FACE_CHECK = 11113;//人脸对比前的过滤准备流程(释放相机)
 
     public static final float FACE_MAX = 0.63f;
     /********************虹软相关*********************/

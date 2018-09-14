@@ -1445,6 +1445,7 @@ public class MainService extends Service {
                                 new Thread(new Runnable() {//开始人脸数据录入流程
                                     @Override
                                     public void run() {
+                                        Log.e(TAG, "通知MainActivity暂停人脸识别");
                                         removeFaceFiles(0);//下载前先删除之前下载所有文件
                                         operateFaceList(faceUrlList);
                                         deleteFaceList();
@@ -1460,6 +1461,7 @@ public class MainService extends Service {
                                         faceDeleteList.clear();
                                         currentFaceList.clear();
                                         mImageNV21 = null;
+                                        Log.e(TAG, "通知MainActivity开始人脸识别");
                                         sendMessageToMainAcitivity(MSG_FACE_INFO_FINISH, null);//通知MainActivity开始人脸识别
                                     }
                                 }).start();
@@ -2147,7 +2149,8 @@ public class MainService extends Service {
         if (!advFile.exists()) {
             HttpApi.i("目标文件不存在：" + advFile.toString() + ",需要从assets拷贝");
             //文件不存在，需要拷贝
-            FileUtils.getInstance(this).copyAssetsToSD("apkadv", DeviceConfig.LOCAL_ADV_PATH).setFileOperateCallback(new FileUtils.FileOperateCallback() {
+            FileUtils.getInstance(this).copyAssetsToSD("apkadv", DeviceConfig.LOCAL_ADV_PATH).setFileOperateCallback
+                    (new FileUtils.FileOperateCallback() {
                 @Override
                 public void onSuccess() {
                     //拷贝完成，检测版本信息，设置标志位
@@ -2684,29 +2687,58 @@ public class MainService extends Service {
             //开门操作
             Log.e(TAG, "进行开门操作 开门开门");
 
-            openLock(2);
-            //分为手机开门和视屏开门 1和2 进行区分 上传日志统一传2；
-            if (logDoor.getKaimenfangshi() == 1) {
-                logDoor.setKaimenfangshi(2);
-                //一键开门拍照
-                if (StringUtils.isFastClick()) {
+
+
+            //如果点击过快不允许开门，不拍照片不上传日志
+            if (StringUtils.isFastClick()) {
+                openLock(2);
+                //分为手机开门和视屏开门 1和2 进行区分 上传日志统一传2
+                if (logDoor.getKaimenfangshi() == 1) {
+                    logDoor.setKaimenfangshi(2);
+                    //一键开门拍照
                     String imgurl = "door/img/" + System.currentTimeMillis() + ".jpg";
                     sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC, imgurl);
                     logDoor.setKaimenjietu(imgurl);
+                } else {
+                    sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC1, null);
                 }
-            } else {
-                sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC1, null);
-            }
-            logDoor.setState(1);
-            List<LogDoor> list = new ArrayList<>();
-            //拼接图片地址
-            logDoor.setKaimenjietu(logDoor.getKaimenjietu());
+                logDoor.setState(1);
+                List<LogDoor> list = new ArrayList<>();
+                //拼接图片地址
+                logDoor.setKaimenjietu(logDoor.getKaimenjietu());
 //            logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
-            logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis()));
-            Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
-            list.add(logDoor);
-            //上传日志
-            createAccessLog(list);
+                logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System
+                        .currentTimeMillis()));
+                Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
+                list.add(logDoor);
+                //上传日志
+                createAccessLog(list);
+            }
+
+//            openLock(2);
+            //分为手机开门和视屏开门 1和2 进行区分 上传日志统一传2
+//            if (logDoor.getKaimenfangshi() == 1) {
+//                logDoor.setKaimenfangshi(2);
+//                //一键开门拍照
+//                if (StringUtils.isFastClick()) {
+//                    String imgurl = "door/img/" + System.currentTimeMillis() + ".jpg";
+//                    sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC, imgurl);
+//                    logDoor.setKaimenjietu(imgurl);
+//                }
+//            } else {
+//                sendMessageToMainAcitivity(MSG_YIJIANKAIMEN_TAKEPIC1, null);
+//            }
+//            logDoor.setState(1);
+//            List<LogDoor> list = new ArrayList<>();
+//            //拼接图片地址
+//            logDoor.setKaimenjietu(logDoor.getKaimenjietu());
+////            logDoor.setKaimenjietu(imageUrl == null ? "" : imageUrl);
+//            logDoor.setKaimenshijian(StringUtils.transferLongToDate("yyyy-MM-dd HH:mm:ss", System.currentTimeMillis
+// ()));
+//            Log.e(TAG, "图片imageUrl" + logDoor.getKaimenjietu());
+//            list.add(logDoor);
+//            //上传日志
+//            createAccessLog(list);
         } else if (content.startsWith("refuse call")) { //拒绝接听
 //            if (!rejectUserList.contains(from)) {
 //                rejectUserList.add(from);
